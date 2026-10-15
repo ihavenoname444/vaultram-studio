@@ -13,11 +13,15 @@ Recorded during implementation on 2026-10-15. This file distinguishes checks fro
 - Two dedicated Jungle4 accounts were created through the official faucet and read back through RPC; operational details remain local.
 - A child permission was linked to runtime execution and its transaction inclusion and irreversibility were verified. Reconciliation handles the observed difference between a preliminary block number and actual inclusion.
 
+## Live Jungle4 proof
+
+The reviewed WASM and app registration are irreversible. All four actions executed through the live gateway, producing three rows and nonce 4. Independent verification through CryptoLions RPC checked EOA and receipt signatures, exact intent-to-transaction binding, pinned code/ABI and irreversible inclusion for all four transactions. The gateway submitted through Greymass RPC. Keys remained local. This is RPC-based verification, not a trustless light-client proof.
+
 ## Not yet confirmed
 
-- The compiled and VeRT-tested C++ runtime has not yet been deployed.
-- No real Jungle4 application state write, RAM calibration or live receipt verification has occurred.
-- No external browser wallet was used; simulation used a local demo EOA and real cryptographic signatures.
+- External browser-wallet integration remains untested.
+- RAM calibration remains open: immediate per-action account observations returned zero despite aggregate growth; these are not evidence of zero RAM cost.
+- No external browser wallet was used. Live tests used a separate locally generated EOA and real EIP-712 signatures.
 - OpenAI integration is implemented but no key/model was supplied, so no provider call was tested.
 - Standalone Playwright failed to start Chrome in this desktop sandbox. This is an environment startup failure, not a passing E2E result. Manual browser checks are separate.
 

@@ -14,7 +14,7 @@ Two dedicated Jungle4 accounts exist. A child relayer permission was created and
 
 ## IMPLEMENTED, not yet verified live
 
-The C++ runtime compiled with official CDT 4.1.1 in a free Binder Linux session. Repeated builds are byte-identical and all four actual-WASM VeRT tests pass; the full suite passes 37 tests without skips. GitHub Actions remains unavailable, but is no longer needed for this build. Jungle4 deployment, application writes and independent live receipt verification remain pending. The primary real-wallet-to-real-state acceptance criterion is therefore open.
+The C++ runtime compiled with official CDT 4.1.1 in a free Binder Linux session. Repeated builds are byte-identical and all four actual-WASM VeRT tests pass; the full suite passes 37 tests without skips. GitHub Actions remains unavailable, but is no longer needed for this build. The runtime and app are now deployed on Jungle4. Four real EIP-712 signed actions produced three state rows and four irreversible transactions, each verified through a separately operated RPC. Signing used a dedicated local EOA; external browser-wallet integration remains untested.
 
 The OpenAI provider is configurable, but no provider call has been tested with a user key. No injected external-wallet signing flow has been tested. RAM estimates are uncalibrated; no actual application RAM delta has been measured.
 

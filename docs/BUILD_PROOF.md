@@ -41,4 +41,4 @@ pnpm format:check
 
 Observed result: 37 tests passed, none skipped; TypeScript and production build passed; formatting passed. The four VeRT tests execute the actual WASM and cover all four actions, exact authorization, nonce replay, ownership, app hash binding, oversized content, expiry, pause and atomic failure behavior. VeRT's test-only Wharfkit 1.2.0 alias matches its internal types; the gateway uses Wharfkit 4.0.2.
 
-This proves compilation and emulator execution. It does not prove Jungle4 deployment, live RAM usage, irreversible application transactions, external browser wallet integration or an external security audit. Those remain separate acceptance gates.
+The build and emulator evidence above are separate from the subsequent Jungle4 proof recorded in VERIFICATION.md. Live deployment and four irreversible application transactions have also been independently verified through RPC. RAM calibration, external browser wallet integration and an external security audit remain open.
