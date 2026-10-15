@@ -186,6 +186,7 @@ function Studio() {
         );
       const client = createWalletClient({ transport: custom(window.ethereum) });
       const [address] = await client.requestAddresses();
+      if (!address) throw new Error("No wallet account selected.");
       setChainId(await client.getChainId());
       setOwner(address.toLowerCase());
       setDemo(false);
@@ -222,7 +223,11 @@ function Studio() {
     if (!app) return;
     await task("Preparing intent", async () => {
       if (!owner)
-        throw new Error("Connect a wallet or select the demo signer first.");
+        throw new Error(
+          config?.mode === "JUNGLE4"
+            ? "Connect a wallet first. Jungle4 requires your signature."
+            : "Connect a wallet or select the demo signer first.",
+        );
       const id = Date.now().toString();
       const agent = parent || ownAgents[0]?.id;
       const payload: Payload =
@@ -660,8 +665,8 @@ function Studio() {
                   ))}
                 </div>
                 <div className="section-title">
-                  <h2>Your agents</h2>
-                  <span className="tiny muted">OWNER-SCOPED RECORDS</span>
+                  <h2>Public agents</h2>
+                  <span className="tiny muted">OWNERS SHOWN BELOW</span>
                 </div>
                 <div className="agents">
                   {rows.filter((r) => r.action === "createagent").length ? (
@@ -673,7 +678,14 @@ function Studio() {
                             <span className="avatar">
                               <Sparkles size={19} />
                             </span>
-                            <span className="badge green">{row.status}</span>
+                            <span
+                              className={
+                                "badge " +
+                                (row.status === "active" ? "green" : "amber")
+                              }
+                            >
+                              {row.status}
+                            </span>
                           </div>
                           <h3>{"name" in row.data ? row.data.name : ""}</h3>
                           <p>
@@ -1009,7 +1021,15 @@ function Studio() {
               <dt>Action</dt>
               <dd>{review.payload.action}</dd>
               <dt>Signer</dt>
-              <dd>{short(owner)}</dd>
+              <dd style={{ overflowWrap: "anywhere" }}>{owner}</dd>
+              {review.intent && (
+                <>
+                  <dt>Wallet network ID</dt>
+                  <dd>{review.intent.sourceChainId} · identity only</dd>
+                  <dt>Destination</dt>
+                  <dd>Jungle4 · {review.intent.runtime}</dd>
+                </>
+              )}
               <dt>Estimated RAM range</dt>
               <dd>
                 {estimate(review.payload).minBytes}–
@@ -1024,11 +1044,17 @@ function Studio() {
             </p>
             <pre>{JSON.stringify(review.payload, null, 2)}</pre>
             {review.intent && (
-              <p className="tiny muted">
-                Nonce {review.intent.nonce} · expires{" "}
-                {new Date(review.intent.expires * 1000).toLocaleTimeString()} ·{" "}
-                {review.intent.runtime}
-              </p>
+              <>
+                <p className="tiny muted">
+                  Nonce {review.intent.nonce} · expires{" "}
+                  {new Date(review.intent.expires * 1000).toLocaleTimeString()}{" "}
+                  · {review.intent.runtime}
+                </p>
+                <details>
+                  <summary>Full signed intent</summary>
+                  <pre>{JSON.stringify(review.intent, null, 2)}</pre>
+                </details>
+              </>
             )}
             <button
               className="button primary full"

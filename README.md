@@ -2,7 +2,7 @@
 
 A local development studio for a bounded agent marketplace: describe an app, compile a versioned specification, sign an action, inspect state, export evidence.
 
-**Current delivery:** functional local simulation with real EIP-712 intent signatures, persistent SQLite state and Ed25519 receipts. Jungle4 integration and C++ runtime are provided; consult `docs/VERIFICATION.md` for what has actually run. Simulation is always visibly labelled and never claims blockchain execution.
+**Current delivery:** verified Phase 0 Jungle4 core, alongside an explicitly labelled local simulation. The record includes 22 irreversible application transactions, 56 automated tests and two Linux browser tests. Human wallet acceptance remains open; see `docs/VERIFICATION.md`. The runtime trusts its relayer and is not production infrastructure.
 
 ## Start
 
@@ -13,11 +13,15 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open http://127.0.0.1:5173. Choose **Build example application → Deploy locally → Use demo signer → Prepare action → Run simulation**. Publish a service, write a public memory, update status, inspect state, check a receipt signature, and export evidence. State survives restart.
+Open http://127.0.0.1:5173. Choose **Compile application → Deploy locally → Use demo signer → Prepare action → Run simulation**. Publish a service, write a public memory, update status, inspect state, check a receipt signature, and export evidence. State survives restart.
 
 The application is VaultRAM-branded and lives in `apps/studio`. Nothing needs to be hosted on Unicove. Unicove is a separate resource-management interface.
 
 The example works without accounts or paid APIs. Optional OpenAI configuration in `.env` enables structured descriptive fields. Without both a key and model, the assistant explicitly loads a fixed example; it does not pretend to interpret the prompt.
+
+## Prepared Jungle4 demonstration
+
+For the already configured dedicated test deployment, run `pnpm demo:check` and then `pnpm demo`. Open the same loopback URL in Chrome with a new empty MetaMask wallet. This mode forces Jungle4 and disables paid AI calls. It reuses `.env.jungle4` without copying keys and stores demo receipts in `.data/demo-jungle4`. Follow [the wallet walkthrough](docs/WALLET_DEMO.md). No deposits or EVM gas are required.
 
 ## Commands
 
@@ -39,7 +43,7 @@ See [deployment](docs/DEPLOYMENT.md), [protocol and trust](docs/ARCHITECTURE.md)
 
 Read [Reality](docs/REALITY.md), [Threat model](docs/THREAT_MODEL.md), [AppSpec](docs/APP_SPEC.md), [Intent protocol](docs/INTENT_PROTOCOL.md), [RAM model](docs/RAM_MODEL.md), [Demo](docs/DEMO.md), and [Implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
-GitHub currently refuses to start Actions because of a GitHub account-level runner restriction. The mandatory contract build/test gate has not run.
+GitHub Actions did not allocate a runner. The official CDT build, repeated artifact comparison, required WASM tests and Linux browser tests passed independently using free infrastructure. Actions is optional and manual-only.
 
 ## Layout
 

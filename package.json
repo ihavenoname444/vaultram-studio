@@ -17,7 +17,9 @@
     "verify": "tsx scripts/verify.ts",
     "preflight": "tsx scripts/preflight.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "demo": "node --import tsx scripts/demo.ts",
+    "demo:check": "node --import tsx scripts/demo.ts --check"
   },
   "dependencies": {
     "@wharfkit/antelope": "4.0.2",

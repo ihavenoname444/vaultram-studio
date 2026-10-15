@@ -54,5 +54,7 @@
   "tests/security.test.ts",
   "tsconfig.json",
   "vitest.config.ts",
-  "docs/HARDENING.md"
+  "docs/HARDENING.md",
+  "scripts/demo.ts",
+  "docs/WALLET_DEMO.md"
 ]

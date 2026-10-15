@@ -40,3 +40,9 @@ Official CDT Linux binaries cannot run directly on ARM macOS. Earlier local and 
 Source is published for review in https://github.com/ihavenoname444/vaultram-studio/pull/1. An explicit source allowlist excludes private environment, keys, databases and local operational records. Source packaging uses the same audit.
 
 GitHub did not allocate a runner: initial runs and a retry stopped before any build step because of an account-level restriction. The successful build and checks were performed independently of GitHub Actions. No payment was made. The workflow still requires WASM tests when a runner is available.
+
+## Demo handoff preparation
+
+The operator chose manual ChatGPT collaboration; integrated AI calls are outside the current demo acceptance gate. The `pnpm demo` entry point forces Jungle4, disables AI API credentials and uses a dedicated persistent local demo journal. Its live preflight passed against the deployed code and ABI, registered example, unpaused runtime, dedicated restricted relay key/link and available RAM/CPU/NET. The UI was opened in Chrome in JUNGLE4 mode without a demo signer. The final human-wallet sequence remains pending; follow WALLET_DEMO.md.
+
+The 56-test suite, typecheck, production build and formatting passed after adding the launcher. Signing review now displays the full owner and the expandable exact intent. Public agent cards are explicitly labelled public. The earlier two Linux browser tests were run before these final presentation/startup adjustments; the handoff startup is separately checked locally.

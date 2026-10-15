@@ -18,6 +18,6 @@ The production dependency audit reported zero known advisories at the recorded c
 
 ## Remaining acceptance gates
 
-A human-operated external wallet and real AI-provider call are unverified. The user has a mobile wallet and has not configured a provider key/model. No paid API calls, payment authorization or mainnet operations were performed. Creating a test EOA does not substitute for testing the user's wallet. Current UI supports injected EIP-1193 wallets; WalletConnect/mobile pairing is not implemented.
+A human-operated external wallet is unverified. The demo operator has chosen manual ChatGPT collaboration instead of an integrated AI service, so real AI-provider calls are outside current demo acceptance. The automated provider remains unverified. No paid API calls, payment authorization or mainnet operations were performed. Creating a test EOA does not substitute for testing the user's wallet. Current UI supports injected EIP-1193 wallets; WalletConnect/mobile pairing is not implemented.
 
 The 18-sample RAM matrix is insufficient to promote a model to calibrated production estimation. Historical trace retrieval is unavailable at the two tested endpoints. Account observations and receipt state commitments are not independently verified historical state proofs. The runtime still trusts the relayer and administrator. The gateway remains loopback-only. Production/mainnet needs a separate design and independent audit.

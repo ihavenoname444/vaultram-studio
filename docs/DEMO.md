@@ -15,7 +15,7 @@ Read REALITY.md first. The local simulation walkthrough, actual compiled WASM te
 
 ## Live walkthrough after the gate passes
 
-Use JUNGLE4 mode with a separate runtime and restricted relay key. Compile and register the exact app ID. Connect an injected EVM wallet, ideally in Base Sepolia identity context; signing requires no EVM gas. Review the complete payload, expiry, nonce, runtime pin and RAM allowance before signing.
+Use `pnpm demo:check` then `pnpm demo` for the configured dedicated runtime and restricted relay key; follow [WALLET_DEMO.md](WALLET_DEMO.md). Compile and register the exact app ID. Connect an injected EVM EOA wallet; its existing Ethereum network may remain selected because it provides an identity signature only. Signing requires no EVM gas. Review the complete payload, expiry, nonce, runtime pin and RAM allowance before signing.
 
 Execute one action, then reconcile until its actual block includes the transaction and is irreversible. Read the state through RPC. Show the real transaction ID, submitting-RPC execution RAM trace and its trust limitation. Keep account before/after observations secondary. Export evidence and run the CLI against a separately chosen Jungle4 RPC with independently pinned receipt key and ABI. Demonstrate service, memory and status only after the first loop is established.
 
