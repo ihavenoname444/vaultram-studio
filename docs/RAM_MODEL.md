@@ -8,7 +8,9 @@ The contract independently requires title bytes + content bytes + 2048 <= ram_bu
 
 ## Payer and observation
 
-Runtime administration pays for configuration/app rows. The relayer pays for business rows and nonce/index rows. Live execution reads relayer ram_usage before and after broadcast. The receipt records the two observations and difference; simulation records null. No application measurement exists yet.
+Runtime administration pays for configuration/app rows. The relayer pays for business rows and nonce/index rows. Live execution reads relayer ram_usage before and after broadcast. The receipt records the two observations and difference; simulation records null.
+
+The first four-action Jungle4 proof returned zero for all immediate per-action differences. A later independent account observation showed usage rising from 4,056 to 5,326 bytes, an aggregate difference of 1,270 bytes. These observations do not establish per-action attribution. They must not be interpreted as zero-cost writes or used to calibrate the estimator. The reason for the immediate zero readings has not yet been established; RPC timing, caching and consistency need investigation before changing measurement behavior.
 
 One gateway serializes writes, but external transactions can affect the same account, and observations are not historical snapshots. Therefore attributable is always false. A receipt signature protects the recorded values from modification; it does not prove causal RAM attribution. Reconciliation must not invent a missing before/after sample.
 

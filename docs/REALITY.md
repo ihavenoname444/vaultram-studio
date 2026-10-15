@@ -12,11 +12,11 @@ The default mode is SIMULATED. The demo signer is a locally generated EOA, not a
 
 Two dedicated Jungle4 accounts exist. A child relayer permission was created and linked to runtime execution; that permission transaction was verified irreversible. No real-money transfer is required. Account creation does not establish the application proof.
 
-## IMPLEMENTED, not yet verified live
+## LIVE TESTNET core, verified
 
 The C++ runtime compiled with official CDT 4.1.1 in a free Binder Linux session. Repeated builds are byte-identical and all four actual-WASM VeRT tests pass; the full suite passes 37 tests without skips. GitHub Actions remains unavailable, but is no longer needed for this build. The runtime and app are now deployed on Jungle4. Four real EIP-712 signed actions produced three state rows and four irreversible transactions, each verified through a separately operated RPC. Signing used a dedicated local EOA; external browser-wallet integration remains untested.
 
-The OpenAI provider is configurable, but no provider call has been tested with a user key. No injected external-wallet signing flow has been tested. RAM estimates are uncalibrated; no actual application RAM delta has been measured.
+The OpenAI provider is configurable, but no provider call has been tested with a user key. No injected external-wallet signing flow has been tested. RAM estimates are uncalibrated: immediate per-action observations returned zero, while a separate account observation after all four writes showed aggregate growth of 1,270 bytes. This does not establish per-action RAM attribution or zero-cost writes.
 
 ## TRUSTED IN PHASE 0
 
