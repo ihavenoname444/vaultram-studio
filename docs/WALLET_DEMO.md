@@ -20,13 +20,15 @@ Open `http://127.0.0.1:5173` in Chrome. Check the **JUNGLE4** badge and **Runtim
 
 1. Unlock the new MetaMask wallet. Click **Connect wallet** in Studio and approve account access.
 2. Create an agent named `VaultRAM demo agent` with a short public description. Click **Prepare action**.
-3. Check the full owner address, action, payload, wallet chain ID and Jungle4 runtime. Expand **Full signed intent** to inspect all signed bindings. Sign only the expected typed-data request. This authorizes a real bounded testnet write through the trusted gateway, even though it is not an EVM transaction.
+3. Check the full owner address, action, payload, wallet chain ID and Jungle4 runtime. Expand **Full signed intent** to inspect all signed bindings. Click **Sign and submit**, then personally confirm the expected typed-data request in MetaMask before the countdown expires. This authorizes a real bounded testnet write through the trusted gateway, even though it is not an EVM transaction.
 4. Inspect the receipt. Use **Check chain finality** until it reports **IRREVERSIBLE**. If UNKNOWN, reconcile instead of making a replacement action.
 5. Publish a service, write a short public memory, and pause the agent. Each needs its own reviewed signature. Wait for irreversibility between actions.
 6. Check **State**, reload, and confirm the records persist. Reconnect the wallet after reload if needed. For each receipt use **Check signature**, then **Export evidence**.
 7. Have the operator run `scripts/verify.ts` for all four exports against an independent RPC with separately pinned receipt key, code hash, ABI and relayer. A local green signature check alone is not independent chain verification.
 
 ## Acceptance record
+
+Requests expire after a short bounded lifetime. Preparing a request does not reserve an unlimited signing window. If it expires, dismiss any stale wallet prompt and click **Refresh expired request** in Studio. This preserves the reviewed action payload and obtains a new bounded intent; it does not sign automatically. Review it again, click **Sign and submit**, and confirm the new MetaMask request. A signature returned after expiry is rejected without submitting that expired request.
 
 Record wallet application/version, browser/version, public address, observed wallet chain ID, four transaction IDs and irreversible blocks, exported receipts, independently checked signatures/bindings and observed RAM trace deltas. No seed phrase, private key, API credential or password belongs in the record.
 

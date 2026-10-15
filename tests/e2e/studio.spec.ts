@@ -155,10 +155,43 @@ test("injected EIP-1193 test wallet signs all four actions and rejects substitut
   );
   expect(signatures).toBe(0);
   await page.unroute("**/api/intent");
-  async function sign() {
-    await page
-      .getByRole("button", { name: "Prepare action", exact: true })
-      .click();
+  let reviewedPayload = "";
+  await page.route("**/api/intent", async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    body.intent.expires = Math.floor(Date.now() / 1000) + 3;
+    reviewedPayload = body.intent.payload;
+    await route.fulfill({ response, json: body });
+  });
+  await page
+    .getByRole("button", { name: "Prepare action", exact: true })
+    .click();
+  const renew = page.getByRole("button", {
+    name: "Refresh expired request",
+    exact: true,
+  });
+  await expect(renew).toBeVisible({ timeout: 6000 });
+  expect(signatures).toBe(0);
+  await page.unroute("**/api/intent");
+  await renew.click();
+  await expect(
+    page.getByRole("button", { name: "Sign and submit", exact: true }),
+  ).toBeEnabled();
+  await page.getByText("Full signed intent", { exact: true }).click();
+  const intentText = await page
+    .getByRole("dialog")
+    .locator("details pre")
+    .innerText();
+  expect(JSON.parse(intentText).payload).toBe(reviewedPayload);
+  expect(JSON.parse(intentText).expires).toBeGreaterThan(
+    Math.floor(Date.now() / 1000) + 30,
+  );
+  expect(signatures).toBe(0);
+  async function sign(prepared = false) {
+    if (!prepared)
+      await page
+        .getByRole("button", { name: "Prepare action", exact: true })
+        .click();
     await page
       .getByRole("button", { name: "Sign and submit", exact: true })
       .click();
@@ -167,7 +200,7 @@ test("injected EIP-1193 test wallet signs all four actions and rejects substitut
     ).toContainText(wallet.address.toLowerCase());
     await page.getByRole("button", { name: "Close receipt" }).click();
   }
-  await sign();
+  await sign(true);
   await page
     .getByRole("button", { name: "Publish service", exact: true })
     .click();

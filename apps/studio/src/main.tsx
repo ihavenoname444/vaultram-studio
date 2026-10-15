@@ -94,6 +94,19 @@ function Studio() {
   const [parent, setParent] = useState("");
   const [status, setStatus] = useState<"active" | "paused">("paused");
   const [review, setReview] = useState<{ payload: Payload; intent?: Intent }>();
+  const [reviewNow, setReviewNow] = useState(() =>
+    Math.floor(Date.now() / 1000),
+  );
+  const reviewExpired = !!review?.intent && review.intent.expires <= reviewNow;
+  useEffect(() => {
+    setReviewNow(Math.floor(Date.now() / 1000));
+    if (!review?.intent) return;
+    const timer = setInterval(
+      () => setReviewNow(Math.floor(Date.now() / 1000)),
+      1000,
+    );
+    return () => clearInterval(timer);
+  }, [review?.intent?.expires]);
   const [selected, setSelected] = useState<Submission>();
   const [logs, setLogs] = useState<string[]>([
     "Studio initialized. Compile a specification to begin.",
@@ -265,6 +278,28 @@ function Studio() {
       }
     });
   }
+  async function renewReview() {
+    if (!review || !app || !config) return;
+    const payload = review.payload;
+    await task("Refreshing signing request", async () => {
+      const result = await api<{ intent: Intent }>("/intent", {
+        appId: app.appId,
+        payload,
+        owner,
+        sourceChainId: chainId,
+      });
+      validateReviewIntent(result.intent, {
+        app,
+        payload,
+        owner,
+        sourceChainId: chainId,
+        runtime: config.runtime,
+        runtimeCodeHash: config.runtimeCodeHash,
+      });
+      setReview({ payload, intent: result.intent });
+      setNotice("Fresh request prepared. Review it, then sign again.");
+    });
+  }
   async function submit() {
     if (!review || !app) return;
     await task(
@@ -301,6 +336,10 @@ function Studio() {
             ...typedData(review.intent),
             account,
           });
+          if (review.intent.expires <= Math.floor(Date.now() / 1000))
+            throw new Error(
+              "The signature arrived after this request expired. Refresh the expired request, review it and sign again. Nothing was submitted.",
+            );
           const [currentAccount] = await client.getAddresses();
           if (
             !currentAccount ||
@@ -1050,6 +1089,14 @@ function Studio() {
                   {new Date(review.intent.expires * 1000).toLocaleTimeString()}{" "}
                   · {review.intent.runtime}
                 </p>
+                <p
+                  role="status"
+                  className={reviewExpired ? "tiny amber-text" : "tiny muted"}
+                >
+                  {reviewExpired
+                    ? "Expired. Refresh this request, review it, then sign again."
+                    : `${Math.max(0, review.intent.expires - reviewNow)} seconds left to sign.`}
+                </p>
                 <details>
                   <summary>Full signed intent</summary>
                   <pre>{JSON.stringify(review.intent, null, 2)}</pre>
@@ -1059,14 +1106,18 @@ function Studio() {
             <button
               className="button primary full"
               disabled={!!busy}
-              onClick={submit}
+              onClick={reviewExpired ? renewReview : submit}
             >
               {busy ? (
                 <LoaderCircle size={15} className="spin" />
               ) : (
                 <Fingerprint size={15} />
               )}{" "}
-              {demo ? "Run simulation" : "Sign and submit"}
+              {demo
+                ? "Run simulation"
+                : reviewExpired
+                  ? "Refresh expired request"
+                  : "Sign and submit"}
             </button>
           </section>
         </div>
