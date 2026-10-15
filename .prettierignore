@@ -1,0 +1,8 @@
+node_modules
+.data
+.env*
+dist
+contracts/build
+pnpm-lock.yaml
+test-results
+playwright-report
