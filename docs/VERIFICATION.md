@@ -5,7 +5,7 @@ Recorded during implementation on 2026-10-15. This file distinguishes checks fro
 ## Confirmed so far
 
 - Final TypeScript checking, production Vite build and formatting checks pass.
-- 24 automated tests pass: protocol binding, UTF-8/uint64 boundaries, persistent gateway and atomic replay/owner handling, RPC finality handling, and independent CLI positive/tampering checks. Four WASM tests are skipped locally because artifacts are absent; CI requires them.
+- 33 automated tests pass: protocol binding, UTF-8/uint64 boundaries, persistent gateway and atomic replay/owner handling, RPC finality handling, independent CLI positive/tampering checks, and source publication exclusion/secret/symlink checks. Four WASM tests are skipped locally because artifacts are absent; CI requires them.
 - In-app-browser manual flow compiled the example, activated local runtime, created an agent, published a service, wrote a memory, updated status and verified the receipt signature. All three rows and four receipts remained after reload.
 - Mobile viewport 390×844 passed a visual layout check; document width equals viewport width (390 px), with no horizontal overflow. Desktop view was restored.
 - Exported simulation evidence passes the independent CLI. Local evidence is excluded from publication; the CLI test creates its own ephemeral keys and evidence.
@@ -21,3 +21,9 @@ Recorded during implementation on 2026-10-15. This file distinguishes checks fro
 - Standalone Playwright failed to start Chrome in this desktop sandbox. This is an environment startup failure, not a passing E2E result. Manual browser checks are separate.
 
 Official CDT Linux binaries cannot run directly on ARM macOS. The old x86 macOS binary requires unavailable architecture support; the IDE remote compiler failed DNS resolution. An experimental local Zig/CDT-header combination failed and produced no deployable artifact. No untested substitute binary was deployed.
+
+## Public review and CI
+
+Source is published for review in https://github.com/ihavenoname444/vaultram-studio/pull/1. An explicit 51-file allowlist excludes private environment, keys, databases and local operational records. Source packaging uses the same audit.
+
+GitHub did not allocate a runner: both initial runs and a fresh retry stopped before any build step because of an account-level restriction. Therefore no Linux compilation, VeRT pass or WASM artifact exists yet. The workflow requires those checks and does not silently skip them.

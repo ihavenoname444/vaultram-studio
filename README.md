@@ -35,6 +35,12 @@ pnpm exec tsx scripts/deploy.ts inspect
 
 See [deployment](docs/DEPLOYMENT.md), [protocol and trust](docs/ARCHITECTURE.md), [verification record](docs/VERIFICATION.md), and [next milestones](docs/ROADMAP.md).
 
+## Review the proof
+
+Read [Reality](docs/REALITY.md), [Threat model](docs/THREAT_MODEL.md), [AppSpec](docs/APP_SPEC.md), [Intent protocol](docs/INTENT_PROTOCOL.md), [RAM model](docs/RAM_MODEL.md), [Demo](docs/DEMO.md), and [Implementation plan](docs/IMPLEMENTATION_PLAN.md).
+
+GitHub currently refuses to start Actions because of a GitHub account-level runner restriction. The mandatory contract build/test gate has not run.
+
 ## Layout
 
 - `apps/studio`: React/Vite workspace, preview, state inspector and signing review.
