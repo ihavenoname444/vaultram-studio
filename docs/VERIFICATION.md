@@ -25,11 +25,11 @@ Reproduce on a Linux host with Node 22+: `pnpm install --frozen-lockfile`, `pnpm
 
 The reviewed WASM and app registration are irreversible. All four actions executed through the live gateway, producing three rows and nonce 4. Independent verification through CryptoLions RPC checked EOA and receipt signatures, exact intent-to-transaction binding, pinned code/ABI and irreversible inclusion for all four transactions. An additional 18-action, two-owner matrix is irreversible and passes the same independent verifier. The gateway submitted through Greymass RPC. Keys remained local. This is RPC-based verification, not a trustless light-client proof.
 
-## Not yet confirmed
+## Human-wallet acceptance and remaining limits
 
-- Human-wallet end-to-end acceptance remains incomplete. MetaMask account connection and a returned signature were observed, but the request had expired before confirmation and was rejected without a chain submission.
+- The local desktop MetaMask four-action demo acceptance passed: createagent, pubservice, writemem and setstate are irreversible in blocks 292264399, 292264806, 292264914 and 292265067. Independent CryptoLions verification passed all four EOA/receipt signatures, exact intent-to-transaction bindings, code/ABI pins and irreversible inclusions. After Chrome reload, all four receipts remained and the three owner-scoped rows were present with the agent paused.
 - RAM traces are recorded for 18 additional irreversible actions, with a versioned dataset in RAM_MODEL.md. Historical RAM trace verification and held-out estimator validation remain open.
-- The successful live chain tests used a separate locally generated EOA and real EIP-712 signatures.
+- The earlier 22 successful live chain tests used separate locally generated EOAs and real EIP-712 signatures; the four later human MetaMask actions are separate evidence.
 - OpenAI integration is implemented but no key/model was supplied, so no provider call was tested.
 - The automated browser provider uses an ephemeral EOA; it does not complete the human MetaMask acceptance gate or validate mobile-wallet UX.
 
@@ -43,8 +43,8 @@ GitHub did not allocate a runner: initial runs and a retry stopped before any bu
 
 ## Demo handoff preparation
 
-The operator chose manual ChatGPT collaboration; integrated AI calls are outside the current demo acceptance gate. The `pnpm demo` entry point forces Jungle4, disables AI API credentials and uses a dedicated persistent local demo journal. Its live preflight passed against the deployed code and ABI, registered example, unpaused runtime, dedicated restricted relay key/link and available RAM/CPU/NET. The UI was opened in Chrome in JUNGLE4 mode without a demo signer. The final human-wallet sequence remains pending; follow WALLET_DEMO.md.
+The operator chose manual ChatGPT collaboration; integrated AI calls are outside the current demo acceptance gate. The `pnpm demo` entry point forces Jungle4, disables AI API credentials and uses a dedicated persistent local demo journal. Its live preflight passed against the deployed code and ABI, registered example, unpaused runtime, dedicated restricted relay key/link and available RAM/CPU/NET. The UI was opened in Chrome in JUNGLE4 mode without a demo signer. The four-action human MetaMask sequence and final reload checks passed; follow WALLET_DEMO.md to reproduce.
 
 The 56-test suite, typecheck, production build and formatting passed after adding the launcher. Signing review now displays the full owner and the expandable exact intent. Public agent cards are explicitly labelled public. Typecheck, production build, formatting and both Linux browser tests also passed after the expiry UX change; the live handoff startup is separately checked locally.
 
-During the human MetaMask attempt, a signature returned after the intent deadline and was rejected before submission. Studio now displays a live countdown and an explicit refresh button after expiry. Refresh preserves the payload, validates the replacement intent, and requires another deliberate signing action. A post-signing expiry check prevents submitting an intent that expired while the wallet prompt was open. The protocol lifetime limit is unchanged. Successful human-wallet chain execution remains pending.
+During an earlier human MetaMask attempt, a signature returned after the intent deadline and was rejected before submission. Studio now displays a live countdown and an explicit refresh button after expiry. Refresh preserves the payload, validates the replacement intent, and requires another deliberate signing action. A post-signing expiry check prevents submitting an intent that expired while the wallet prompt was open. The protocol lifetime limit is unchanged. A subsequent four-action sequence was manually confirmed in MetaMask and passed independent verification and final reload checks. No mobile-wallet support or production certification is implied.

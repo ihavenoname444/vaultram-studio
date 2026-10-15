@@ -2,7 +2,7 @@
 
 A local development studio for a bounded agent marketplace: describe an app, compile a versioned specification, sign an action, inspect state, export evidence.
 
-**Current delivery:** verified Phase 0 Jungle4 core, alongside an explicitly labelled local simulation. The record includes 22 irreversible application transactions, 56 automated tests and two Linux browser tests. Human wallet acceptance remains open; see `docs/VERIFICATION.md`. The runtime trusts its relayer and is not production infrastructure.
+**Current delivery:** verified Phase 0 Jungle4 core, alongside an explicitly labelled local simulation. The record includes 26 irreversible application transactions, including four manually confirmed MetaMask actions, 56 automated tests and two Linux browser tests. The local desktop wallet demo passed; see `docs/VERIFICATION.md`. The runtime trusts its relayer and is not production infrastructure.
 
 ## Start
 
