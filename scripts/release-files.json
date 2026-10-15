@@ -44,11 +44,15 @@
   "services/gateway/src/store.ts",
   "tests/chain.test.ts",
   "tests/e2e/studio.spec.ts",
+  "tests/fixtures/crash-worker.ts",
   "tests/gateway.test.ts",
   "tests/protocol.test.ts",
   "tests/receipt.test.ts",
+  "tests/recovery.test.ts",
   "tests/release.test.ts",
   "tests/runtime.test.ts",
+  "tests/security.test.ts",
   "tsconfig.json",
-  "vitest.config.ts"
+  "vitest.config.ts",
+  "docs/HARDENING.md"
 ]

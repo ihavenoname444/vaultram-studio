@@ -21,6 +21,13 @@ export class Store {
       CREATE TABLE IF NOT EXISTS state (app TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(app,kind,id));`);
   }
   putApp(app: Compiled) {
+    const existing = this.db
+      .prepare("SELECT value FROM apps WHERE id=?")
+      .get(app.appId);
+    if (existing && JSON.parse(String(existing.value)).appHash !== app.appHash)
+      throw new Error(
+        "App ID collision: refusing to replace a different app hash",
+      );
     this.db
       .prepare(
         "INSERT INTO apps(id,value) VALUES(?,?) ON CONFLICT(id) DO UPDATE SET value=excluded.value",
@@ -84,9 +91,18 @@ export class Store {
       ) + 1n
     ).toString();
   }
+  unresolved(app: string, owner: string) {
+    return !!this.db
+      .prepare(
+        "SELECT 1 FROM submissions WHERE app=? AND owner=? AND status IN ('RESERVED','BROADCASTING','UNKNOWN') LIMIT 1",
+      )
+      .get(app, owner);
+  }
   rejectBeforeBroadcast(hash: string) {
     this.db
-      .prepare("UPDATE submissions SET status='REJECTED',nonce=? WHERE hash=?")
+      .prepare(
+        "UPDATE submissions SET status='REJECTED',nonce=? WHERE hash=? AND status='RESERVED' AND prepared IS NULL AND receipt IS NULL",
+      )
       .run("released:" + hash, hash);
   }
   reserve(hash: string, intent: Intent, signature: string) {

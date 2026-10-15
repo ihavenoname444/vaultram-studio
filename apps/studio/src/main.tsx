@@ -32,6 +32,7 @@ import {
   canonical,
   typedData,
   estimate,
+  validateReviewIntent,
   type Compiled,
   type Intent,
   type Payload,
@@ -50,6 +51,7 @@ declare global {
 type Config = {
   mode: "SIMULATED" | "JUNGLE4";
   runtime: string;
+  runtimeCodeHash: string;
   token: string;
   ai: string;
   receiptPublicKey: string;
@@ -245,6 +247,15 @@ function Studio() {
           owner,
           sourceChainId: chainId,
         });
+        if (!config) throw new Error("Gateway configuration unavailable");
+        validateReviewIntent(result.intent, {
+          app,
+          payload,
+          owner,
+          sourceChainId: chainId,
+          runtime: config.runtime,
+          runtimeCodeHash: config.runtimeCodeHash,
+        });
         setReview({ payload, intent: result.intent });
       }
     });
@@ -261,13 +272,22 @@ function Studio() {
             payload: review.payload,
           });
         else {
-          if (!window.ethereum || !review.intent)
+          if (!window.ethereum || !review.intent || !config)
             throw new Error("Wallet disconnected");
+          validateReviewIntent(review.intent, {
+            app,
+            payload: review.payload,
+            owner,
+            sourceChainId: chainId,
+            runtime: config.runtime,
+            runtimeCodeHash: config.runtimeCodeHash,
+          });
           const client = createWalletClient({
             transport: custom(window.ethereum),
           });
           const [account] = await client.getAddresses();
           if (
+            !account ||
             account.toLowerCase() !== owner ||
             (await client.getChainId()) !== chainId
           )
@@ -276,6 +296,15 @@ function Studio() {
             ...typedData(review.intent),
             account,
           });
+          const [currentAccount] = await client.getAddresses();
+          if (
+            !currentAccount ||
+            currentAccount.toLowerCase() !== owner ||
+            (await client.getChainId()) !== chainId
+          )
+            throw new Error(
+              "Wallet changed during signing. Prepare a new intent.",
+            );
           result = await api("/execute", { intent: review.intent, signature });
         }
         setReview(undefined);
@@ -809,7 +838,7 @@ function Studio() {
                     <span
                       className={
                         "badge " +
-                        (r.status === "SIMULATED" ? "amber" : "green")
+                        (r.status === "IRREVERSIBLE" ? "green" : "amber")
                       }
                     >
                       {r.status}
@@ -1045,7 +1074,8 @@ function Studio() {
             )}
             <span
               className={
-                "badge " + (selected.status === "SIMULATED" ? "amber" : "green")
+                "badge " +
+                (selected.status === "IRREVERSIBLE" ? "green" : "amber")
               }
             >
               {selected.status}
@@ -1054,6 +1084,14 @@ function Studio() {
               {selected.receipt?.receipt.trust ??
                 "Submission recorded. No execution receipt is available yet."}
             </p>
+            {selected.receipt?.receipt.ram.executionTrace && (
+              <p>
+                Execution trace:{" "}
+                {selected.receipt.receipt.ram.executionTrace.delta} RAM bytes.
+                Reported by the submitting RPC; historical RAM attribution has
+                not been independently verified.
+              </p>
+            )}
             <pre>
               {JSON.stringify(selected.receipt?.receipt ?? selected, null, 2)}
             </pre>

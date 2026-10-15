@@ -179,7 +179,8 @@ export const IntentSchema = z
     policy: z.literal(POLICY),
     sourceChainId: z.number().int().positive().max(2147483647),
     action: z.enum(["createagent", "pubservice", "writemem", "setstate"]),
-    payload: z.string().max(2500),
+    // JSON escaping can expand a valid 1024-byte string to over 6000 characters.
+    payload: z.string().max(7000),
     payloadHash: z.string().regex(/^0x[0-9a-f]{64}$/),
     nonce: id.refine((v) => BigInt(v) < 18446744073709551615n),
     expires: z.number().int().positive(),
@@ -235,6 +236,39 @@ export function typedData(intent: Intent) {
   };
 }
 export const intentHash = (intent: Intent) => hashTypedData(typedData(intent));
+export function validateReviewIntent(
+  raw: unknown,
+  expected: {
+    app: Compiled;
+    payload: Payload;
+    owner: string;
+    sourceChainId: number;
+    runtime: string;
+    runtimeCodeHash: string;
+  },
+  now = Math.floor(Date.now() / 1000),
+) {
+  const intent = IntentSchema.parse(raw);
+  const payload = PayloadSchema.parse(expected.payload);
+  if (
+    intent.owner !== expected.owner.toLowerCase() ||
+    intent.sourceChainId !== expected.sourceChainId ||
+    intent.appId !== expected.app.appId ||
+    intent.appHash !== expected.app.appHash ||
+    intent.runtime !== expected.runtime ||
+    intent.runtimeCodeHash !== expected.runtimeCodeHash ||
+    intent.action !== payload.action ||
+    intent.payload !== canonical(payload) ||
+    intent.payloadHash !== digest(payload) ||
+    intent.maxRamBytes !== estimate(payload).maxBytes
+  )
+    throw new Error(
+      "Signing request differs from reviewed action or deployment",
+    );
+  if (intent.expires <= now || intent.expires > now + 300)
+    throw new Error("Signing request expired or lifetime too long");
+  return intent;
+}
 export async function validateSignedIntent(
   raw: unknown,
   signature: Hex,
@@ -321,6 +355,13 @@ export type Receipt = {
     delta: number | null;
     method: string;
     attributable: boolean;
+    executionTrace?: {
+      payer: string;
+      delta: number;
+      source: "send_transaction";
+      transactionId: string;
+      independentlyVerified: false;
+    };
   };
   stateHash: string | null;
   trust: string;

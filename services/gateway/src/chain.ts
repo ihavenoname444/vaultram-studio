@@ -1,5 +1,6 @@
 import {
   APIClient,
+  FetchProvider,
   ABI,
   Action,
   Transaction,
@@ -54,6 +55,42 @@ export function uint64(value: unknown): string {
     throw new Error("Invalid uint64 in RPC response");
   return result;
 }
+// Only accept the exact single-action shape emitted by this runtime. Missing or
+// ambiguous traces are unknown, never an invented zero. RPC traces remain trusted.
+export function executionRam(
+  processed: any,
+  runtime: string,
+  payer: string,
+): number | null {
+  const traces = processed?.action_traces;
+  if (!Array.isArray(traces) || traces.length !== 1) return null;
+  const trace = traces[0];
+  if (
+    trace?.receiver !== runtime ||
+    trace?.act?.account !== runtime ||
+    trace?.act?.name !== "execute" ||
+    trace?.except ||
+    (trace?.inline_traces?.length ?? 0) !== 0 ||
+    !Array.isArray(trace?.account_ram_deltas) ||
+    processed.account_ram_delta
+  )
+    return null;
+  const seen = new Set<string>();
+  let delta = 0;
+  for (const entry of trace.account_ram_deltas) {
+    if (
+      !entry ||
+      typeof entry.account !== "string" ||
+      seen.has(entry.account) ||
+      typeof entry.delta !== "number" ||
+      !Number.isSafeInteger(entry.delta)
+    )
+      return null;
+    seen.add(entry.account);
+    if (entry.account === payer) delta += entry.delta;
+  }
+  return Number.isSafeInteger(delta) ? delta : null;
+}
 export class Jungle {
   client: APIClient;
   constructor(
@@ -65,7 +102,12 @@ export class Jungle {
     readonly permission = "relay",
     readonly abiHash?: string,
   ) {
-    this.client = new APIClient({ url });
+    this.client = new APIClient({
+      provider: new FetchProvider(url, {
+        fetch: (input, init) =>
+          fetch(input, { ...init, signal: AbortSignal.timeout(15000) }),
+      }),
+    });
   }
   async rpc(path: string, body: unknown) {
     const r = await fetch(this.url + "/v1/chain/" + path, {
@@ -132,11 +174,15 @@ export class Jungle {
   }
   async ram() {
     const r = await this.rpc("get_account", { account_name: this.relayer });
-    return Number(r.ram_usage);
+    if (!Number.isSafeInteger(r.ram_usage) || r.ram_usage < 0)
+      throw new Error("Invalid RPC RAM usage");
+    return r.ram_usage as number;
   }
   async prepare(intent: Intent, payload: Payload, hash: string) {
     await this.check();
     const info = await this.client.v1.chain.get_info();
+    if (String(info.chain_id) !== JUNGLE4)
+      throw new Error("Wrong transaction-header chain");
     const { abi } = await this.client.v1.chain.get_abi(this.runtime);
     if (!abi) throw new Error("Missing runtime ABI");
     if (
@@ -184,9 +230,19 @@ export class Jungle {
       throw new Error("Transaction not confirmed executed");
     if (json.transaction_id !== prepared.transactionId)
       throw new Error("Transaction response ID mismatch");
+    if (
+      !Number.isSafeInteger(json.processed.block_num) ||
+      json.processed.block_num <= 0
+    )
+      throw new Error("Invalid transaction block number");
     return {
       transactionId: json.transaction_id as string,
       blockNum: Number(json.processed.block_num),
+      executionRamDelta: executionRam(
+        json.processed,
+        this.runtime,
+        this.relayer,
+      ),
     };
   }
   async inclusionBlock(

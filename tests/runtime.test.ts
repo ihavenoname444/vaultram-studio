@@ -144,5 +144,58 @@ describe.skipIf(!available)(
       await expect(execute(agent)).rejects.toThrow("paused");
       expect(rows()).toHaveLength(0);
     });
+    it("rejects unauthorized administration, reinitialization, bad owner keys and nonce gaps", async () => {
+      await expect(
+        runtime.actions
+          .init({ relayer: "stranger1111" })
+          .send("runtime11111@active"),
+      ).rejects.toThrow("initialized");
+      await expect(
+        runtime.actions.pause({ paused: true }).send("relayacct111@relay"),
+      ).rejects.toThrow();
+      await expect(
+        runtime.actions
+          .regapp({ app_id: "2", app_hash: app.appHash.slice(2) })
+          .send("stranger1111@active"),
+      ).rejects.toThrow();
+      await expect(execute(agent, "2")).rejects.toThrow("first nonce");
+      await expect(
+        execute(agent, "1", owner, { owner_key: "ff".repeat(32) }),
+      ).rejects.toThrow("owner key");
+      await execute(agent);
+      await expect(
+        execute(
+          {
+            action: "pubservice",
+            id: "2",
+            agentId: "1",
+            title: "S",
+            description: "D",
+          },
+          "1",
+          stranger,
+        ),
+      ).rejects.toThrow("not owned");
+      await expect(execute({ ...agent, id: "2" }, "3")).rejects.toThrow(
+        "nonce",
+      );
+      expect(rows()).toHaveLength(1);
+    });
+    it("enforces the app cap without changing its configuration after failure", async () => {
+      for (let n = 1; n < 64; n++)
+        await runtime.actions
+          .regapp({ app_id: String(n), app_hash: app.appHash.slice(2) })
+          .send("runtime11111@active");
+      await expect(
+        runtime.actions
+          .regapp({ app_id: "64", app_hash: app.appHash.slice(2) })
+          .send("runtime11111@active"),
+      ).rejects.toThrow("app limit");
+      expect(
+        runtime.tables
+          .apps(BigInt(runtime.name.value.toString()))
+          .getTableRows(),
+      ).toHaveLength(64);
+    });
   },
 );

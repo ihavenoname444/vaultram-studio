@@ -30,7 +30,21 @@ export async function createServer(
   const mode = options.mode ?? process.env.VAULTRAM_MODE ?? "SIMULATED";
   if (mode !== "SIMULATED" && mode !== "JUNGLE4")
     throw new Error("VAULTRAM_MODE must be SIMULATED or JUNGLE4");
-  const directory = resolve(options.directory ?? ".data");
+  const directory = resolve(
+    options.directory ?? process.env.VAULTRAM_DATA_DIR ?? ".data",
+  );
+  const port = z.coerce
+    .number()
+    .int()
+    .min(1024)
+    .max(65535)
+    .parse(process.env.VAULTRAM_PORT ?? 8787);
+  const uiPort = z.coerce
+    .number()
+    .int()
+    .min(1024)
+    .max(65535)
+    .parse(process.env.VAULTRAM_UI_PORT ?? 5173);
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   const token = randomBytes(32).toString("hex");
   const runtime =
@@ -73,14 +87,26 @@ export async function createServer(
       : undefined;
   const server = Fastify({ logger: false, bodyLimit: 32768 });
   let tail: Promise<unknown> = Promise.resolve();
+  let queued = 0;
   function serial<T>(fn: () => Promise<T>): Promise<T> {
-    const run = tail.then(fn);
+    if (queued >= 16)
+      return Promise.reject(
+        new Error(
+          "Submission queue full; reconcile pending work before retrying",
+        ),
+      );
+    queued++;
+    const run = tail.then(fn).finally(() => {
+      queued--;
+    });
     tail = run.catch(() => {});
     return run;
   }
   let windowStart = Date.now(),
     requests = 0;
   server.addHook("onRequest", async (req, reply) => {
+    reply.header("Cache-Control", "no-store");
+    reply.header("X-Content-Type-Options", "nosniff");
     if (
       !["127.0.0.1", "localhost", "[::1]"].includes(
         (req.headers.host ?? "").replace(/:\d+$/, ""),
@@ -99,10 +125,10 @@ export async function createServer(
     if (
       origin &&
       ![
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:8787",
-        "http://127.0.0.1:8787",
+        `http://localhost:${uiPort}`,
+        `http://127.0.0.1:${uiPort}`,
+        `http://localhost:${port}`,
+        `http://127.0.0.1:${port}`,
       ].includes(origin)
     )
       return reply.code(403).send({ error: "Origin rejected" });
@@ -122,6 +148,7 @@ export async function createServer(
   server.get("/api/config", async () => ({
     mode,
     runtime,
+    runtimeCodeHash: "0x" + (chain?.codeHash ?? "0".repeat(64)),
     token,
     ai:
       process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL
@@ -167,9 +194,20 @@ export async function createServer(
   ) {
     if (!store.deployed(app.appId)) throw new Error("Deploy this app first");
     const parsed = PayloadSchema.parse(payload);
+    if (chain && store.unresolved(app.appId, owner.toLowerCase()))
+      throw new Error(
+        "Previous submission is unresolved; reconcile it before signing another action",
+      );
     const nonce = chain
       ? await chain.nextNonce(app.appId, owner.toLowerCase())
       : store.nextNonce(app.appId, owner.toLowerCase());
+    if (
+      chain &&
+      BigInt(nonce) < BigInt(store.nextNonce(app.appId, owner.toLowerCase()))
+    )
+      throw new Error(
+        "RPC nonce is behind local submissions; wait for chain visibility and prepare again",
+      );
     return {
       intent: makeIntent(
         app,
@@ -212,6 +250,10 @@ export async function createServer(
       throw new Error("Runtime code pin mismatch");
     const existing = store.get(hash);
     if (existing) return existing;
+    if (chain && store.unresolved(id, intent.owner))
+      throw new Error(
+        "Previous submission is unresolved; reconcile before executing another action",
+      );
     const base: Receipt = {
       version: 1,
       mode: mode as Receipt["mode"],
@@ -272,6 +314,14 @@ export async function createServer(
       const result = await chain.broadcast(prepared);
       base.blockNum = result.blockNum;
       base.status = "SUBMITTED";
+      if (result.executionRamDelta !== null)
+        base.ram.executionTrace = {
+          payer: chain.relayer,
+          delta: result.executionRamDelta,
+          source: "send_transaction",
+          transactionId: prepared.transactionId,
+          independentlyVerified: false,
+        };
       store.saveReceipt(hash, signer.sign(base));
     } catch {
       store.saveReceipt(hash, signer.sign(base));
@@ -279,10 +329,11 @@ export async function createServer(
     }
     try {
       base.ram.after = await chain.ram();
-      base.ram.delta =
-        base.ram.before === null ? null : base.ram.after - base.ram.before;
+      // Independent calls can see different/lagging backends. Preserve samples,
+      // but do not turn their difference into a transaction RAM measurement.
+      base.ram.delta = null;
       base.ram.method =
-        "payer account observations; concurrent external writes may affect delta";
+        "non-atomic account samples; use executionTrace for submitting-RPC attribution when available";
     } catch {
       /* Separate measurement failure from execution. */
     }
@@ -355,16 +406,25 @@ export async function createServer(
       signature: row.signature,
       attestation: row.receipt,
       prepared: row.prepared ? JSON.parse(row.prepared) : null,
+      deployment: {
+        chainId: row.intent.destination,
+        runtime: row.intent.runtime,
+        codeHash: row.intent.runtimeCodeHash.slice(2),
+        abiHash: chain?.abiHash ?? null,
+        runtimeVersion: row.intent.runtimeVersion,
+        policy: row.intent.policy,
+        abiHashSigned: false,
+      },
     };
   });
   server.addHook("onClose", async () => store.close());
-  return { server, store, token, mode };
+  return { server, store, token, mode, port };
 }
 if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
 ) {
-  const { server, mode } = await createServer();
-  await server.listen({ host: "127.0.0.1", port: 8787 });
-  console.log("VaultRAM gateway http://127.0.0.1:8787 · " + mode);
+  const { server, mode, port } = await createServer();
+  await server.listen({ host: "127.0.0.1", port });
+  console.log(`VaultRAM gateway http://127.0.0.1:${port} · ${mode}`);
 }

@@ -2,6 +2,12 @@ import {
   AppSpecSchema,
   exampleSpec,
 } from "../../../packages/core/src/index.ts";
+import { z } from "zod";
+const DescriptionSchema = AppSpecSchema.pick({
+  name: true,
+  description: true,
+  accent: true,
+}).strict();
 export async function describe(prompt: string) {
   const key = process.env.OPENAI_API_KEY,
     model = process.env.OPENAI_MODEL;
@@ -66,7 +72,10 @@ export async function describe(prompt: string) {
       .join("");
     try {
       return {
-        spec: AppSpecSchema.parse({ ...exampleSpec, ...JSON.parse(output) }),
+        spec: AppSpecSchema.parse({
+          ...exampleSpec,
+          ...DescriptionSchema.parse(JSON.parse(output)),
+        }),
         provenance: "OPENAI" as const,
         note: "AI supplied descriptive fields. Runtime, schema and permissions come from versioned template v1.",
       };

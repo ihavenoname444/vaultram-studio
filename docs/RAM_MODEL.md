@@ -8,11 +8,27 @@ The contract independently requires title bytes + content bytes + 2048 <= ram_bu
 
 ## Payer and observation
 
-Runtime administration pays for configuration/app rows. The relayer pays for business rows and nonce/index rows. Live execution reads relayer ram_usage before and after broadcast. The receipt records the two observations and difference; simulation records null.
+Runtime administration pays for configuration/app rows. The relayer pays for business rows and nonce/index rows. New live receipts keep `ram_usage` before/after as secondary observations and leave their `delta` null. They can be stale or include unrelated writes. The original four-action proof reported immediate differences of zero despite later aggregate growth of 1,270 bytes; those old receipts remain historical evidence, not zero-cost claims.
 
-The first four-action Jungle4 proof returned zero for all immediate per-action differences. A later independent account observation showed usage rising from 4,056 to 5,326 bytes, an aggregate difference of 1,270 bytes. These observations do not establish per-action attribution. They must not be interpreted as zero-cost writes or used to calibrate the estimator. The reason for the immediate zero readings has not yet been established; RPC timing, caching and consistency need investigation before changing measurement behavior.
+The primary reported measurement is now `ram.executionTrace`: the relayer's `account_ram_deltas` from the exact single `execute` action returned by `send_transaction`. Missing, malformed, duplicate-account or ambiguous trace shapes produce unknown, not zero. An explicit empty delta list can represent a real zero. The trace is bound to the transaction ID in the signed receipt. It is a submitting-RPC observation, not an independently reconstructed historical proof: `independentlyVerified` remains false. Historical transaction endpoints on the two tested RPCs returned 404.
 
-One gateway serializes writes, but external transactions can affect the same account, and observations are not historical snapshots. Therefore attributable is always false. A receipt signature protects the recorded values from modification; it does not prove causal RAM attribution. Reconciliation must not invent a missing before/after sample.
+Dataset **calibration-v1** has 18 irreversible actions, nine each from two fresh test owners in a fresh app, under the pinned runtime in BUILD_PROOF.md. Independent CryptoLions verification checked all 18 transactions; Greymass supplied the execution traces. The two owners shared the dedicated relayer. The experiment did not prove the absence of all external account writers; action traces, rather than account differences, are used below.
+
+| Operation                                        | Owner 1 bytes | Owner 2 bytes |
+| ------------------------------------------------ | ------------: | ------------: |
+| First agent, 1-byte name + 1-byte description    |           802 |           578 |
+| Second agent, 60 + 500 bytes                     |           742 |           742 |
+| Service, 1 + 1 bytes                             |           183 |           183 |
+| Service, 80 + 500 bytes                          |           762 |           762 |
+| Memory, 1 byte                                   |           182 |           182 |
+| Memory, 1,024 ASCII bytes                        |         1,206 |         1,206 |
+| Memory, 256 whale characters / 1,024 UTF-8 bytes |         1,206 |         1,206 |
+| Pause agent                                      |             0 |             0 |
+| Reactivate agent                                 |             0 |             0 |
+
+A candidate fit is 179 fixed bytes plus serialized title/content string lengths and bytes, with 395 extra bytes for a new owner's nonce and 224 for initial app tables. This is an inference from this small dataset, not an independently validated protocol constant. No held-out validation or confidence interval exists. The production admission estimator remains **conservative-admission-v1, calibrated: false**; these observations do not justify replacing its safety allowance. Dataset exports preserve each intent, signed receipt, transaction, estimate and observed trace delta.
+
+One gateway serializes writes, but external transactions can affect the same account. `attributable` remains false for the account observations. Receipt signatures protect recorded values from modification; they do not make RPC observations trustless. Reconciliation never invents missing RAM samples.
 
 ## Calibration acceptance procedure
 

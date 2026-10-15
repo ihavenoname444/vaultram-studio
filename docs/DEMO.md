@@ -2,7 +2,7 @@
 
 ## Readiness gate
 
-Read REALITY.md first. The local simulation walkthrough, actual compiled WASM tests and four live Jungle4 actions are verified. The live proof used a dedicated local EOA and independently checked irreversible receipts. An external injected-wallet UI walkthrough is still pending.
+Read REALITY.md first. The local simulation walkthrough, actual compiled WASM tests and 22 live Jungle4 actions are verified. The live proof used a dedicated local EOA and independently checked irreversible receipts. A human external-wallet walkthrough is still pending. The controlled EIP-1193 test provider is a separate automated test, not proof of a real wallet application.
 
 ## Verified local walkthrough
 
@@ -17,6 +17,6 @@ Read REALITY.md first. The local simulation walkthrough, actual compiled WASM te
 
 Use JUNGLE4 mode with a separate runtime and restricted relay key. Compile and register the exact app ID. Connect an injected EVM wallet, ideally in Base Sepolia identity context; signing requires no EVM gas. Review the complete payload, expiry, nonce, runtime pin and RAM allowance before signing.
 
-Execute one action, then reconcile until its actual block includes the transaction and is irreversible. Read the state through RPC. Show the real transaction ID, before/after payer RAM observations and their attribution limitation. Export evidence and run the CLI against a separately chosen Jungle4 RPC with independently pinned receipt key and ABI. Demonstrate service, memory and status only after the first loop is established.
+Execute one action, then reconcile until its actual block includes the transaction and is irreversible. Read the state through RPC. Show the real transaction ID, submitting-RPC execution RAM trace and its trust limitation. Keep account before/after observations secondary. Export evidence and run the CLI against a separately chosen Jungle4 RPC with independently pinned receipt key and ABI. Demonstrate service, memory and status only after the first loop is established.
 
 If submission is UNKNOWN, stop the narrative and reconcile; do not repeat the click to manufacture success. If AI is unavailable, say FIXTURE. If external wallet interaction has not been tested, do not describe a CLI signer as that wallet test. End by explaining that future adapters must prove their own security model.

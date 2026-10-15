@@ -30,7 +30,7 @@ Gateway HTTP is loopback-only with Host/Origin checks and a per-process request 
 
 ## Replay and crash handling
 
-SQLite reserves `(app, owner, nonce)` uniquely and stores the signed transaction before any broadcast. Writes are serialized in one gateway process. Simulation business state, nonce and receipt commit in one SQLite transaction. The C++ business row and nonce update commit in one chain transaction.
+SQLite reserves `(app, owner, nonce)` uniquely and stores the signed transaction before any broadcast. Writes are serialized in one gateway process with a bounded pending queue. Unresolved reservations or an RPC nonce behind durable local state block new signing requests. Simulation business state, nonce and receipt commit in one SQLite transaction. The C++ business row and nonce update commit in one chain transaction.
 
 Before-broadcast preparation failure releases the reservation with a retained REJECTED record. Once a signed transaction is persisted, an ambiguous network error remains UNKNOWN. No automatic retry with a new nonce and no blind rebroadcast occurs. Reconcile queries the transaction status and then checks block inclusion and last irreversible block.
 
@@ -40,10 +40,10 @@ A crash with a RESERVED record and no prepared transaction requires operator rev
 
 The estimator uses canonical payload bytes plus a conservative allowance, labelled uncalibrated. It is not a measured range or a protocol-enforced hard spending ceiling. The C++ check is admission policy, not exact RAM metering.
 
-Live receipts record the relayer payer account's `ram_usage` before and after execution. Both observations can include concurrent external writes; receipts therefore always say `attributable: false`. State and RAM observations are made near execution and are not historical Merkle proofs. Simulation leaves all chain/RAM fields null.
+Live receipts keep before/after payer account observations with null delta and `attributable: false`. A separate, transaction-bound `executionTrace` records the submitting RPC's RAM deltas when its trace is unambiguous. It is explicitly not independently verified. See RAM_MODEL.md for the 18-action dataset and remaining calibration limits. State and RAM observations are not historical Merkle proofs. Simulation leaves all chain/RAM fields null.
 
 ## Independent verifier
 
-Export includes AppSpec, intent, EOA signature, receipt attestation, and the prepared transaction in live mode. Pin the Ed25519 public key via a separate trusted channel. The UI's check uses this installation's gateway key and is only a local signature check.
+Export includes AppSpec, intent, EOA signature, receipt attestation, deployment metadata and the prepared transaction in live mode. Protocol v1 signs the code hash; ABI is separately pinned and explicitly marked `abiHashSigned: false`. A signed deployment commitment including ABI belongs to a future protocol version. Pin the Ed25519 public key via a separate trusted channel. The UI's check uses this installation's gateway key and is only a local signature check.
 
 The CLI verifies both signatures and their binding, reconstructs the exact one-action transaction from a separately pinned ABI, checks transaction digest, current code/ABI pins, inclusion and irreversibility using an independently selected Jungle4 RPC. It still trusts that RPC; it is not a light client. It does not prove historical RAM attribution, receipt timestamp, or absence of a temporary code upgrade between observations.

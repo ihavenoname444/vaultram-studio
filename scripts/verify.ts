@@ -64,6 +64,25 @@ if (receipt.mode === "SIMULATED") {
   if (String(tx.id) !== receipt.transactionId)
     throw new Error("INVALID transaction digest");
   const abi = JSON.parse(readFileSync(VERIFY_ABI_PATH, "utf8"));
+  const abiHash = createHash("sha256")
+    .update(Serializer.encode({ object: ABI.from(abi) }).array)
+    .digest("hex");
+  if (
+    evidence.deployment &&
+    (evidence.deployment.chainId !== verified.intent.destination ||
+      evidence.deployment.runtime !== verified.intent.runtime ||
+      evidence.deployment.codeHash !== VERIFY_CODE_HASH ||
+      evidence.deployment.abiHash !== abiHash ||
+      evidence.deployment.runtimeVersion !== verified.intent.runtimeVersion ||
+      evidence.deployment.policy !== verified.intent.policy ||
+      evidence.deployment.abiHashSigned !== false)
+  )
+    throw new Error("INVALID deployment manifest or ABI pin");
+  if (
+    receipt.ram.executionTrace &&
+    receipt.ram.executionTrace.payer !== VERIFY_RELAYER
+  )
+    throw new Error("INVALID trace payer");
   const expected = Action.from(
     {
       account: verified.intent.runtime,
@@ -88,9 +107,7 @@ if (receipt.mode === "SIMULATED") {
     "",
     VERIFY_CODE_HASH,
     "relay",
-    createHash("sha256")
-      .update(Serializer.encode({ object: ABI.from(abi) }).array)
-      .digest("hex"),
+    abiHash,
   );
   if (!(await chain.finality(receipt.transactionId, receipt.blockNum)))
     throw new Error(

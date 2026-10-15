@@ -5,6 +5,10 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createServer } from "../services/gateway/src/server.ts";
 import { compile, exampleSpec } from "../packages/core/src/index.ts";
+import {
+  receiptSigner,
+  verifyReceipt,
+} from "../services/gateway/src/receipt.ts";
 it("independent CLI accepts exported signatures and rejects altered receipts", async () => {
   const dir = mkdtempSync(join(tmpdir(), "vaultram-verify-"));
   const s = await createServer({ directory: dir, mode: "SIMULATED" });
@@ -36,6 +40,38 @@ it("independent CLI accepts exported signatures and rejects altered receipts", a
         headers,
       })
     ).json();
+    // A valid cryptographic signature must not legitimize impossible claims.
+    const signer = receiptSigner(join(dir, "schema-test.pem"));
+    const base = evidence.attestation.receipt;
+    for (const malformed of [
+      { ...base, ram: { ...base.ram, before: 0 } },
+      { ...base, status: "IRREVERSIBLE" },
+      { ...base, unexpected: "unreviewed metadata" },
+      {
+        ...base,
+        mode: "JUNGLE4",
+        status: "IRREVERSIBLE",
+        transactionId: "11".repeat(32),
+        blockNum: 42,
+        ram: {
+          ...base.ram,
+          executionTrace: {
+            payer: "testpayer",
+            delta: 100,
+            source: "send_transaction",
+            transactionId: "22".repeat(32),
+            independentlyVerified: false,
+          },
+        },
+      },
+    ]) {
+      expect(verifyReceipt(signer.sign(malformed), signer.publicKey)).toBe(
+        false,
+      );
+    }
+    expect(verifyReceipt(signer.sign(base), "malformed public key")).toBe(
+      false,
+    );
     const file = join(dir, "evidence.json"),
       key = join(dir, "public.pem");
     writeFileSync(file, JSON.stringify(evidence));

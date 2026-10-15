@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: "127.0.0.1",
-    port: 5173,
+    port: Number(process.env.VAULTRAM_UI_PORT ?? 5173),
     strictPort: true,
-    proxy: { "/api": "http://127.0.0.1:8787" },
+    proxy: { "/api": `http://127.0.0.1:${process.env.VAULTRAM_PORT ?? 8787}` },
   },
   build: { outDir: "dist", emptyOutDir: true },
 });

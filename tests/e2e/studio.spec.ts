@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 test("compile, deploy, sign, inspect, export and reload", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -16,13 +17,17 @@ test("compile, deploy, sign, inspect, export and reload", async ({ page }) => {
     name: "Deploy locally",
     exact: true,
   });
-  if (await deploy.isEnabled()) await deploy.click();
+  await expect(deploy).toBeEnabled();
+  await deploy.click();
+  await expect(
+    page.getByRole("button", { name: "Runtime ready", exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Use demo signer", exact: true })
     .click();
   await page.getByLabel("Agent name", { exact: true }).fill("Atlas Research");
   await page
-    .getByLabel("Description", { exact: true })
+    .getByRole("textbox", { name: "Description", exact: true })
     .fill("Reads public technical sources and preserves concise findings.");
   await page
     .getByRole("button", { name: "Prepare action", exact: true })
@@ -52,7 +57,7 @@ test("compile, deploy, sign, inspect, export and reload", async ({ page }) => {
   });
   await page.getByRole("button", { name: "Write memory", exact: true }).click();
   await page
-    .getByLabel("Public memory", { exact: true })
+    .getByRole("textbox", { name: "Public memory", exact: true })
     .fill("Public finding: every intent binds its destination.");
   await page
     .getByRole("button", { name: "Prepare action", exact: true })
@@ -86,4 +91,96 @@ test("compile, deploy, sign, inspect, export and reload", async ({ page }) => {
     ),
   ).toBe(true);
   expect(errors).toEqual([]);
+});
+
+test("injected EIP-1193 test wallet signs all four actions and rejects substituted review data", async ({
+  page,
+}) => {
+  // A controlled provider exercises the real browser signing path. This does
+  // not claim that MetaMask or a human user's mobile wallet has been tested.
+  const wallet = privateKeyToAccount(generatePrivateKey());
+  let signatures = 0;
+  await page.exposeFunction(
+    "testWalletRequest",
+    async ({ method, params }: { method: string; params?: unknown[] }) => {
+      if (method === "eth_requestAccounts" || method === "eth_accounts")
+        return [wallet.address];
+      if (method === "eth_chainId") return "0x1";
+      if (method === "eth_signTypedData_v4") {
+        expect(String(params?.[0]).toLowerCase()).toBe(
+          wallet.address.toLowerCase(),
+        );
+        const data = JSON.parse(String(params?.[1]));
+        data.domain.chainId = Number(data.domain.chainId);
+        signatures++;
+        return wallet.signTypedData(data);
+      }
+      throw new Error("Unexpected wallet request: " + method);
+    },
+  );
+  await page.addInitScript(() => {
+    (window as any).ethereum = {
+      request: (request: unknown) => (window as any).testWalletRequest(request),
+      on: () => {},
+      removeListener: () => {},
+    };
+  });
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Compile application", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Deploy locally", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Connect wallet", exact: true })
+    .click();
+  await page
+    .getByLabel("Agent name", { exact: true })
+    .fill("External provider test");
+  await page
+    .getByRole("textbox", { name: "Description", exact: true })
+    .fill("Public browser test");
+  await page.route("**/api/intent", async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    body.intent.owner = "0x" + "99".repeat(20);
+    await route.fulfill({ response, json: body });
+  });
+  await page
+    .getByRole("button", { name: "Prepare action", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "differs from reviewed action",
+  );
+  expect(signatures).toBe(0);
+  await page.unroute("**/api/intent");
+  async function sign() {
+    await page
+      .getByRole("button", { name: "Prepare action", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Sign and submit", exact: true })
+      .click();
+    await expect(
+      page.getByRole("dialog", { name: "Execution receipt" }).locator("pre"),
+    ).toContainText(wallet.address.toLowerCase());
+    await page.getByRole("button", { name: "Close receipt" }).click();
+  }
+  await sign();
+  await page
+    .getByRole("button", { name: "Publish service", exact: true })
+    .click();
+  await page.getByLabel("Service title", { exact: true }).fill("Test service");
+  await sign();
+  await page.getByRole("button", { name: "Write memory", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Public memory", exact: true })
+    .fill("Public wallet-signed memory");
+  await sign();
+  await page
+    .getByRole("button", { name: "Update status", exact: true })
+    .click();
+  await sign();
+  expect(signatures).toBe(4);
 });
