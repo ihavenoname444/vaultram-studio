@@ -8,6 +8,8 @@ Create accounts through the official Jungle4 faucet and retain private keys loca
 
 Use official Antelope CDT 4.1.1 on Linux x86_64. The GitHub workflow builds this standalone repository with read-only GitHub permissions and without deployment keys.
 
+A free Binder Linux build has already produced the reviewed artifacts. GitHub Actions is optional: see [BUILD_PROOF.md](BUILD_PROOF.md) for exact checksums, reproduction commands and the passing actual-WASM tests. Downloaded WASM and ABI can be deployed directly using the local commands below.
+
 ```sh
 pnpm exec tsx scripts/build-contract.ts
 ```

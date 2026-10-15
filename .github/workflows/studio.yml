@@ -1,8 +1,6 @@
 name: VaultRAM Studio proof
 on:
-  push:
-    branches: ["main", "codex/vaultram-studio"]
-  pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

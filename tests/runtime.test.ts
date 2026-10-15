@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { Blockchain, type Account } from "@vaulta/vert";
+import { API } from "@wharfkit/antelope-vert";
 import {
   compile,
   exampleSpec,
@@ -29,8 +30,19 @@ describe.skipIf(!available)(
     let chain: Blockchain, runtime: Account;
     beforeEach(async () => {
       chain = new Blockchain();
-      chain.createAccounts("relayacct111", "stranger1111");
-      runtime = chain.createContract("runtime11111", "contracts/build/runtime");
+      const [relay] = chain.createAccounts("relayacct111", "stranger1111");
+      relay.permissions.push(
+        API.v1.AccountPermission.from({
+          perm_name: "relay",
+          parent: "active",
+          required_auth: { threshold: 1, keys: [], accounts: [], waits: [] },
+        }),
+      );
+      runtime = chain.createAccount({
+        name: "runtime11111",
+        abi: JSON.parse(readFileSync("contracts/build/runtime.abi", "utf8")),
+        wasm: readFileSync("contracts/build/runtime.wasm"),
+      });
       await runtime.actions
         .init({ relayer: "relayacct111" })
         .send("runtime11111@active");
@@ -90,6 +102,9 @@ describe.skipIf(!available)(
     it("rejects wrong permission and replay without changing state", async () => {
       await expect(
         execute(agent, "1", owner, {}, "stranger1111@active"),
+      ).rejects.toThrow();
+      await expect(
+        execute(agent, "1", owner, {}, "relayacct111@active"),
       ).rejects.toThrow();
       await execute(agent);
       await expect(execute({ ...agent, id: "2" })).rejects.toThrow("nonce");

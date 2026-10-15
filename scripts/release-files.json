@@ -12,6 +12,7 @@
   "contracts/vaulta-runtime/runtime.cpp",
   "docs/APP_SPEC.md",
   "docs/ARCHITECTURE.md",
+  "docs/BUILD_PROOF.md",
   "docs/DEMO.md",
   "docs/DEPLOYMENT.md",
   "docs/IMPLEMENTATION_PLAN.md",

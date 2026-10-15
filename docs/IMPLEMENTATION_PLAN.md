@@ -11,9 +11,9 @@ The trusted-computing base includes the gateway, relayer key, runtime administra
 ## Increments
 
 1. Strict spec/compiler, simulation, persistent nonce/ownership checks, UI and signed exports: implemented and locally tested.
-2. Runtime source, VeRT tests, Jungle4 adapter and deployment tools: implemented; compilation and execution remain unverified.
-3. Official CDT build and required WASM tests: CI prepared; an account-level restriction prevents runner startup.
-4. Deploy to dedicated test accounts, register exact app, external EOA signature, irreversible state write and independent receipt verification: pending gate 3.
+2. Runtime source, VeRT tests, Jungle4 adapter and deployment tools: implemented; actual WASM execution passes in VeRT.
+3. Official CDT build and required WASM tests: completed outside GitHub Actions using free Binder Linux. Two builds are byte-identical; all 37 tests pass without skips.
+4. Deploy to dedicated test accounts, register exact app, external EOA signature, irreversible state write and independent receipt verification: pending testnet resources and live execution.
 5. Repeated RAM measurement and calibration, external injected-wallet UI exercise, provider integration call and automated browser suite: pending infrastructure/configuration.
 6. External security review and production operating model: separate project before mainnet.
 
@@ -25,4 +25,4 @@ CI must pass install, publication audit, compiler, typecheck, required runtime/u
 
 ## Open risks
 
-Uncompiled C++ and ABI; uncalibrated RAM; trusted relay/admin upgrade powers; local-only HTTP; unavailable historical transaction RPC; ambiguous broadcast recovery; no real provider or external wallet exercise; no external security audit. Completion requires evidence for the real loop, not a polished simulation.
+Undeployed runtime; uncalibrated RAM; trusted relay/admin upgrade powers; local-only HTTP; unavailable historical transaction RPC; ambiguous broadcast recovery; no real provider or external wallet exercise; no external security audit. Completion requires evidence for the real loop, not a polished simulation.

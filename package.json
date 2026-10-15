@@ -35,6 +35,7 @@
     "@types/react-dom": "19.3.0",
     "@vaulta/vert": "2.1.1",
     "@vitejs/plugin-react": "6.1.2",
+    "@wharfkit/antelope-vert": "npm:@wharfkit/antelope@1.2.0",
     "prettier": "3.9.10",
     "tsx": "4.23.15",
     "typescript": "7.0.2",

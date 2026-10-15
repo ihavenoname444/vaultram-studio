@@ -2,7 +2,7 @@
 
 ## Readiness gate
 
-Read REALITY.md first. Today only the local simulation walkthrough is verified. Do not present this as a completed Jungle4 proof. To unlock the live walkthrough: build official CDT artifacts, pass required VeRT tests, deploy/register on Jungle4, complete a signed write and verify its export independently.
+Read REALITY.md first. The local simulation walkthrough and actual compiled WASM tests are verified. Do not present this as a completed Jungle4 proof. Official CDT artifacts and required VeRT tests are complete. To unlock the live walkthrough: deploy/register on Jungle4, complete a signed write and verify its export independently.
 
 ## Verified local walkthrough
 
