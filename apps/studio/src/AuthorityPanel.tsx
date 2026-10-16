@@ -23,7 +23,13 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
     return j;
   }
   async function refresh() {
-    setState(await api(""));
+    try {
+      setState(await api(""));
+    } catch (e) {
+      setState(undefined);
+      setReview(undefined);
+      throw e;
+    }
   }
   async function task(fn: () => Promise<void>) {
     setBusy(true);
@@ -93,7 +99,11 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
           </button>
         </div>
         {!state ? (
-          <p>Checking native deployment and grant…</p>
+          <p>
+            {error
+              ? "Authority unavailable. Refresh to verify before preparing a write."
+              : "Checking native deployment and grant…"}
+          </p>
         ) : (
           <>
             <div className="native-grid">

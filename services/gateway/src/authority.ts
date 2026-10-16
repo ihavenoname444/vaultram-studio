@@ -170,9 +170,11 @@ export class AuthorityGateway {
     if (a.abi_hash !== c.abiHash) throw Error("Authority ABI pin mismatch");
     return info;
   }
-  async permission() {
+  async permission(endpoint: string = this.c.rpc) {
     const c = this.c,
-      account = await this.rpc(c.rpc, "get_account", { account_name: c.actor });
+      account = await this.rpc(endpoint, "get_account", {
+        account_name: c.actor,
+      });
     const p = account.permissions.find(
         (p: any) => p.perm_name === c.permission,
       ),
@@ -242,6 +244,7 @@ export class AuthorityGateway {
   }
   async state() {
     await this.pins(this.c.independent);
+    await this.permission(this.c.independent);
     const [root, grants, effects] = await Promise.all(
       ["root", "grants", "effects"].map((t) => this.table(t)),
     );

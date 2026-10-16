@@ -62,6 +62,45 @@ function prepareMocks(g: AuthorityGateway) {
   } as any);
 }
 describe.skipIf(!available)("native Studio safety", () => {
+  it("refuses to display current authority if the independent RPC observes widened permission links", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "native-studio-"));
+    const g = configured(dir);
+    try {
+      vi.spyOn(g, "pins").mockResolvedValue({});
+      const tables = vi.spyOn(g, "table");
+      const rpc = vi.spyOn(g, "rpc").mockResolvedValue({
+        permissions: [
+          {
+            perm_name: g.c.permission,
+            parent: "active",
+            required_auth: {
+              threshold: 1,
+              keys: [
+                {
+                  key: String(PrivateKey.from(g.c.privateKey).toPublic()),
+                  weight: 1,
+                },
+              ],
+              accounts: [],
+              waits: [],
+            },
+            linked_actions: ["reserve", "consume", "grant"].map((action) => ({
+              account: g.c.account,
+              action,
+            })),
+          },
+        ],
+      });
+      await expect(g.state()).rejects.toThrow("permission links mismatch");
+      expect(rpc).toHaveBeenCalledWith(g.c.independent, "get_account", {
+        account_name: g.c.actor,
+      });
+      expect(tables).not.toHaveBeenCalled();
+    } finally {
+      g.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
   it("counts UTF-8 payload bytes and binds the application", () => {
     expect(
       JSON.parse(nativePayload({ appId: "42", text: "hello" })).appId,
