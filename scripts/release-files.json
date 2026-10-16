@@ -74,5 +74,7 @@
   "docs/NATIVE_STUDIO.md",
   "packages/core/src/native-evidence.ts",
   "tests/native-evidence.test.ts",
-  "tests/dev-boundary.test.ts"
+  "tests/dev-boundary.test.ts",
+  "services/gateway/src/private-file.ts",
+  "tests/private-file.test.ts"
 ]

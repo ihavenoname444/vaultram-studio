@@ -24,6 +24,7 @@ import { receiptSigner } from "./receipt.ts";
 import { Jungle } from "./chain.ts";
 import { describe } from "./ai.ts";
 import { AuthorityGateway, NativeWrite } from "./authority.ts";
+import { readPrivateJson } from "./private-file.ts";
 if (existsSync(".env")) process.loadEnvFile(".env");
 export async function createServer(
   options: { directory?: string; mode?: "SIMULATED" | "JUNGLE4" } = {},
@@ -81,9 +82,7 @@ export async function createServer(
   const authority =
     mode === "JUNGLE4" && process.env.VAULTRAM_AUTHORITY_CONFIG
       ? new AuthorityGateway(
-          JSON.parse(
-            readFileSync(process.env.VAULTRAM_AUTHORITY_CONFIG, "utf8"),
-          ),
+          readPrivateJson(process.env.VAULTRAM_AUTHORITY_CONFIG),
           directory,
         )
       : undefined;
