@@ -83,8 +83,64 @@ describe.skipIf(!available)("native Studio safety", () => {
       { revoked: 1 },
       { available: 0 },
       { id: 2 },
+      { available: undefined },
+      { expires: "not-a-time" },
+      { max_payload: 257 },
+      { revoked: "false" },
     ])
       expect(() => assertGrant({ ...grant, ...patch }, c, 100)).toThrow();
+  });
+  it("blocks an already prepared second operation after an ambiguous first submission", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "native-studio-"));
+    const g = configured(dir);
+    try {
+      prepareMocks(g);
+      const a = await g.prepare({ appId: "42", text: "first" });
+      const b = await g.prepare({
+        appId: "42",
+        text: "prepared before timeout",
+      });
+      const send = vi
+        .spyOn(g.client.v1.chain, "send_transaction")
+        .mockRejectedValue(Error("timeout"));
+      vi.spyOn(g, "rpc").mockRejectedValue(Error("unavailable"));
+      await g.submit(a.id, a.payloadHash);
+      await expect(g.submit(b.id, b.payloadHash)).rejects.toThrow("unresolved");
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(g.row(b.id).status).toBe("PREPARED");
+    } finally {
+      g.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  it("atomically prevents competing prepared submissions across journal connections", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "native-studio-"));
+    const g = configured(dir),
+      other = new AuthorityGateway(g.c, dir, abiBytes);
+    try {
+      prepareMocks(g);
+      prepareMocks(other);
+      const a = await g.prepare({ appId: "42", text: "first" });
+      const b = await other.prepare({ appId: "42", text: "second" });
+      const sendA = vi
+        .spyOn(g.client.v1.chain, "send_transaction")
+        .mockRejectedValue(Error("timeout"));
+      const sendB = vi
+        .spyOn(other.client.v1.chain, "send_transaction")
+        .mockRejectedValue(Error("timeout"));
+      vi.spyOn(g, "rpc").mockRejectedValue(Error("unavailable"));
+      vi.spyOn(other, "rpc").mockRejectedValue(Error("unavailable"));
+      const results = await Promise.allSettled([
+        g.submit(a.id, a.payloadHash),
+        other.submit(b.id, b.payloadHash),
+      ]);
+      expect(results.filter((r) => r.status === "rejected")).toHaveLength(1);
+      expect(sendA.mock.calls.length + sendB.mock.calls.length).toBe(1);
+    } finally {
+      other.close();
+      g.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
   it("persists before broadcast and never resends after timeout or restart", async () => {
     const dir = mkdtempSync(join(tmpdir(), "native-studio-"));
@@ -185,6 +241,82 @@ describe.skipIf(!available)("native Studio safety", () => {
         m === "get_info" ? { chain_id: JUNGLE4 } : { code_hash: "wrong" },
       );
       await expect(g.pins(g.c.rpc)).rejects.toThrow("code pin");
+    } finally {
+      g.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  it("rejects broadened native permissions, extra links and indirect authority reuse", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "native-studio-"));
+    const g = configured(dir);
+    const pub = String(PrivateKey.from(g.c.privateKey).toPublic());
+    const permission = {
+      perm_name: "vrstudio",
+      parent: "active",
+      required_auth: {
+        threshold: 1,
+        keys: [{ key: pub, weight: 1 }],
+        accounts: [],
+        waits: [],
+      },
+      linked_actions: ["reserve", "consume"].map((action) => ({
+        account: g.c.account,
+        action,
+      })),
+    };
+    const read = vi.spyOn(g, "rpc");
+    try {
+      read.mockResolvedValue({ permissions: [permission] });
+      await expect(g.permission()).resolves.toBeUndefined();
+      for (const patch of [
+        { parent: "owner" },
+        { required_auth: { ...permission.required_auth, threshold: 0 } },
+        {
+          required_auth: {
+            ...permission.required_auth,
+            keys: [
+              { key: String(PrivateKey.generate("K1").toPublic()), weight: 1 },
+            ],
+          },
+        },
+        {
+          required_auth: {
+            ...permission.required_auth,
+            waits: [{ wait_sec: 1, weight: 1 }],
+          },
+        },
+        {
+          linked_actions: [
+            ...permission.linked_actions,
+            { account: "eosio.token", action: "transfer" },
+          ],
+        },
+      ]) {
+        read.mockResolvedValue({ permissions: [{ ...permission, ...patch }] });
+        await expect(g.permission()).rejects.toThrow();
+      }
+      for (const auth of [
+        permission.required_auth,
+        {
+          threshold: 1,
+          keys: [],
+          waits: [],
+          accounts: [
+            {
+              permission: { actor: g.c.actor, permission: g.c.permission },
+              weight: 1,
+            },
+          ],
+        },
+      ]) {
+        read.mockResolvedValue({
+          permissions: [
+            permission,
+            { perm_name: "active", required_auth: auth },
+          ],
+        });
+        await expect(g.permission()).rejects.toThrow();
+      }
     } finally {
       g.close();
       rmSync(dir, { recursive: true, force: true });

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { Blockchain, type Account } from "@vaulta/vert";
-import { TimePointSec } from "@wharfkit/antelope-vert";
+import { TimePointSec, Action, Transaction } from "@wharfkit/antelope-vert";
 const dir = "contracts/build/authority/";
 const available =
   existsSync(dir + "authority.wasm") && existsSync(dir + "authority.abi");
@@ -142,6 +142,47 @@ describe.skipIf(!available)("authority proof: actual WASM", () => {
       () => call("consume", { id: 1, payload: "public" }),
       "not available",
     );
+  });
+  it("rolls back the reservation too when the second action in one transaction fails", async () => {
+    await grant();
+    const make = (name: string, data: object) =>
+      Action.from(
+        {
+          account: String(c.name),
+          name,
+          authorization: [{ actor, permission: "active" }],
+          data,
+        },
+        c.abi!,
+      );
+    const transaction = (payload: string) =>
+      Transaction.from({
+        expiration: 0,
+        ref_block_num: 0,
+        ref_block_prefix: 0,
+        actions: [
+          make("reserve", {
+            grant_id: 1,
+            id: 1,
+            space: "memory",
+            obligation: 1,
+            nullifier: 1,
+            effect_id: 1,
+            payload_hash: hash("public"),
+          }),
+          make("consume", { id: 1, payload }),
+        ],
+      });
+    await rejected(
+      () => bc.applyTransaction(transaction("substituted")),
+      "binding",
+    );
+    expect(table("reservations")).toHaveLength(0);
+    expect(Number(table("grants")[0].available)).toBe(3);
+    await bc.applyTransaction(transaction("public"));
+    expect(table("effects")).toHaveLength(1);
+    expect(Number(table("grants")[0].available)).toBe(2);
+    conserved();
   });
   it("rejects direct actor bypass, namespace substitution and payload substitution", async () => {
     await grant();

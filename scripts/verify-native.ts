@@ -2,6 +2,10 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { ABI, Action, Serializer, SignedTransaction } from "@wharfkit/antelope";
 import { JUNGLE4 } from "../packages/core/src/index.ts";
+import {
+  assertNativeBlock,
+  assertNativeEffect,
+} from "../packages/core/src/native-evidence.ts";
 const [file, expectedAccount, output] = process.argv.slice(2);
 if (!file || !expectedAccount)
   throw Error(
@@ -75,7 +79,13 @@ async function api(method: string, data: object = {}) {
   return r.json();
 }
 const info = await api("get_info");
-if (info.chain_id !== JUNGLE4 || e.block > info.last_irreversible_block_num)
+if (
+  info.chain_id !== JUNGLE4 ||
+  !Number.isSafeInteger(e.block) ||
+  e.block < 1 ||
+  !Number.isSafeInteger(info.last_irreversible_block_num) ||
+  e.block > info.last_irreversible_block_num
+)
   throw Error("Wrong chain or non-final block");
 if (
   (await api("get_code_hash", { account_name: c.account })).code_hash !==
@@ -84,14 +94,13 @@ if (
 )
   throw Error("Current deployment pin mismatch");
 const block = await api("get_block", { block_num_or_id: e.block });
-if (
-  block.id !== e.blockId ||
-  !block.transactions.some(
-    (t: any) =>
-      t.status === "executed" && (t.trx?.id ?? t.trx) === o.transactionId,
-  )
-)
-  throw Error("Executed irreversible inclusion missing");
+assertNativeBlock(
+  block,
+  e.block,
+  o.transactionId,
+  info.last_irreversible_block_num,
+  e.blockId,
+);
 async function row(table: string, id: string) {
   const r = await api("get_table_rows", {
     json: true,
@@ -108,17 +117,14 @@ async function row(table: string, id: string) {
 }
 const effect = await row("effects", o.reservationId),
   reservation = await row("reservations", o.reservationId);
-if (
-  effect.payload !== o.payload ||
-  String(effect.grant_id) !== c.grantId ||
-  String(effect.reservation) !== o.reservationId ||
-  effect.actor !== c.actor ||
-  effect.space !== c.space ||
-  Number(reservation.status) !== 1 ||
-  String(reservation.grant_id) !== c.grantId ||
-  reservation.payload_hash !== hash(o.payload)
-)
-  throw Error("Effect binding mismatch");
+assertNativeEffect(
+  effect,
+  reservation,
+  c,
+  o.reservationId,
+  o.payload,
+  hash(o.payload),
+);
 const result = {
   status: "VERIFIED_NATIVE_STUDIO_WRITE",
   account: c.account,

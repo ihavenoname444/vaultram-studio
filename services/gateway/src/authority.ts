@@ -14,6 +14,10 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { readFileSync, mkdirSync } from "node:fs";
 import { z } from "zod";
 import { JUNGLE4 } from "../../../packages/core/src/index.ts";
+import {
+  assertNativeBlock,
+  assertNativeEffect,
+} from "../../../packages/core/src/native-evidence.ts";
 const name = z.string().regex(/^[a-z1-5.]{1,12}$/);
 const pin = z.string().regex(/^[a-f0-9]{64}$/);
 export const AuthorityConfig = z
@@ -65,6 +69,20 @@ export function assertGrant(
     g.space !== c.space
   )
     throw Error("Native grant binding mismatch");
+  if (
+    ![false, true, 0, 1].includes(g.revoked) ||
+    ![g.expires, g.available, g.max_payload].every(
+      (x) =>
+        (typeof x === "number" ||
+          (typeof x === "string" && /^[0-9]+$/.test(x))) &&
+        Number.isSafeInteger(Number(x)) &&
+        Number(x) >= 0,
+    ) ||
+    Number(g.available) > 10000 ||
+    Number(g.max_payload) < 1 ||
+    Number(g.max_payload) > 256
+  )
+    throw Error("Malformed native grant");
   if (g.revoked) throw Error("Native grant revoked");
   if (Number(g.expires) <= now) throw Error("Native grant expired");
   if (Number(g.available) < 1) throw Error("Native grant exhausted");
@@ -392,6 +410,14 @@ export class AuthorityGateway {
     if (sha(row.payload) !== payloadHash)
       throw Error("Reviewed payload mismatch");
     if (row.status !== "PREPARED") return this.reconcile(id);
+    if (
+      this.db
+        .prepare(
+          "SELECT 1 FROM native_ops WHERE status IN ('PENDING','UNKNOWN') LIMIT 1",
+        )
+        .get()
+    )
+      throw Error("Reconcile unresolved native operation first");
     const tx = this.boundTransaction(row);
     if (Date.parse(String(tx.expiration) + "Z") <= Date.now())
       throw Error("Native review expired; prepare a new operation");
@@ -400,11 +426,14 @@ export class AuthorityGateway {
     if (
       this.db
         .prepare(
-          "UPDATE native_ops SET status='PENDING' WHERE id=? AND status='PREPARED'",
+          "UPDATE native_ops SET status='PENDING' WHERE id=? AND status='PREPARED' AND NOT EXISTS (SELECT 1 FROM native_ops WHERE status IN ('PENDING','UNKNOWN'))",
         )
         .run(id).changes !== 1
-    )
+    ) {
+      if (this.row(id).status === "PREPARED")
+        throw Error("Reconcile unresolved native operation first");
       return this.reconcile(id);
+    }
     // Persist before broadcast. Never automatically rebroadcast after an ambiguous result.
     try {
       await this.client.v1.chain.send_transaction(tx);
@@ -436,18 +465,23 @@ export class AuthorityGateway {
           evidence: row.evidence ? JSON.parse(row.evidence) : null,
         };
       const n = Number(s.block_number);
-      if (!Number.isSafeInteger(n) || n > info.last_irreversible_block_num)
+      if (
+        !Number.isSafeInteger(n) ||
+        n < 1 ||
+        !Number.isSafeInteger(info.last_irreversible_block_num) ||
+        n > info.last_irreversible_block_num
+      )
         throw Error("Authority block not irreversible");
       const b = await this.rpc(this.c.independent, "get_block", {
         block_num_or_id: n,
       });
-      if (
-        !b.transactions.some(
-          (t: any) =>
-            t.status === "executed" && (t.trx?.id ?? t.trx) === row.txid,
-        )
-      )
-        throw Error("Authority inclusion mismatch");
+      assertNativeBlock(
+        b,
+        n,
+        row.txid,
+        info.last_irreversible_block_num,
+        s.block_id,
+      );
       const tx = this.boundTransaction(row);
       if (String(tx.id) !== row.txid)
         throw Error("Stored transaction digest mismatch");
@@ -457,19 +491,14 @@ export class AuthorityGateway {
       const effect = effects.find((r: any) => String(r.id) === row.rid),
         reservation = reservations.find((r: any) => String(r.id) === row.rid),
         grant = grants.find((r: any) => String(r.id) === this.c.grantId);
-      if (
-        !effect ||
-        effect.payload !== row.payload ||
-        String(effect.reservation) !== row.rid ||
-        String(effect.grant_id) !== this.c.grantId ||
-        effect.actor !== this.c.actor ||
-        effect.space !== this.c.space ||
-        !reservation ||
-        Number(reservation.status) !== 1 ||
-        reservation.payload_hash !== sha(row.payload) ||
-        String(reservation.grant_id) !== this.c.grantId
-      )
-        throw Error("Native effect binding mismatch");
+      assertNativeEffect(
+        effect,
+        reservation,
+        this.c,
+        row.rid,
+        row.payload,
+        sha(row.payload),
+      );
       const evidence = {
         version: 1,
         configuration: this.publicConfig(),

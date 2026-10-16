@@ -89,7 +89,7 @@ Verification requires network access and no private keys. Independently pin this
 ## Still missing for the broader Aegis/VaultRAM claim
 
 1. Bind the actual Studio owner identity to authority enforced by the chain: native wallet flow or carefully specified on-chain EVM-signature verification, domain separation and nonce/revocation semantics.
-2. Integrate protected effects into the real Studio workflow. The current UI still uses the original relayer-trusting runtime.
+2. Complete protected-effect integration across Studio. Public memory now uses native authority (see NATIVE_STUDIO.md); agent, service and status flows still use the original relayer-trusting runtime.
 3. Specify and implement cross-runtime/domain conservation, transfer/settlement and finality handling. This proof has one chain and one enforcement contract.
 4. Extend the model only with tested lifecycle rules: no subdelegation, renewal, refund, release from quarantine or capacity recycling exists here.
 5. Define production administrator controls and recovery, then commission an external audit and adversarial testing. The upgrade administrator can replace the enforcement code; principal and native account permissions can also be changed by their controllers.

@@ -71,5 +71,8 @@
   "scripts/verify-native.ts",
   "scripts/test-native-studio.ts",
   "tests/native-studio.test.ts",
-  "docs/NATIVE_STUDIO.md"
+  "docs/NATIVE_STUDIO.md",
+  "packages/core/src/native-evidence.ts",
+  "tests/native-evidence.test.ts",
+  "tests/dev-boundary.test.ts"
 ]

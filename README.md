@@ -63,3 +63,5 @@ GitHub Actions did not allocate a runner. The official CDT build, repeated artif
 Public small records only. No USDC, payments, bridging, origin-chain execution, smart-contract wallets, autonomous agents, reputation engine or production SLA. The gateway validates EOA signatures; the contract trusts the relayer. The runtime administrator remains able to upgrade or pause the contract.
 
 Keep `.data` and `.env*` private. They contain local keys and state. The gateway must remain bound to loopback; this release is a single-user local tool, not a multi-tenant hosted service. Never reuse the demo signer for real assets. Testnet keys are dedicated to Jungle4.
+
+The latest security pass passed **83 tests** and hardened private-file access, unresolved submission handling and evidence verification. See [the hardening record](docs/HARDENING.md) for concrete findings and remaining production blockers. This remains a testnet prototype, not a security certification or proof of comparative chain superiority.

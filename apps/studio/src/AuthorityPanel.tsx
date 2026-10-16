@@ -191,8 +191,14 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
             <code>{op.txid}</code>
             {op.evidence && (
               <p>
+                Verified {new Date(op.evidence.verifiedAt).toLocaleString()} ·
                 Irreversible block {op.evidence.block} · Effect #
                 {op.evidence.effect.id}
+              </p>
+            )}
+            {op.evidence && (
+              <p className="muted">
+                Saved verification. Use Reconcile for a fresh check.
               </p>
             )}
             {op.error && <p>{op.error}</p>}
