@@ -14,7 +14,7 @@ Two dedicated Jungle4 accounts exist. A child relayer permission was created and
 
 ## LIVE TESTNET core, verified
 
-The C++ runtime compiled with official CDT 4.1.1 in a free Binder Linux session. Repeated builds are byte-identical and all six actual-WASM VeRT tests pass; the full suite passes 56 tests without skips. GitHub Actions remains unavailable, but is no longer needed for this build. The runtime and app are now deployed on Jungle4. The original four real EIP-712 signed actions produced three state rows. Eighteen additional actions in calibration-v1 are also irreversible, with all 22 transactions verified through a separately operated RPC. Signing used a dedicated local EOA; external browser-wallet integration remains untested.
+The C++ runtime compiled with official CDT 4.1.1 in a free Binder Linux session. Repeated builds are byte-identical and all six actual-WASM VeRT tests pass; the full suite passes 56 tests without skips. GitHub Actions remains unavailable, but is no longer needed for this build. The runtime and app are now deployed on Jungle4. The original four real EIP-712 signed actions produced three state rows. Eighteen additional actions in calibration-v1 are also irreversible, with all 22 transactions verified through a separately operated RPC. Four subsequent human-confirmed MetaMask actions also passed independent verification and reload checks, bringing the original runtime record to 26. Mobile-wallet UX remains untested.
 
 The OpenAI provider is configurable, but no provider call has been tested with a user key. A controlled EIP-1193 provider exercises browser signing separately from a human wallet application. RAM execution traces are now recorded for 18 actions, but are submitting-RPC observations, not independent historical trace proofs. Admission estimates remain uncalibrated pending held-out validation.
 
@@ -24,4 +24,8 @@ The gateway verifies EVM signatures; the contract trusts the relayer. It does no
 
 ## PLANNED
 
-Reputation beyond agent status, payments, interoperable messaging, Solana/exSat adapters, arbitrary application templates, scoped autonomous authority, managed RAM, finance and token economics are not implemented. No independent security audit has occurred. “Reviewed template” means reviewed during implementation, not externally audited.
+Reputation beyond agent status, payments, interoperable messaging, Solana/exSat adapters, arbitrary application templates, integration of scoped autonomous authority into Studio, managed RAM, finance and token economics are not implemented. No independent security audit has occurred. “Reviewed template” means reviewed during implementation, not externally audited.
+
+## Separate native authority proof
+
+A dedicated Jungle4 contract implements native-principal grants, conserved write capacity, reservation, atomic consumption, revocation, expiry and irreversible quarantine. It is separate from the Studio EVM-owner flow. See [AUTHORITY_PROOF.md](AUTHORITY_PROOF.md) for pins, evidence and the remaining Aegis gaps. It establishes neither cross-domain conservation nor V token necessity.

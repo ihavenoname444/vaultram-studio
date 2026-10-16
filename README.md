@@ -2,7 +2,9 @@
 
 A local development studio for a bounded agent marketplace: describe an app, compile a versioned specification, sign an action, inspect state, export evidence.
 
-**Current delivery:** verified Phase 0 Jungle4 core, alongside an explicitly labelled local simulation. The record includes 26 irreversible application transactions, including four manually confirmed MetaMask actions, 56 automated tests and two Linux browser tests. The local desktop wallet demo passed; see `docs/VERIFICATION.md`. The runtime trusts its relayer and is not production infrastructure.
+**Current delivery:** verified Phase 0 Jungle4 core, alongside an explicitly labelled local simulation. The record includes 26 irreversible application transactions, including four manually confirmed MetaMask actions, 70 automated tests (including the separate authority proof) and two prior Linux browser tests. The local desktop wallet demo passed; see `docs/VERIFICATION.md`. The runtime trusts its relayer and is not production infrastructure.
+
+**Separate native authority proof:** a second Jungle4 contract now enforces principal grants, conserved capacity, reserve/consume, revocation, expiry and quarantine. Its 33-case live matrix completed; deployment plus 14 successful matrix transactions passed independent inclusion checks. Rejections remain RPC observations. This is a narrow Aegis proof, not integration into Studio or a claim that V/A is the safest crypto. See [the authority report](docs/AUTHORITY_PROOF.md).
 
 ## Start
 

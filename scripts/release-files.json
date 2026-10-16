@@ -56,5 +56,12 @@
   "vitest.config.ts",
   "docs/HARDENING.md",
   "scripts/demo.ts",
-  "docs/WALLET_DEMO.md"
+  "docs/WALLET_DEMO.md",
+  "contracts/authority-proof/authority.cpp",
+  "scripts/authority-proof.ts",
+  "scripts/build-authority.ts",
+  "tests/authority.test.ts",
+  "docs/AUTHORITY_PROOF.md",
+  "scripts/lib/authority-evidence.ts",
+  "tests/authority-evidence.test.ts"
 ]
