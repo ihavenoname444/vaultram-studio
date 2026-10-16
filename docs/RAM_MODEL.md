@@ -39,3 +39,19 @@ One gateway serializes writes, but external transactions can affect the same acc
 5. Report sample count, distribution and worst observed error per operation; version the dataset and estimator together. Validate held-out samples before changing the allowance.
 
 Do not quote dollar cost from these byte estimates. Mainnet RAM price, CPU/NET provision and operational expenses require current measurements and a separate launch decision. Jungle4 faucet resources are test assets.
+
+## Native authority and RAM in one operation — 2026-10-16
+
+The native memory workflow records a RAM observation against the same transaction ID as its reserve+consume actions. Only an executed response containing exactly those two top-level actions, the expected contract/receiver, no inline traces and unambiguous integer RAM deltas for the contract payer is accepted. Missing/ambiguous observations remain unknown; old operations are not backfilled with invented values. Observations persist in SQLite and are included in native evidence exports and the app view. Payload bytes include the application binding. This measures consumption, not a byte spending cap, RAM savings or V-token consumption. Independent verification authenticates transaction inclusion/effect via RPC; it does not authenticate the submitting RPC's historical RAM trace. Fourteen focused tests and typecheck passed.
+
+## Actual VaultRAM/V integration boundary
+
+We are an independent application intended to demonstrate utility on VaultRAM, not the VaultRAM platform itself. The deployed application currently uses a dedicated Jungle4 contract and its own allocated RAM. No VaultRAM SDK, data service or V settlement is integrated.
+
+The official https://vaultram.com homepage, inspected 2026-10-16, names `token.rms`, describes V for data access/verification fees, incentives and governance, and presents a RAM-byte equivalence. These statements do not provide an executable application integration or redemption specification. No developer SDK/API specification was found on the inspected homepage; that does not establish that none exists elsewhere.
+
+Before a real V integration we need authoritative network/account/code/ABI references; the supported application registration and data-access interface; RAM allocation and payer rules; V fee calculation, precision, authorization and settlement semantics; and a supported test deployment. A claimed byte equivalence is not sufficient to implement a V-to-RAM conversion. These must be confirmed from deployed contracts and official integration documentation, then tested with bounded permissions. No mainnet transfer or invented V charge is part of this demo. Comparing RAM efficiency requires a controlled baseline with identical workloads before claiming savings.
+
+### Recorded native run
+
+On 2026-10-16, the running app API prepared, submitted and reconciled transaction `110d360f2e50e30501ad9a8359a8704b76944d78c76a8caa944d5ce0d752e9c0` on Jungle4. The independent verifier confirmed irreversible inclusion in block **292402257** and the expected effect. Grant 1 decreased from **99 to 98**. The submitting RPC reported **866 RAM bytes** for payer `vrsdgugozrrz`, with **143 payload bytes** including the application binding. This was one real app API operation, not a new wallet-signature test. The RAM number remains an observation, not independently verified savings. Typecheck, production build and 14 focused tests passed. No V was charged.

@@ -211,6 +211,17 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
                 Saved verification. Use Reconcile for a fresh check.
               </p>
             )}
+            {op.evidence && (
+              <p>
+                RAM:{" "}
+                {op.evidence.ram?.bytes == null
+                  ? "Unknown"
+                  : op.evidence.ram.bytes + " bytes"}{" "}
+                · Payload: {op.evidence.ram?.payloadBytes ?? "—"} bytes.
+                Submitting-RPC observation; not an independently verified RAM
+                proof or a V saving.
+              </p>
+            )}
             {op.error && <p>{op.error}</p>}
             <div className="native-buttons">
               <button

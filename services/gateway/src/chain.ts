@@ -91,6 +91,50 @@ export function executionRam(
   }
   return Number.isSafeInteger(delta) ? delta : null;
 }
+// Two top-level actions, one known RAM payer; ambiguous observations stay unknown.
+export function nativeExecutionRam(
+  result: any,
+  transactionId: string,
+  account: string,
+): number | null {
+  const p = result?.processed,
+    traces = p?.action_traces;
+  if (
+    result?.transaction_id !== transactionId ||
+    p?.receipt?.status !== "executed" ||
+    p?.except ||
+    p?.account_ram_delta ||
+    !Array.isArray(traces) ||
+    traces.length !== 2
+  )
+    return null;
+  let total = 0;
+  for (let i = 0; i < 2; i++) {
+    const t = traces[i];
+    if (
+      t?.receiver !== account ||
+      t?.act?.account !== account ||
+      t?.act?.name !== ["reserve", "consume"][i] ||
+      t?.except ||
+      (t?.inline_traces?.length ?? 0) !== 0 ||
+      !Array.isArray(t?.account_ram_deltas)
+    )
+      return null;
+    const seen = new Set<string>();
+    for (const d of t.account_ram_deltas) {
+      if (
+        d?.account !== account ||
+        seen.has(d.account) ||
+        typeof d.delta !== "number" ||
+        !Number.isSafeInteger(d.delta)
+      )
+        return null;
+      seen.add(d.account);
+      total += d.delta;
+    }
+  }
+  return Number.isSafeInteger(total) ? total : null;
+}
 export class Jungle {
   client: APIClient;
   constructor(

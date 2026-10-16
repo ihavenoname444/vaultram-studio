@@ -1,3 +1,4 @@
+import { nativeExecutionRam } from "../services/gateway/src/chain.ts";
 import { describe, it, expect, vi } from "vitest";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -359,6 +360,50 @@ describe.skipIf(!available)("native Studio safety", () => {
     } finally {
       g.close();
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("native RAM observations", () => {
+  const txid = "a".repeat(64),
+    account = "authority111";
+  const sample = () => ({
+    transaction_id: txid,
+    processed: {
+      receipt: { status: "executed" },
+      action_traces: ["reserve", "consume"].map((name) => ({
+        receiver: account,
+        act: { account, name },
+        account_ram_deltas: [{ account, delta: 128 }],
+      })),
+    },
+  });
+  it("sums only the exact two-action transaction and accepts explicit zero", () => {
+    expect(nativeExecutionRam(sample(), txid, account)).toBe(256);
+    const r = sample();
+    r.processed.action_traces.forEach((t) => (t.account_ram_deltas = []));
+    expect(nativeExecutionRam(r, txid, account)).toBe(0);
+  });
+  it("rejects missing, mismatched and ambiguous measurements", () => {
+    expect(nativeExecutionRam({}, txid, account)).toBeNull();
+    expect(nativeExecutionRam(sample(), "b".repeat(64), account)).toBeNull();
+    for (const patch of [
+      { account_ram_deltas: undefined },
+      { account_ram_deltas: [{ account, delta: "128" }] },
+      {
+        account_ram_deltas: [
+          { account, delta: 1 },
+          { account, delta: 1 },
+        ],
+      },
+      { account_ram_deltas: [{ account: "other", delta: 1 }] },
+      { inline_traces: [{}] },
+      { except: {} },
+      { act: { account, name: "grant" } },
+    ]) {
+      const r = sample();
+      Object.assign(r.processed.action_traces[0], patch);
+      expect(nativeExecutionRam(r, txid, account)).toBeNull();
     }
   });
 });

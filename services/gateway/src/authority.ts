@@ -18,6 +18,7 @@ import {
   assertNativeBlock,
   assertNativeEffect,
 } from "../../../packages/core/src/native-evidence.ts";
+import { nativeExecutionRam } from "./chain.ts";
 const name = z.string().regex(/^[a-z1-5.]{1,12}$/);
 const pin = z.string().regex(/^[a-f0-9]{64}$/);
 export const AuthorityConfig = z
@@ -112,6 +113,9 @@ export class AuthorityGateway {
     );
     this.db.exec(
       "CREATE TABLE IF NOT EXISTS native_domain (id INTEGER PRIMARY KEY CHECK(id=1),fingerprint TEXT NOT NULL)",
+    );
+    this.db.exec(
+      "CREATE TABLE IF NOT EXISTS native_ram (txid TEXT PRIMARY KEY, observation TEXT NOT NULL)",
     );
     const fingerprint = sha(
       JSON.stringify({
@@ -439,7 +443,21 @@ export class AuthorityGateway {
     }
     // Persist before broadcast. Never automatically rebroadcast after an ambiguous result.
     try {
-      await this.client.v1.chain.send_transaction(tx);
+      const response = JSON.parse(
+        JSON.stringify(await this.client.v1.chain.send_transaction(tx)),
+      );
+      const ram = {
+        transactionId: row.txid,
+        payer: this.c.account,
+        bytes: nativeExecutionRam(response, row.txid, this.c.account),
+        payloadBytes: Buffer.byteLength(row.payload),
+        source: "SUBMITTING_RPC_EXECUTION_TRACE",
+        independentlyVerified: false,
+        observedAt: new Date().toISOString(),
+      };
+      this.db
+        .prepare("INSERT INTO native_ram(txid,observation) VALUES(?,?)")
+        .run(row.txid, JSON.stringify(ram));
     } catch {
       this.db
         .prepare(
@@ -504,6 +522,21 @@ export class AuthorityGateway {
       );
       const evidence = {
         version: 1,
+        ram: (() => {
+          const sample = this.db
+            .prepare("SELECT observation FROM native_ram WHERE txid=?")
+            .get(row.txid) as any;
+          return sample
+            ? JSON.parse(sample.observation)
+            : {
+                bytes: null,
+                transactionId: row.txid,
+                payer: this.c.account,
+                payloadBytes: Buffer.byteLength(row.payload),
+                source: "UNAVAILABLE",
+                independentlyVerified: false,
+              };
+        })(),
         configuration: this.publicConfig(),
         operation: {
           id,
