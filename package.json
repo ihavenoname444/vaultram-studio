@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "demo": "node --import tsx scripts/demo.ts",
-    "demo:check": "node --import tsx scripts/demo.ts --check"
+    "demo:check": "node --import tsx scripts/demo.ts --check",
+    "demo:authority": "node --import tsx scripts/authority-demo.ts"
   },
   "dependencies": {
     "@wharfkit/antelope": "4.0.2",

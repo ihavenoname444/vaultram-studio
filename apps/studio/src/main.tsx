@@ -40,6 +40,7 @@ import {
   type StateRow,
 } from "../../../packages/core/src/index.ts";
 import "./style.css";
+import { AuthorityPanel } from "./AuthorityPanel.tsx";
 declare global {
   interface Window {
     ethereum?: EIP1193Provider & {
@@ -49,6 +50,7 @@ declare global {
   }
 }
 type Config = {
+  authorityEnabled?: boolean;
   mode: "SIMULATED" | "JUNGLE4";
   runtime: string;
   runtimeCodeHash: string;
@@ -70,6 +72,9 @@ type Submission = {
 };
 const short = (s: string) => s.slice(0, 7) + "…" + s.slice(-5);
 function Studio() {
+  const [workspace, setWorkspace] = useState<"authority" | "templates">(
+    "authority",
+  );
   const [config, setConfig] = useState<Config>();
   const [apps, setApps] = useState<App[]>([]);
   const [app, setApp] = useState<App>();
@@ -410,6 +415,33 @@ function Studio() {
   const activeReceipts = receipts.filter(
     (r) => r.receipt?.receipt.appId === app?.appId,
   );
+  if (config?.authorityEnabled && workspace === "authority")
+    return (
+      <div className="shell">
+        <header className="topbar">
+          <a className="brand" href="/">
+            {" "}
+            <span className="brand-mark">V</span>VaultRAM{" "}
+            <span className="slash">/</span>
+            <span className="muted">studio</span>
+          </a>
+          <div className="top-meta">
+            <span className="badge green">NATIVE AUTHORITY · JUNGLE4</span>
+            <button
+              className="button small"
+              onClick={() => setWorkspace("templates")}
+            >
+              Templates / EVM demo
+            </button>
+          </div>
+        </header>
+        <AuthorityPanel
+          token={config.token}
+          appId={app?.appId}
+          appName={app?.spec.name}
+        />
+      </div>
+    );
   return (
     <div className="shell">
       <header className="topbar">
@@ -419,6 +451,14 @@ function Studio() {
           <span className="muted">studio</span>
         </a>
         <div className="top-meta">
+          {config?.authorityEnabled && (
+            <button
+              className="button small"
+              onClick={() => setWorkspace("authority")}
+            >
+              Native authority
+            </button>
+          )}
           <span className="network">
             <span className="dot" />
             Jungle4 target

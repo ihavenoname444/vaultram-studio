@@ -63,5 +63,13 @@
   "tests/authority.test.ts",
   "docs/AUTHORITY_PROOF.md",
   "scripts/lib/authority-evidence.ts",
-  "tests/authority-evidence.test.ts"
+  "tests/authority-evidence.test.ts",
+  "services/gateway/src/authority.ts",
+  "apps/studio/src/AuthorityPanel.tsx",
+  "scripts/setup-authority-studio.ts",
+  "scripts/authority-demo.ts",
+  "scripts/verify-native.ts",
+  "scripts/test-native-studio.ts",
+  "tests/native-studio.test.ts",
+  "docs/NATIVE_STUDIO.md"
 ]

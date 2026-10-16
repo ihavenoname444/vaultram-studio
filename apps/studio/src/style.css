@@ -1359,3 +1359,102 @@ dd {
     transition: none !important;
   }
 }
+
+.native-workspace {
+  max-width: 1050px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 36px 24px 70px;
+  overflow-wrap: anywhere;
+}
+.native-intro {
+  margin-bottom: 28px;
+  max-width: 730px;
+}
+.native-intro h1 {
+  font-size: 38px;
+  letter-spacing: -1.5px;
+  margin: 10px 0;
+}
+.native-intro p {
+  line-height: 1.65;
+  color: #a2abb5;
+}
+.native-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 18px 0;
+}
+.native-card h2 {
+  font-size: 18px;
+  margin: 0 0 14px;
+}
+.native-card p {
+  font-size: 13px;
+  line-height: 1.65;
+}
+.native-card textarea {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  resize: vertical;
+}
+.native-heading,
+.native-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.native-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin: 18px 0;
+}
+.native-grid small,
+.native-grid strong {
+  display: block;
+}
+.native-grid small {
+  color: #a2abb5;
+  margin-bottom: 5px;
+}
+.native-operation {
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.native-operation code {
+  display: block;
+  font-size: 11px;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.native-operation pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.native-alert {
+  border: 1px solid #dc9c91;
+  background: #341e1b;
+  padding: 15px;
+  border-radius: 8px;
+}
+@media (max-width: 600px) {
+  .native-workspace {
+    padding: 24px 14px;
+  }
+  .native-card {
+    padding: 17px;
+  }
+  .native-grid {
+    grid-template-columns: 1fr;
+  }
+  .native-intro h1 {
+    font-size: 30px;
+  }
+}

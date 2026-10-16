@@ -23,6 +23,7 @@ import { Store } from "./store.ts";
 import { receiptSigner } from "./receipt.ts";
 import { Jungle } from "./chain.ts";
 import { describe } from "./ai.ts";
+import { AuthorityGateway, NativeWrite } from "./authority.ts";
 if (existsSync(".env")) process.loadEnvFile(".env");
 export async function createServer(
   options: { directory?: string; mode?: "SIMULATED" | "JUNGLE4" } = {},
@@ -77,6 +78,20 @@ export async function createServer(
     await chain.check();
   }
   const store = new Store(directory + "/" + mode.toLowerCase() + ".sqlite");
+  const authority =
+    mode === "JUNGLE4" && process.env.VAULTRAM_AUTHORITY_CONFIG
+      ? new AuthorityGateway(
+          JSON.parse(
+            readFileSync(process.env.VAULTRAM_AUTHORITY_CONFIG, "utf8"),
+          ),
+          directory,
+        )
+      : undefined;
+  if (authority) {
+    await authority.pins(authority.c.rpc);
+    await authority.pins(authority.c.independent);
+    await authority.permission();
+  }
   const signer = receiptSigner(directory + "/receipt-key.pem");
   const demoPath = directory + "/simulation-wallet.key";
   if (mode === "SIMULATED" && !existsSync(demoPath))
@@ -146,6 +161,7 @@ export async function createServer(
       .send({ error: safe.replace(/PVT_[A-Za-z0-9_]+/g, "[REDACTED]") });
   });
   server.get("/api/config", async () => ({
+    authorityEnabled: !!authority,
     mode,
     runtime,
     runtimeCodeHash: "0x" + (chain?.codeHash ?? "0".repeat(64)),
@@ -161,6 +177,36 @@ export async function createServer(
       "EOA signature verified by trusted gateway; contract trusts relayer. No origin-chain transaction or bridge.",
   }));
   server.get("/api/apps", async () => store.apps());
+  const native = () => {
+    if (!authority) throw new Error("Native authority is not configured");
+    return authority;
+  };
+  server.get("/api/authority", async () => native().state());
+  server.post("/api/authority/prepare", async (req) =>
+    serial(async () => {
+      const body = NativeWrite.parse(req.body);
+      store.app(body.appId);
+      return native().prepare(body);
+    }),
+  );
+  server.post("/api/authority/execute", async (req) =>
+    serial(async () => {
+      const body = z
+        .object({
+          id: z.string().uuid(),
+          payloadHash: z.string().regex(/^[a-f0-9]{64}$/),
+        })
+        .strict()
+        .parse(req.body);
+      return native().submit(body.id, body.payloadHash);
+    }),
+  );
+  server.post("/api/authority/reconcile", async (req) =>
+    serial(async () => {
+      const body = z.object({ id: z.string().uuid() }).strict().parse(req.body);
+      return native().reconcile(body.id);
+    }),
+  );
   server.get("/api/receipts", async () => store.receipts());
   server.get<{ Params: { id: string } }>("/api/apps/:id/state", async (req) => {
     store.app(req.params.id);
@@ -417,7 +463,10 @@ export async function createServer(
       },
     };
   });
-  server.addHook("onClose", async () => store.close());
+  server.addHook("onClose", async () => {
+    authority?.close();
+    store.close();
+  });
   return { server, store, token, mode, port };
 }
 if (

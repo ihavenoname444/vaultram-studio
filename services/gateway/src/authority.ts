@@ -1,0 +1,513 @@
+import {
+  ABI,
+  Action,
+  APIClient,
+  FetchProvider,
+  Transaction,
+  SignedTransaction,
+  PrivateKey,
+  PublicKey,
+  Serializer,
+} from "@wharfkit/antelope";
+import { DatabaseSync } from "node:sqlite";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { readFileSync, mkdirSync } from "node:fs";
+import { z } from "zod";
+import { JUNGLE4 } from "../../../packages/core/src/index.ts";
+const name = z.string().regex(/^[a-z1-5.]{1,12}$/);
+const pin = z.string().regex(/^[a-f0-9]{64}$/);
+export const AuthorityConfig = z
+  .object({
+    account: name,
+    actor: name,
+    permission: name.refine((x) => !["active", "owner"].includes(x)),
+    grantId: z.string().regex(/^[1-9][0-9]{0,15}$/),
+    space: name,
+    privateKey: z.string(),
+    codeHash: pin,
+    abiHash: pin,
+    abiJsonHash: pin,
+    rpc: z.literal("https://jungle4.greymass.com"),
+    independent: z.literal("https://jungle4.cryptolions.io"),
+  })
+  .strict();
+export type AuthoritySettings = z.infer<typeof AuthorityConfig>;
+const sha = (s: string | Uint8Array) =>
+  createHash("sha256").update(s).digest("hex");
+export const NativeWrite = z
+  .object({
+    appId: z.string().regex(/^[1-9][0-9]{0,19}$/),
+    text: z.string().min(1).max(256),
+  })
+  .strict();
+export function nativePayload(input: unknown) {
+  const b = NativeWrite.parse(input);
+  const payload = JSON.stringify({
+    appId: b.appId,
+    kind: "memory",
+    text: b.text,
+  });
+  if (Buffer.byteLength(payload) > 256)
+    throw Error(
+      "Public record exceeds 256 UTF-8 bytes including its application binding",
+    );
+  return payload;
+}
+export function assertGrant(
+  g: any,
+  c: Pick<AuthoritySettings, "actor" | "space" | "grantId">,
+  now: number,
+) {
+  if (
+    !g ||
+    String(g.id) !== c.grantId ||
+    g.actor !== c.actor ||
+    g.space !== c.space
+  )
+    throw Error("Native grant binding mismatch");
+  if (g.revoked) throw Error("Native grant revoked");
+  if (Number(g.expires) <= now) throw Error("Native grant expired");
+  if (Number(g.available) < 1) throw Error("Native grant exhausted");
+}
+export class AuthorityGateway {
+  readonly db: DatabaseSync;
+  readonly abi: ABI;
+  readonly c: AuthoritySettings;
+  readonly client: APIClient;
+  constructor(
+    config: AuthoritySettings,
+    directory: string,
+    abiBytes: Uint8Array = readFileSync(
+      "contracts/build/authority/authority.abi",
+    ),
+  ) {
+    this.c = AuthorityConfig.parse(config);
+    if (sha(abiBytes) !== this.c.abiJsonHash)
+      throw Error("Local authority ABI pin mismatch");
+    this.abi = ABI.from(JSON.parse(Buffer.from(abiBytes).toString()));
+    if (sha(Serializer.encode({ object: this.abi }).array) !== this.c.abiHash)
+      throw Error("Serialized authority ABI pin mismatch");
+    mkdirSync(directory, { recursive: true, mode: 0o700 });
+    this.db = new DatabaseSync(directory + "/authority.sqlite");
+    this.db.exec(
+      "PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS native_ops (id TEXT PRIMARY KEY,payload TEXT NOT NULL,rid TEXT NOT NULL UNIQUE,txid TEXT NOT NULL UNIQUE,transaction_json TEXT NOT NULL,status TEXT NOT NULL,evidence TEXT,error TEXT)",
+    );
+    this.db.exec(
+      "CREATE TABLE IF NOT EXISTS native_domain (id INTEGER PRIMARY KEY CHECK(id=1),fingerprint TEXT NOT NULL)",
+    );
+    const fingerprint = sha(
+      JSON.stringify({
+        ...this.publicConfig(),
+        publicKey: String(PrivateKey.from(this.c.privateKey).toPublic()),
+      }),
+    );
+    const previous = this.db
+      .prepare("SELECT fingerprint FROM native_domain WHERE id=1")
+      .get() as any;
+    if (
+      previous?.fingerprint !== fingerprint &&
+      (previous || this.db.prepare("SELECT 1 FROM native_ops LIMIT 1").get())
+    ) {
+      this.db.close();
+      throw Error(
+        "Native journal configuration mismatch; use a separate data directory",
+      );
+    }
+    if (!previous)
+      this.db
+        .prepare("INSERT INTO native_domain(id,fingerprint) VALUES(1,?)")
+        .run(fingerprint);
+    this.client = new APIClient({
+      provider: new FetchProvider(this.c.rpc, {
+        fetch: (input, init) =>
+          fetch(input, { ...init, signal: AbortSignal.timeout(15000) }),
+      }),
+    });
+  }
+  close() {
+    this.db.close();
+  }
+  async rpc(endpoint: string, method: string, body: object = {}) {
+    const r = await fetch(endpoint + "/v1/chain/" + method, {
+      method: "POST",
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!r.ok)
+      throw Error("Authority RPC " + method + " failed (" + r.status + ")");
+    return r.json();
+  }
+  async pins(endpoint: string) {
+    const c = this.c;
+    const info = await this.rpc(endpoint, "get_info");
+    if (info.chain_id !== JUNGLE4) throw Error("Wrong authority chain");
+    const code = await this.rpc(endpoint, "get_code_hash", {
+      account_name: c.account,
+    });
+    if (code.code_hash !== c.codeHash)
+      throw Error("Authority code pin mismatch");
+    const a = await this.rpc(endpoint, "get_raw_abi", {
+      account_name: c.account,
+    });
+    if (a.abi_hash !== c.abiHash) throw Error("Authority ABI pin mismatch");
+    return info;
+  }
+  async permission() {
+    const c = this.c,
+      account = await this.rpc(c.rpc, "get_account", { account_name: c.actor });
+    const p = account.permissions.find(
+        (p: any) => p.perm_name === c.permission,
+      ),
+      a = p?.required_auth;
+    const pub = PrivateKey.from(c.privateKey).toPublic();
+    if (
+      p?.parent !== "active" ||
+      a?.threshold !== 1 ||
+      a.keys?.length !== 1 ||
+      a.keys[0].weight !== 1 ||
+      a.accounts?.length ||
+      a.waits?.length ||
+      !PublicKey.from(a.keys[0].key).equals(pub)
+    )
+      throw Error("Restricted native permission mismatch");
+    if (
+      account.permissions.some((q: any) =>
+        q.required_auth.accounts?.some(
+          (entry: any) =>
+            entry.permission?.actor === c.actor &&
+            entry.permission?.permission === c.permission,
+        ),
+      )
+    )
+      throw Error("Agent permission referenced by another authority");
+    const links = p.linked_actions;
+    if (
+      !Array.isArray(links) ||
+      links.length !== 2 ||
+      !["reserve", "consume"].every((action) =>
+        links.some((l: any) => l.account === c.account && l.action === action),
+      )
+    )
+      throw Error("Native permission links mismatch");
+    if (
+      account.permissions.some(
+        (q: any) =>
+          q.perm_name !== c.permission &&
+          q.required_auth.keys.some((k: any) =>
+            PublicKey.from(k.key).equals(pub),
+          ),
+      )
+    )
+      throw Error("Agent key reused in another permission");
+  }
+  async table(table: string, endpoint: string = this.c.independent) {
+    const r = await this.rpc(endpoint, "get_table_rows", {
+      json: true,
+      code: this.c.account,
+      scope: this.c.account,
+      table,
+      limit: 10001,
+    });
+    if (r.more || !Array.isArray(r.rows))
+      throw Error("Incomplete authority table");
+    return r.rows;
+  }
+  publicConfig() {
+    const { privateKey, ...c } = this.c;
+    return {
+      ...c,
+      chainId: JUNGLE4,
+      signer: "LOCAL_RESTRICTED_NATIVE_KEY",
+      trust:
+        "Local operator controls agent signing. Native contract enforces grant limits. Upgrade administrator and chain remain trusted.",
+    };
+  }
+  async state() {
+    await this.pins(this.c.independent);
+    const [root, grants, effects] = await Promise.all(
+      ["root", "grants", "effects"].map((t) => this.table(t)),
+    );
+    if (root.length !== 1) throw Error("Authority root absent");
+    const total =
+      BigInt(root[0].available) +
+      grants.reduce(
+        (n: bigint, g: any) =>
+          n +
+          ["available", "reserved", "quarantined", "consumed"].reduce(
+            (s, k) => s + BigInt(g[k]),
+            0n,
+          ),
+        0n,
+      );
+    if (
+      total !== BigInt(root[0].total) ||
+      grants.some(
+        (g: any) =>
+          ["available", "reserved", "quarantined", "consumed"].reduce(
+            (n, k) => n + BigInt(g[k]),
+            0n,
+          ) !== BigInt(g.budget),
+      )
+    )
+      throw Error("Authority conservation mismatch");
+    const grant = grants.find((g: any) => String(g.id) === this.c.grantId);
+    return {
+      configuration: this.publicConfig(),
+      root: root[0],
+      grant,
+      effects: effects.filter(
+        (e: any) => String(e.grant_id) === this.c.grantId,
+      ),
+      operations: this.list(),
+    };
+  }
+  list() {
+    return (
+      this.db
+        .prepare(
+          "SELECT id,status,txid,error,evidence FROM native_ops ORDER BY rowid DESC LIMIT 100",
+        )
+        .all() as any[]
+    ).map((r) => ({
+      ...r,
+      evidence: r.evidence ? JSON.parse(r.evidence) : null,
+    }));
+  }
+  row(id: string) {
+    const row = this.db
+      .prepare("SELECT * FROM native_ops WHERE id=?")
+      .get(id) as any;
+    if (!row) throw Error("Unknown native operation");
+    return row;
+  }
+  async prepare(input: unknown) {
+    const payload = nativePayload(input);
+    if (
+      this.db
+        .prepare(
+          "SELECT 1 FROM native_ops WHERE status IN ('PENDING','UNKNOWN') LIMIT 1",
+        )
+        .get()
+    )
+      throw Error("Reconcile unresolved native operation first");
+    await this.pins(this.c.rpc);
+    await this.permission();
+    const grants = await this.table("grants", this.c.rpc),
+      grant = grants.find((g: any) => String(g.id) === this.c.grantId);
+    assertGrant(grant, this.c, Math.floor(Date.now() / 1000));
+    if (Buffer.byteLength(payload) > Number(grant.max_payload))
+      throw Error("Payload exceeds native grant limit");
+    const rid = BigInt("0x" + randomBytes(6).toString("hex")).toString();
+    if (rid === "0") throw Error("Retry preparation");
+    const c = this.c;
+    const data = {
+      grant_id: c.grantId,
+      id: rid,
+      space: c.space,
+      obligation: rid,
+      nullifier: rid,
+      effect_id: rid,
+      payload_hash: sha(payload),
+    };
+    const make = (name: string, data: object) =>
+      Action.from(
+        {
+          account: c.account,
+          name,
+          data,
+          authorization: [{ actor: c.actor, permission: c.permission }],
+        },
+        this.abi,
+      );
+    const head = await this.client.v1.chain.get_info();
+    if (String(head.chain_id) !== JUNGLE4)
+      throw Error("Wrong authority signing chain");
+    const tx = Transaction.from({
+      ...head.getTransactionHeader(120),
+      actions: [make("reserve", data), make("consume", { id: rid, payload })],
+    });
+    const signed = SignedTransaction.from({
+      ...tx,
+      signatures: [
+        PrivateKey.from(c.privateKey).signDigest(tx.signingDigest(JUNGLE4)),
+      ],
+    });
+    const id = randomUUID();
+    this.db
+      .prepare(
+        "INSERT INTO native_ops(id,payload,rid,txid,transaction_json,status) VALUES(?,?,?,?,?,?)",
+      )
+      .run(id, payload, rid, String(tx.id), JSON.stringify(signed), "PREPARED");
+    return {
+      id,
+      payload,
+      payloadHash: sha(payload),
+      reservationId: rid,
+      transactionId: String(tx.id),
+      expires: String(tx.expiration),
+      configuration: this.publicConfig(),
+      grant,
+    };
+  }
+  boundTransaction(row: any) {
+    const tx = SignedTransaction.from(JSON.parse(row.transaction_json)),
+      c = this.c;
+    const make = (name: string, data: object) =>
+      Action.from(
+        {
+          account: c.account,
+          name,
+          data,
+          authorization: [{ actor: c.actor, permission: c.permission }],
+        },
+        this.abi,
+      );
+    const expected = [
+      make("reserve", {
+        grant_id: c.grantId,
+        id: row.rid,
+        space: c.space,
+        obligation: row.rid,
+        nullifier: row.rid,
+        effect_id: row.rid,
+        payload_hash: sha(row.payload),
+      }),
+      make("consume", { id: row.rid, payload: row.payload }),
+    ];
+    if (
+      String(tx.id) !== row.txid ||
+      JSON.stringify(tx.actions) !== JSON.stringify(expected) ||
+      tx.context_free_actions.length ||
+      tx.transaction_extensions.length ||
+      tx.signatures.length !== 1 ||
+      !tx.signatures[0]
+        .recoverDigest(tx.transaction.signingDigest(JUNGLE4))
+        .equals(PrivateKey.from(c.privateKey).toPublic())
+    )
+      throw Error("Stored native transaction binding mismatch");
+    return tx;
+  }
+  async submit(id: string, payloadHash: string) {
+    const row = this.row(id);
+    if (sha(row.payload) !== payloadHash)
+      throw Error("Reviewed payload mismatch");
+    if (row.status !== "PREPARED") return this.reconcile(id);
+    const tx = this.boundTransaction(row);
+    if (Date.parse(String(tx.expiration) + "Z") <= Date.now())
+      throw Error("Native review expired; prepare a new operation");
+    await this.pins(this.c.rpc);
+    await this.permission();
+    if (
+      this.db
+        .prepare(
+          "UPDATE native_ops SET status='PENDING' WHERE id=? AND status='PREPARED'",
+        )
+        .run(id).changes !== 1
+    )
+      return this.reconcile(id);
+    // Persist before broadcast. Never automatically rebroadcast after an ambiguous result.
+    try {
+      await this.client.v1.chain.send_transaction(tx);
+    } catch {
+      this.db
+        .prepare(
+          "UPDATE native_ops SET status='UNKNOWN',error='Submission outcome uncertain; reconcile without resubmitting' WHERE id=?",
+        )
+        .run(id);
+    }
+    return this.reconcile(id);
+  }
+  async reconcile(id: string) {
+    const row = this.row(id);
+    if (row.status === "PREPARED")
+      return { id, status: row.status, transactionId: row.txid };
+    try {
+      const info = await this.pins(this.c.independent);
+      const s = await this.rpc(this.c.independent, "get_transaction_status", {
+        id: row.txid,
+      });
+      if (s.state !== "IRREVERSIBLE")
+        return {
+          id,
+          status: row.status,
+          transactionId: row.txid,
+          observedChainStatus: s.state,
+          verificationUnavailable: row.status === "IRREVERSIBLE",
+          evidence: row.evidence ? JSON.parse(row.evidence) : null,
+        };
+      const n = Number(s.block_number);
+      if (!Number.isSafeInteger(n) || n > info.last_irreversible_block_num)
+        throw Error("Authority block not irreversible");
+      const b = await this.rpc(this.c.independent, "get_block", {
+        block_num_or_id: n,
+      });
+      if (
+        !b.transactions.some(
+          (t: any) =>
+            t.status === "executed" && (t.trx?.id ?? t.trx) === row.txid,
+        )
+      )
+        throw Error("Authority inclusion mismatch");
+      const tx = this.boundTransaction(row);
+      if (String(tx.id) !== row.txid)
+        throw Error("Stored transaction digest mismatch");
+      const [effects, reservations, grants] = await Promise.all(
+        ["effects", "reservations", "grants"].map((t) => this.table(t)),
+      );
+      const effect = effects.find((r: any) => String(r.id) === row.rid),
+        reservation = reservations.find((r: any) => String(r.id) === row.rid),
+        grant = grants.find((r: any) => String(r.id) === this.c.grantId);
+      if (
+        !effect ||
+        effect.payload !== row.payload ||
+        String(effect.reservation) !== row.rid ||
+        String(effect.grant_id) !== this.c.grantId ||
+        effect.actor !== this.c.actor ||
+        effect.space !== this.c.space ||
+        !reservation ||
+        Number(reservation.status) !== 1 ||
+        reservation.payload_hash !== sha(row.payload) ||
+        String(reservation.grant_id) !== this.c.grantId
+      )
+        throw Error("Native effect binding mismatch");
+      const evidence = {
+        version: 1,
+        configuration: this.publicConfig(),
+        operation: {
+          id,
+          payload: row.payload,
+          reservationId: row.rid,
+          transactionId: row.txid,
+          transaction: JSON.parse(row.transaction_json),
+        },
+        block: n,
+        blockId: b.id,
+        effect,
+        reservation,
+        grant,
+        verifiedAt: new Date().toISOString(),
+        verification: "IRREVERSIBLE_INCLUSION_AND_EFFECT_VIA_INDEPENDENT_RPC",
+      };
+      this.db
+        .prepare(
+          "UPDATE native_ops SET status='IRREVERSIBLE',evidence=?,error=NULL WHERE id=?",
+        )
+        .run(JSON.stringify(evidence), id);
+      return { id, status: "IRREVERSIBLE", transactionId: row.txid, evidence };
+    } catch {
+      if (row.status !== "IRREVERSIBLE")
+        this.db
+          .prepare(
+            "UPDATE native_ops SET status='UNKNOWN',error='Independent verification unavailable; reconcile without resubmitting' WHERE id=?",
+          )
+          .run(id);
+      return {
+        id,
+        status: row.status === "IRREVERSIBLE" ? "IRREVERSIBLE" : "UNKNOWN",
+        transactionId: row.txid,
+        evidence: row.evidence ? JSON.parse(row.evidence) : null,
+        verificationUnavailable: true,
+      };
+    }
+  }
+}
