@@ -8,7 +8,7 @@ The gateway reconstructs the exact action/authorization, checks the chain-bound 
 
 Revocation intentionally does not require the operational agent permission to remain healthy. Current code pins and app/grant ownership are still required. The UI retains the owner control panel when the operational authority overview fails. This is not recovery from a hostile upgraded contract or an offline chain.
 
-Local tests generate a separate owner key, verify its signature, execute the transaction against actual owner/app WASM and verify subsequent agent writes fail. Network/finality responses in those tests are fixtures. The live Studio unsigned-request step may be inspected without changing any authority. **A real external native wallet has not signed this flow, and test owner custody has not migrated.** MetaMask's EVM signature is not a substitute for this Antelope signature. The Anchor adapter uses official WharfKit SessionKit with in-memory session storage, Jungle4 only, exact owner@active matching, broadcast disabled and transaction modification disabled. It rechecks returned transaction bytes and recovers the signature key before accepting it. This is locally tested integration code, not evidence that a real wallet ceremony has succeeded.
+Local tests generate a separate owner key, verify its signature, execute the transaction against actual owner/app WASM and verify subsequent agent writes fail. Network/finality responses in those tests are fixtures. The live Studio unsigned-request step may be inspected without changing any authority. **Anchor has returned a signature, but it failed the configured active-key check; no live revocation has been broadcast. Full owner custody has not migrated.** MetaMask's EVM signature is not a substitute for this Antelope signature. The Anchor adapter uses official WharfKit SessionKit with in-memory session storage, Jungle4 only, exact owner@active matching, broadcast disabled and transaction modification disabled. It rechecks returned transaction bytes and recovers the signature key before accepting it. This is locally tested integration code, not evidence that a real wallet ceremony has succeeded.
 
 ## Using Anchor
 
@@ -17,7 +17,7 @@ Local tests generate a separate owner key, verify its signature, execute the tra
 3. Prepare unsigned revocation, select Sign with Anchor and review the actual contract, revoke action and owner@active authorization in the wallet. Signing alone does not broadcast.
 4. Submit the checked signature in Studio. On timeout use Reconcile; wait for irreversible verification and then confirm the revoked agent cannot write.
 
-Owner/active key generation, on-chain custody migration and the real-wallet drill remain user-assisted and unverified. The app never requests a seed or private key.
+Key generation and an on-chain active-key rotation have occurred; complete custody migration and the successful real-wallet drill remain unfinished. The app never requests a seed or private key.
 
 ## Using the developer handoff
 
@@ -42,7 +42,7 @@ node --import tsx scripts/isolate-gateway.ts --probe
 
 Only after reviewing/proving the boundary, stop the prior gateway and use the launcher without `--probe`; run Vite separately with a clean environment. Verify denial of owner/admin files, symlink aliases, process inspection, unintended IPC and writes outside the data directory before relying on it. Linux production should use a separately restricted user/container or VM, with external owner signing and no owner/admin secret mounted into the gateway. Existing plain demo startup remains an explicitly unisolated developer mode.
 
-No owner/admin keys were moved, deleted, rotated or exposed during this pass. Deleting local recovery material before an external wallet is verified would risk losing control.
+The original isolation pass did not move, delete or rotate owner/admin keys. The later active-key rotation is recorded below; owner recovery authority remains unchanged. Deleting local recovery material before an external wallet is verified would risk losing control.
 
 ## Journal startup and recovery
 
@@ -71,3 +71,11 @@ Remaining production gates: a verified external native wallet and owner-controll
 `tests/owner-wallet.test.ts` adds seven local cryptographic boundary tests for exact signatures, request domain, changed wallet transactions, signer/key/chain mismatch, expiry and missing connected wallet. Independent code review also inspected the installed SDK broadcast behavior; it found no blocker in this narrow adapter scope.
 
 The Anchor adapter verifies the SDK's encoded `resolved.transaction`, not its decoded display transaction, so verification needs no inferred action ABI. A regression test covers the real SDK response shape with decoded action data. Fail-closed diagnostics distinguish chain, signer, transaction-byte, signature-count and recovered-public-key mismatches; no private keys are logged. Full suite: 143 tests with all three WASM builds required. Real-wallet revocation remains incomplete until separately recorded live verification succeeds.
+
+## Live Anchor diagnostic — 2026-10-19
+
+The active authority of vrya3iayygzy was rotated to the user-supplied active public key in transaction ba3b9397cc74051448c8b01da8c70bb331c7051694083357a8e3277874c25ff8, block 292905995; a separate RPC had irreversible block 292906026 when checked. The original owner recovery authority remains unchanged. This is partial custody migration, not complete key isolation.
+
+Anchor connected as vrya3iayygzy@active, but its signature for prepared request 00a85b86-bbe7-4794-97ed-96824ee05560 recovered the public key intended for owner instead of the current on-chain active key. The adapter rejected it before broadcast. This establishes a wallet/key binding mismatch, not a transaction failure on Jungle4. The exact transaction, chain, signer and signature-count checks passed before the public-key check failed.
+
+Correct the wallet's local active-key association using the separately backed-up active key. Do not change on-chain authority or bypass signature verification to accommodate the incorrectly imported wallet. Then repeat a fresh, user-approved revoke, submit the checked signature, independently verify irreversibility and test rejection of subsequent delegated writes. Those live completion checks remain pending. No private key was read or included in this diagnostic.
