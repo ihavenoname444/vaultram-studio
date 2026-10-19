@@ -4,7 +4,7 @@
 
 A local development studio for a bounded agent marketplace: describe an app, compile a versioned specification, sign an action, inspect state, export evidence.
 
-**Current delivery:** a verified Jungle4 owner/app authority slice, alongside the earlier Phase 0 core and explicitly labelled local simulation. The current suite passes 142 tests with all three WASM builds required. Legacy history includes 26 irreversible application transactions, four manually confirmed MetaMask actions and two prior Linux browser tests. The legacy runtime trusts its relayer; this is not production infrastructure.
+**Current delivery:** a verified Jungle4 owner/app authority slice, alongside the earlier Phase 0 core and explicitly labelled local simulation. The current suite passes 143 tests with all three WASM builds required. Legacy history includes 26 irreversible application transactions, four manually confirmed MetaMask actions and two prior Linux browser tests. The legacy runtime trusts its relayer; this is not production infrastructure.
 
 **Architecture/security alignment:** Studio now presents actual grant limits and explicitly unavailable VaultRAM backing. Requests requiring backed authority fail before signing. Direct hostile-signer tests demonstrate both rejected scope expansion and successful arbitrary content inside a grant. Gateway/owner custody is still local, not isolated. See [assumptions and delivery plan](docs/SECURITY_ASSUMPTIONS.md) and [all 18 directive invariants](docs/AUTHORITY_INVARIANTS.md).
 

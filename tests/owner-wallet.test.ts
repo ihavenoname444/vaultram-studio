@@ -41,6 +41,11 @@ function fixture(seconds = 100) {
   };
   const result = {
     transaction,
+    resolved: {
+      transaction,
+      chainId: JUNGLE4,
+      signer: { actor: request.owner, permission: "active" },
+    },
     chain: { id: JUNGLE4 },
     signer: { actor: request.owner, permission: "active" },
     signatures: [key.signDigest(transaction.signingDigest(JUNGLE4))],
@@ -79,6 +84,7 @@ describe("external owner wallet boundary", () => {
       verifyOwnerWalletResult(request, {
         ...result,
         transaction,
+        resolved: { ...result.resolved, transaction },
         signatures: [key.signDigest(transaction.signingDigest(JUNGLE4))],
       }),
     ).toThrow();
@@ -103,6 +109,24 @@ describe("external owner wallet boundary", () => {
   it("rejects expired requests and excessive validity", () => {
     for (const seconds of [-1, 130])
       expect(() => ownerWalletTransaction(fixture(seconds).request)).toThrow();
+  });
+  it("validates encoded SDK transaction even when its display transaction contains decoded action data", () => {
+    const { request, result } = fixture();
+    const decoded = JSON.parse(JSON.stringify(result.transaction));
+    decoded.actions[0].data = { grant_id: "1" };
+    expect(() => Transaction.from(decoded)).toThrow("Missing ABI");
+    expect(
+      verifyOwnerWalletResult(request, { ...result, transaction: decoded }),
+    ).toBe(String(result.signatures[0]));
+    expect(() =>
+      verifyOwnerWalletResult(request, { ...result, resolved: undefined }),
+    ).toThrow();
+    expect(() =>
+      verifyOwnerWalletResult(request, {
+        ...result,
+        resolved: { ...result.resolved, chainId: "0".repeat(64) },
+      }),
+    ).toThrow();
   });
   it("requires an actual connected native wallet before invoking signing", async () => {
     await expect(signOwnerRevocation(fixture().request)).rejects.toThrow(

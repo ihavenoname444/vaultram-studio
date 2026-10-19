@@ -84,18 +84,37 @@ export function ownerWalletTransaction(request: any) {
 }
 export function verifyOwnerWalletResult(request: any, result: any) {
   const tx = ownerWalletTransaction(request);
+  if (String(result.chain.id) !== JUNGLE4) throw Error("Wallet chain mismatch");
   if (
-    String(result.chain.id) !== JUNGLE4 ||
     String(result.signer.actor) !== request.owner ||
-    String(result.signer.permission) !== "active" ||
-    !result.transaction ||
-    String(Transaction.from(result.transaction).id) !== String(tx.id) ||
-    result.signatures.length !== 1 ||
-    !Signature.from(result.signatures[0])
-      .recoverDigest(tx.signingDigest(JUNGLE4))
-      .equals(PublicKey.from(request.publicKey))
+    String(result.signer.permission) !== "active"
   )
-    throw Error("Wallet returned a different signer, transaction or signature");
+    throw Error("Wallet signer mismatch");
+  if (
+    !result.resolved ||
+    String(result.resolved.chainId) !== JUNGLE4 ||
+    String(result.resolved.signer.actor) !== request.owner ||
+    String(result.resolved.signer.permission) !== "active"
+  )
+    throw Error("Wallet resolved signer/chain mismatch");
+  if (
+    String(Transaction.from(result.resolved.transaction).id) !== String(tx.id)
+  )
+    throw Error("Wallet transaction bytes changed");
+  if (result.signatures.length !== 1)
+    throw Error(
+      "Expected one wallet signature; received " + result.signatures.length,
+    );
+  const recovered = Signature.from(result.signatures[0]).recoverDigest(
+    tx.signingDigest(JUNGLE4),
+  );
+  if (!recovered.equals(PublicKey.from(request.publicKey)))
+    throw Error(
+      "Wallet PUBLIC key mismatch. Expected " +
+        request.publicKey +
+        "; received " +
+        String(recovered),
+    );
   return String(result.signatures[0]);
 }
 export async function signOwnerRevocation(request: any) {
