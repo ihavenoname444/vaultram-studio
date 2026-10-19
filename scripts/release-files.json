@@ -98,5 +98,7 @@
   "scripts/recover-native.ts",
   "tests/fixtures/native-crash-worker.ts",
   "tests/native-recovery.test.ts",
-  "docs/OWNER_SIGNING_RECOVERY.md"
+  "docs/OWNER_SIGNING_RECOVERY.md",
+  "apps/studio/src/owner-wallet.ts",
+  "tests/owner-wallet.test.ts"
 ]

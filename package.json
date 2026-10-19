@@ -25,6 +25,9 @@
   },
   "dependencies": {
     "@wharfkit/antelope": "4.0.2",
+    "@wharfkit/session": "4.0.2",
+    "@wharfkit/wallet-plugin-anchor": "4.0.2",
+    "@wharfkit/web-renderer": "4.0.2",
     "fastify": "5.12.7",
     "lucide-react": "1.57.0",
     "react": "19.3.1",

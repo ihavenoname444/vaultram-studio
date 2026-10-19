@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { connectOwnerWallet, signOwnerRevocation } from "./owner-wallet.ts";
 export function OwnerControls({
   api,
   refresh,
@@ -9,6 +10,7 @@ export function OwnerControls({
   requests: any[];
 }) {
   const [request, setRequest] = useState<any>();
+  const [wallet, setWallet] = useState("");
   const [signature, setSignature] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -44,11 +46,21 @@ export function OwnerControls({
         this action. Completed records remain public.
       </p>
       <p className="muted">
-        Developer signing handoff: export an Antelope transaction for an
-        independent native signer. Browser-wallet connection, grant creation and
-        key-custody migration are not included. Do not enter a private key or
-        seed phrase.
+        Connect Anchor on Jungle4, prepare the request, then approve it in your
+        wallet. Signing does not broadcast; submit the checked signature below.
+        Grant creation and key-custody migration are not included. Never enter a
+        private key or seed phrase.
       </p>
+      <button
+        className="button"
+        disabled={busy}
+        onClick={() =>
+          void run(async () => setWallet(await connectOwnerWallet()))
+        }
+      >
+        Connect Anchor
+      </button>
+      {wallet && <p>Connected: {wallet}</p>}
       <button
         className="button"
         disabled={busy}
@@ -73,6 +85,20 @@ export function OwnerControls({
             Jungle4 · Expires {request.transaction.expiration} UTC. Verify the
             exact action and chain in the external signer.
           </p>
+          <button
+            className="button"
+            disabled={busy || !wallet}
+            onClick={() =>
+              void run(async () => {
+                setSignature(await signOwnerRevocation(request));
+                setMessage(
+                  "Wallet signature checked. Submit signed revocation to send it.",
+                );
+              })
+            }
+          >
+            Sign with Anchor
+          </button>
           <button className="button" onClick={download}>
             Export unsigned request
           </button>

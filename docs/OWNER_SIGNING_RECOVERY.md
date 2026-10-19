@@ -2,13 +2,22 @@
 
 ## Delivered scope
 
-Studio has a developer handoff for **native owner-signed grant revocation**. It prepares one unsigned `revoke` action, exports the Antelope transaction and accepts a returned public signature. No owner private key or seed is accepted by this path. It supports only the current configured Jungle4 owner/app/grant and simple 1-of-1 `active` authority; multisig/delegation fail closed. Registration and grant creation still use the earlier local test provisioning process and are not externally signed through Studio yet.
+Studio has an Anchor wallet adapter and a developer handoff for **native owner-signed grant revocation**. It prepares one unsigned `revoke` action, exports the Antelope transaction and accepts a returned public signature. No owner private key or seed is accepted by this path. It supports only the current configured Jungle4 owner/app/grant and simple 1-of-1 `active` authority; multisig/delegation fail closed. Registration and grant creation still use the earlier local test provisioning process and are not externally signed through Studio yet.
 
 The gateway reconstructs the exact action/authorization, checks the chain-bound signing digest, expiry, owner/app/grant/code binding and current active public key. It rejects additional actions, extensions, wrong signers/chains, key rotation after review and owner keys reused as its operational key. The signed transaction is persisted before broadcast. Unknown results are reconciled without automatic resend. The native contract—not the signature UI—enforces revocation.
 
 Revocation intentionally does not require the operational agent permission to remain healthy. Current code pins and app/grant ownership are still required. The UI retains the owner control panel when the operational authority overview fails. This is not recovery from a hostile upgraded contract or an offline chain.
 
-Local tests generate a separate owner key, verify its signature, execute the transaction against actual owner/app WASM and verify subsequent agent writes fail. Network/finality responses in those tests are fixtures. The live Studio unsigned-request step may be inspected without changing any authority. **A real external native wallet has not signed this flow, and test owner custody has not migrated.** MetaMask's EVM signature is not a substitute for this Antelope signature. A wallet adapter/ESR integration remains to make this a normal consumer wallet flow.
+Local tests generate a separate owner key, verify its signature, execute the transaction against actual owner/app WASM and verify subsequent agent writes fail. Network/finality responses in those tests are fixtures. The live Studio unsigned-request step may be inspected without changing any authority. **A real external native wallet has not signed this flow, and test owner custody has not migrated.** MetaMask's EVM signature is not a substitute for this Antelope signature. The Anchor adapter uses official WharfKit SessionKit with in-memory session storage, Jungle4 only, exact owner@active matching, broadcast disabled and transaction modification disabled. It rechecks returned transaction bytes and recovers the signature key before accepting it. This is locally tested integration code, not evidence that a real wallet ceremony has succeeded.
+
+## Using Anchor
+
+1. Keep owner and active private keys in your separately controlled wallet and verify that its public keys are actually bound to the native Jungle4 account. Installing Anchor or connecting an unrelated account does not transfer custody. Back up keys privately before any reviewed on-chain rotation.
+2. Connect Anchor before preparing the short-lived request. Select the configured native owner account and its active permission on Jungle4.
+3. Prepare unsigned revocation, select Sign with Anchor and review the actual contract, revoke action and owner@active authorization in the wallet. Signing alone does not broadcast.
+4. Submit the checked signature in Studio. On timeout use Reconcile; wait for irreversible verification and then confirm the revoked agent cannot write.
+
+Owner/active key generation, on-chain custody migration and the real-wallet drill remain user-assisted and unverified. The app never requests a seed or private key.
 
 ## Using the developer handoff
 
@@ -58,3 +67,5 @@ For backups, stop all writers and copy a consistent SQLite backup (including WAL
 `tests/owner-app-studio.test.ts` covers owner signatures, wrong keys/chains/actions, stale or unsupported authority, unhealthy agent permission, operational/owner key reuse, actual WASM revocation, and owner-request timeout/restart without resend. Independent review found and prompted fixes to the emergency-revocation dependency and recovery initialization/table checks.
 
 Remaining production gates: a verified external native wallet and owner-controlled custody; external registration/grant approval with both allocator and owner signatures; validated OS/deployment isolation; full backup-loss and key-rotation drills; upgrade governance; verified VaultRAM backing. No new live revocation or deployment is claimed by these local tests.
+
+`tests/owner-wallet.test.ts` adds six local cryptographic boundary tests for exact signatures, request domain, changed wallet transactions, signer/key/chain mismatch, expiry and missing connected wallet. Independent code review also inspected the installed SDK broadcast behavior; it found no blocker in this narrow adapter scope.
