@@ -38,6 +38,7 @@ function configured(dir: string) {
     },
     dir,
     abiBytes,
+    "create",
   );
 }
 const grant = {

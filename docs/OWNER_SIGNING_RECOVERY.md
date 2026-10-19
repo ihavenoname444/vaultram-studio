@@ -1,0 +1,60 @@
+# External owner signing, custody and recovery
+
+## Delivered scope
+
+Studio has a developer handoff for **native owner-signed grant revocation**. It prepares one unsigned `revoke` action, exports the Antelope transaction and accepts a returned public signature. No owner private key or seed is accepted by this path. It supports only the current configured Jungle4 owner/app/grant and simple 1-of-1 `active` authority; multisig/delegation fail closed. Registration and grant creation still use the earlier local test provisioning process and are not externally signed through Studio yet.
+
+The gateway reconstructs the exact action/authorization, checks the chain-bound signing digest, expiry, owner/app/grant/code binding and current active public key. It rejects additional actions, extensions, wrong signers/chains, key rotation after review and owner keys reused as its operational key. The signed transaction is persisted before broadcast. Unknown results are reconciled without automatic resend. The native contract—not the signature UI—enforces revocation.
+
+Revocation intentionally does not require the operational agent permission to remain healthy. Current code pins and app/grant ownership are still required. The UI retains the owner control panel when the operational authority overview fails. This is not recovery from a hostile upgraded contract or an offline chain.
+
+Local tests generate a separate owner key, verify its signature, execute the transaction against actual owner/app WASM and verify subsequent agent writes fail. Network/finality responses in those tests are fixtures. The live Studio unsigned-request step may be inspected without changing any authority. **A real external native wallet has not signed this flow, and test owner custody has not migrated.** MetaMask's EVM signature is not a substitute for this Antelope signature. A wallet adapter/ESR integration remains to make this a normal consumer wallet flow.
+
+## Using the developer handoff
+
+1. In Owner control, prepare unsigned revocation. Review the native owner, grant, exact contract, Jungle4 chain and two-minute expiry.
+2. Export the request. In a separately trusted native signer, independently decode and review the actual transaction action and authorization; descriptive request text and a raw digest are not sufficient human review. Sign `Transaction.from(request.transaction).signingDigest(request.chainId)` only after verifying the fields. Never copy an owner key into Studio or chat.
+3. Return only the public `SIG_K1_…`/`SIG_R1_…` signature. Studio submits the exact stored transaction and verifies irreversible inclusion/current revoked state through its separately selected RPC.
+4. On timeout, use Reconcile. Do not create a replacement transaction to work around an unknown result.
+
+Only grant revocation is supported. It stops future reserve/consume, including reserved work; it does not delete completed public records, transfer funds, rotate keys or remove the application's ownership. Existing admin/upgrade/RPC trust remains.
+
+## Process isolation: prepared, blocked here, NOT established
+
+`scripts/isolate-gateway.ts` provides a macOS Seatbelt launch recipe with a deny-default profile, code/dependency read allowlist, exact operational-config access, one writable data directory, restricted process execution and a sanitized environment. It starts the gateway alone; Vite must be started separately and receives no gateway environment. Owner/admin files are not allowlisted. Implicit `.env` loading is disabled for this path. A disposable outside-directory read canary must be denied before any restricted operational configuration is loaded; any activation/probe failure aborts without an unsandboxed fallback.
+
+Both implementation and independent-review probes returned `sandbox_apply: Operation not permitted` inside the current executor. The new launcher also stopped as intended. **The policy's successful activation, runtime compatibility, complete file/IPC/process isolation and resistance to sandbox escape remain unverified.** A passing canary alone is not a complete audit. This recipe does not isolate the entire host, protect against administrator compromise or move keys into a hardware wallet.
+
+From an ordinary macOS terminal in the repository, the next host check is:
+
+```sh
+node --import tsx scripts/isolate-gateway.ts --probe
+```
+
+Only after reviewing/proving the boundary, stop the prior gateway and use the launcher without `--probe`; run Vite separately with a clean environment. Verify denial of owner/admin files, symlink aliases, process inspection, unintended IPC and writes outside the data directory before relying on it. Linux production should use a separately restricted user/container or VM, with external owner signing and no owner/admin secret mounted into the gateway. Existing plain demo startup remains an explicitly unisolated developer mode.
+
+No owner/admin keys were moved, deleted, rotated or exposed during this pass. Deleting local recovery material before an external wallet is verified would risk losing control.
+
+## Journal startup and recovery
+
+The native gateway now opens an **existing journal by default**. Missing/zero-byte/corrupt/identity-less journals or missing required tables fail closed. Schema versions distinguish a compatible older-journal migration from missing current tables. Stored transaction bindings/statuses are checked on startup. Explicit `create` is for a genuinely new deployment/test fixture only; it must never be used as a repair for a live journal. Database integrity checks cannot detect every malicious deletion of otherwise valid rows or prove complete history.
+
+Schema initialization, domain identity and recovery lock creation commit together. A crash during initialization leaves an unusable incomplete journal, not an accepted empty history. Existing databases are migrated without changing their domain fingerprint or signed transactions.
+
+A valid exported native write can reconstruct an operation in a separate **submission-locked recovery journal**:
+
+```sh
+node --import tsx scripts/recover-native.ts OPERATIONAL_CONFIG EXPORT_JSON SEPARATE_RECOVERY_DIRECTORY
+```
+
+The imported transaction must match the configured domain and restricted signer. Claimed success in the export is ignored: import starts UNKNOWN, then independently checks chain inclusion and state. RPC failure leaves UNKNOWN. This does not broadcast, restore owner-operation history, prove completeness, or automatically permit new writes. Even after one receipt is verified, the recovery journal remains locked. A failed import also leaves its initialized destination locked. Use trusted complete backups or a separately reviewed migration/new grant to resume service; no automatic unlock or capacity release exists.
+
+For backups, stop all writers and copy a consistent SQLite backup (including WAL handling), not only a live `.sqlite` file. Keep backups outside the gateway's writable boundary. This pass does not implement a general backup service or prove recovery after total loss without any retained transaction evidence.
+
+## Verification and remaining work
+
+`tests/native-recovery.test.ts` kills a real gateway process with SIGKILL after preparation, before remote acceptance, after simulated acceptance and after UNKNOWN persistence. Restart preserves the status and does not resend uncertain work. Remote acceptance is a fixture, not live Jungle4. Additional tests reject corrupted/missing files, lost tables and tampered signed rows; restore an exported write through fresh chain checks; and preserve the submission lock across failed imports/restarts.
+
+`tests/owner-app-studio.test.ts` covers owner signatures, wrong keys/chains/actions, stale or unsupported authority, unhealthy agent permission, operational/owner key reuse, actual WASM revocation, and owner-request timeout/restart without resend. Independent review found and prompted fixes to the emergency-revocation dependency and recovery initialization/table checks.
+
+Remaining production gates: a verified external native wallet and owner-controlled custody; external registration/grant approval with both allocator and owner signatures; validated OS/deployment isolation; full backup-loss and key-rotation drills; upgrade governance; verified VaultRAM backing. No new live revocation or deployment is claimed by these local tests.

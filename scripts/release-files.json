@@ -91,5 +91,12 @@
   "packages/core/src/authority-manifest.ts",
   "tests/authority-manifest.test.ts",
   "docs/SECURITY_ASSUMPTIONS.md",
-  "docs/AUTHORITY_INVARIANTS.md"
+  "docs/AUTHORITY_INVARIANTS.md",
+  "services/gateway/src/owner-revoke.ts",
+  "apps/studio/src/OwnerControls.tsx",
+  "scripts/isolate-gateway.ts",
+  "scripts/recover-native.ts",
+  "tests/fixtures/native-crash-worker.ts",
+  "tests/native-recovery.test.ts",
+  "docs/OWNER_SIGNING_RECOVERY.md"
 ]

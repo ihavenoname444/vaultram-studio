@@ -25,7 +25,9 @@ import { Jungle } from "./chain.ts";
 import { describe } from "./ai.ts";
 import { AuthorityGateway, NativeWrite } from "./authority.ts";
 import { readPrivateJson } from "./private-file.ts";
-if (existsSync(".env")) process.loadEnvFile(".env");
+import { OwnerRevoke } from "./owner-revoke.ts";
+if (process.env.VAULTRAM_SKIP_DOTENV !== "1" && existsSync(".env"))
+  process.loadEnvFile(".env");
 export async function createServer(
   options: { directory?: string; mode?: "SIMULATED" | "JUNGLE4" } = {},
 ) {
@@ -89,9 +91,14 @@ export async function createServer(
   if (authority) {
     await authority.pins(authority.c.rpc);
     await authority.pins(authority.c.independent);
-    await authority.permission();
+    // A broken operational permission must block writes, not owner revocation.
+    // state/prepare/submit still check it; native owner revoke has its own checks.
+    if (!authority.c.appBinding) await authority.permission();
   }
   const signer = receiptSigner(directory + "/receipt-key.pem");
+  const ownerRevoke = authority?.c.appBinding
+    ? new OwnerRevoke(authority)
+    : undefined;
   const demoPath = directory + "/simulation-wallet.key";
   if (mode === "SIMULATED" && !existsSync(demoPath))
     writeFileSync(demoPath, generatePrivateKey(), { flag: "wx", mode: 0o600 });
@@ -161,6 +168,7 @@ export async function createServer(
   });
   server.get("/api/config", async () => ({
     authorityEnabled: !!authority,
+    ownerControlEnabled: !!ownerRevoke,
     mode,
     runtime,
     runtimeCodeHash: "0x" + (chain?.codeHash ?? "0".repeat(64)),
@@ -180,7 +188,40 @@ export async function createServer(
     if (!authority) throw new Error("Native authority is not configured");
     return authority;
   };
-  server.get("/api/authority", async () => native().state());
+  server.get("/api/authority", async () => ({
+    ...(await native().state()),
+    ownerRequests: ownerRevoke?.list(),
+  }));
+  const externalOwner = () => {
+    if (!ownerRevoke) throw Error("Native owner/app v2 required");
+    return ownerRevoke;
+  };
+  server.post("/api/authority/owner/prepare", async (req) =>
+    serial(async () => {
+      z.object({ action: z.literal("revoke") })
+        .strict()
+        .parse(req.body);
+      return externalOwner().prepare();
+    }),
+  );
+  server.post("/api/authority/owner/submit", async (req) =>
+    serial(async () => {
+      const b = z
+        .object({
+          id: z.string().uuid(),
+          signatures: z.array(z.string()).length(1),
+        })
+        .strict()
+        .parse(req.body);
+      return externalOwner().submit(b.id, b.signatures);
+    }),
+  );
+  server.post("/api/authority/owner/reconcile", async (req) =>
+    serial(async () => {
+      const b = z.object({ id: z.string().uuid() }).strict().parse(req.body);
+      return externalOwner().reconcile(b.id);
+    }),
+  );
   server.post("/api/authority/prepare", async (req) =>
     serial(async () => {
       const body = NativeWrite.parse(req.body);

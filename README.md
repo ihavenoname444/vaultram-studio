@@ -1,8 +1,10 @@
 # VaultRAM Studio
 
+**Owner control and recovery:** native owner-signed revocation handoff and conservative journal recovery are implemented and locally tested. OS isolation is a fail-closed launch recipe that cannot activate in this executor; real external-wallet signing and key-custody migration remain unverified. See [details and limitations](docs/OWNER_SIGNING_RECOVERY.md).
+
 A local development studio for a bounded agent marketplace: describe an app, compile a versioned specification, sign an action, inspect state, export evidence.
 
-**Current delivery:** a verified Jungle4 owner/app authority slice, alongside the earlier Phase 0 core and explicitly labelled local simulation. The current suite passes 122 tests with all three WASM builds required. Legacy history includes 26 irreversible application transactions, four manually confirmed MetaMask actions and two prior Linux browser tests. The legacy runtime trusts its relayer; this is not production infrastructure.
+**Current delivery:** a verified Jungle4 owner/app authority slice, alongside the earlier Phase 0 core and explicitly labelled local simulation. The current suite passes 136 tests with all three WASM builds required. Legacy history includes 26 irreversible application transactions, four manually confirmed MetaMask actions and two prior Linux browser tests. The legacy runtime trusts its relayer; this is not production infrastructure.
 
 **Architecture/security alignment:** Studio now presents actual grant limits and explicitly unavailable VaultRAM backing. Requests requiring backed authority fail before signing. Direct hostile-signer tests demonstrate both rejected scope expansion and successful arbitrary content inside a grant. Gateway/owner custody is still local, not isolated. See [assumptions and delivery plan](docs/SECURITY_ASSUMPTIONS.md) and [all 18 directive invariants](docs/AUTHORITY_INVARIANTS.md).
 

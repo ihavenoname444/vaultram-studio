@@ -51,6 +51,7 @@ declare global {
 }
 type Config = {
   authorityEnabled?: boolean;
+  ownerControlEnabled?: boolean;
   mode: "SIMULATED" | "JUNGLE4";
   runtime: string;
   runtimeCodeHash: string;
@@ -436,6 +437,7 @@ function Studio() {
           </div>
         </header>
         <AuthorityPanel
+          ownerControlEnabled={config.ownerControlEnabled}
           token={config.token}
           appId={app?.appId}
           appName={app?.spec.name}

@@ -1,5 +1,7 @@
 # Directive invariants: evidence and gaps
 
+**Latest implementation:** see [Owner signing and recovery](OWNER_SIGNING_RECOVERY.md) for the new revoke-only external signing handoff, SIGKILL/corruption drills and submission-locked receipt restoration. Full external custody, registration/grant signing and functioning OS isolation remain unverified; older gap descriptions below should be read with this limited update.
+
 Scope: deployed owner/app v2 native test-write contract. Local WASM tests are not new live-chain evidence. The independent agent review is not an external professional audit. Contract source and previous Jungle4 deployment are unchanged by the manifest pass.
 
 | #   | Requirement                                  | Actual status / evidence boundary                                                                                                                |

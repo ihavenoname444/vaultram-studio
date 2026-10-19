@@ -11,7 +11,7 @@ import {
 } from "@wharfkit/antelope";
 import { DatabaseSync } from "node:sqlite";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { readFileSync, mkdirSync } from "node:fs";
+import { readFileSync, mkdirSync, existsSync } from "node:fs";
 import { z } from "zod";
 import { JUNGLE4 } from "../../../packages/core/src/index.ts";
 import {
@@ -117,6 +117,7 @@ export class AuthorityGateway {
     abiBytes: Uint8Array = readFileSync(
       `contracts/build/${config.appBinding ? "owner-app" : "authority"}/authority.abi`,
     ),
+    journalMode: "existing" | "create" | "recovery" = "existing",
   ) {
     this.c = AuthorityConfig.parse(config);
     if (sha(abiBytes) !== this.c.abiJsonHash)
@@ -124,10 +125,61 @@ export class AuthorityGateway {
     this.abi = ABI.from(JSON.parse(Buffer.from(abiBytes).toString()));
     if (sha(Serializer.encode({ object: this.abi }).array) !== this.c.abiHash)
       throw Error("Serialized authority ABI pin mismatch");
+    const exists = existsSync(directory + "/authority.sqlite");
+    if (journalMode === "existing" && !exists)
+      throw Error(
+        "Native journal missing: restore a verified backup; never silently recreate live history",
+      );
+    if (journalMode !== "existing" && exists)
+      throw Error("Native journal already exists; use existing mode");
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     this.db = new DatabaseSync(directory + "/authority.sqlite");
+    try {
+      if (
+        (this.db.prepare("PRAGMA quick_check").get() as any)?.quick_check !==
+        "ok"
+      )
+        throw Error("Native journal integrity check failed");
+      if (
+        journalMode === "existing" &&
+        !this.db
+          .prepare("SELECT fingerprint FROM native_domain WHERE id=1")
+          .get()
+      )
+        throw Error("Native journal identity missing");
+      if (journalMode === "existing") {
+        const version = Number(
+          (this.db.prepare("PRAGMA user_version").get() as any).user_version,
+        );
+        if (![0, 1, 2].includes(version))
+          throw Error("Unsupported journal version");
+        for (const table of [
+          "native_domain",
+          "native_ops",
+          "native_ram",
+          ...(version >= 1 ? ["native_safety"] : []),
+          ...(version >= 2 ? ["native_owner_ops"] : []),
+        ])
+          if (
+            !this.db
+              .prepare(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+              )
+              .get(table)
+          )
+            throw Error("Journal table missing");
+      }
+    } catch {
+      this.db.close();
+      throw Error(
+        "Native journal corrupt or incomplete: restore a verified backup",
+      );
+    }
     this.db.exec(
-      "PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS native_ops (id TEXT PRIMARY KEY,payload TEXT NOT NULL,rid TEXT NOT NULL UNIQUE,txid TEXT NOT NULL UNIQUE,transaction_json TEXT NOT NULL,status TEXT NOT NULL,evidence TEXT,error TEXT)",
+      "PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; BEGIN IMMEDIATE",
+    );
+    this.db.exec(
+      "CREATE TABLE IF NOT EXISTS native_ops (id TEXT PRIMARY KEY,payload TEXT NOT NULL,rid TEXT NOT NULL UNIQUE,txid TEXT NOT NULL UNIQUE,transaction_json TEXT NOT NULL,status TEXT NOT NULL,evidence TEXT,error TEXT)",
     );
     this.db.exec(
       "CREATE TABLE IF NOT EXISTS native_domain (id INTEGER PRIMARY KEY CHECK(id=1),fingerprint TEXT NOT NULL)",
@@ -135,6 +187,19 @@ export class AuthorityGateway {
     this.db.exec(
       "CREATE TABLE IF NOT EXISTS native_ram (txid TEXT PRIMARY KEY, observation TEXT NOT NULL)",
     );
+    this.db.exec(
+      "CREATE TABLE IF NOT EXISTS native_safety (id INTEGER PRIMARY KEY CHECK(id=1), recovery_locked INTEGER NOT NULL)",
+    );
+    if (journalMode === "recovery")
+      this.db
+        .prepare("INSERT INTO native_safety(id,recovery_locked) VALUES(1,1)")
+        .run();
+    if (
+      Number(
+        (this.db.prepare("PRAGMA user_version").get() as any).user_version,
+      ) === 0
+    )
+      this.db.exec("PRAGMA user_version=1");
     const fingerprint = sha(
       JSON.stringify({
         ...this.publicConfig(),
@@ -163,6 +228,86 @@ export class AuthorityGateway {
           fetch(input, { ...init, signal: AbortSignal.timeout(15000) }),
       }),
     });
+    try {
+      for (const row of this.db
+        .prepare("SELECT * FROM native_ops")
+        .all() as any[]) {
+        if (
+          !["PREPARED", "PENDING", "UNKNOWN", "IRREVERSIBLE"].includes(
+            row.status,
+          )
+        )
+          throw Error("Invalid journal status");
+        this.boundTransaction(row);
+      }
+      this.db.exec("COMMIT");
+    } catch {
+      this.db.close();
+      throw Error(
+        "Native journal record binding corrupt; restore a verified backup",
+      );
+    }
+  }
+  assertWritable() {
+    if (
+      this.db
+        .prepare("SELECT 1 FROM native_safety WHERE recovery_locked=1")
+        .get()
+    )
+      throw Error(
+        "Recovery journal is read-only for submission; completeness must be reviewed before any new authority is issued",
+      );
+  }
+  async restoreExport(e: any) {
+    // Exports can reconstruct evidence, never establish completeness of lost history.
+    if (
+      JSON.stringify(e.configuration) !== JSON.stringify(this.publicConfig()) ||
+      (e.version === 2) !== !!this.c.appBinding ||
+      ![1, 2].includes(e.version)
+    )
+      throw Error("Recovery export domain mismatch");
+    const o = e.operation;
+    const row = {
+      id: z.string().uuid().parse(o?.id),
+      rid: z
+        .string()
+        .regex(/^[1-9][0-9]*$/)
+        .parse(o?.reservationId),
+      txid: o.transactionId,
+      payload: z.string().max(256).parse(o?.payload),
+      transaction_json: JSON.stringify(o.transaction),
+    };
+    this.boundTransaction(row);
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      this.db
+        .prepare(
+          "INSERT OR REPLACE INTO native_safety(id,recovery_locked) VALUES(1,1)",
+        )
+        .run();
+      const old = this.db
+        .prepare("SELECT * FROM native_ops WHERE id=?")
+        .get(row.id) as any;
+      if (
+        old &&
+        (old.txid !== row.txid ||
+          old.transaction_json !== row.transaction_json ||
+          old.payload !== row.payload ||
+          old.rid !== row.rid)
+      )
+        throw Error("Recovery collision");
+      if (!old)
+        this.db
+          .prepare(
+            "INSERT INTO native_ops(id,payload,rid,txid,transaction_json,status) VALUES(?,?,?,?,?,'UNKNOWN')",
+          )
+          .run(row.id, row.payload, row.rid, row.txid, row.transaction_json);
+      this.db.exec("COMMIT");
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
+    return this.reconcile(row.id);
   }
   close() {
     this.db.close();
@@ -349,6 +494,7 @@ export class AuthorityGateway {
     return row;
   }
   async prepare(input: unknown) {
+    this.assertWritable();
     const payload = nativePayload(input, this.c.appBinding);
     if (
       this.db
@@ -470,6 +616,7 @@ export class AuthorityGateway {
     if (sha(row.payload) !== payloadHash)
       throw Error("Reviewed payload mismatch");
     if (row.status !== "PREPARED") return this.reconcile(id);
+    this.assertWritable();
     if (
       this.db
         .prepare(

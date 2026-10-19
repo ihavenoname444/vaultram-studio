@@ -1,5 +1,7 @@
 # Security assumptions and directive alignment
 
+**Latest implementation:** see [Owner signing and recovery](OWNER_SIGNING_RECOVERY.md) for the new revoke-only external signing handoff, SIGKILL/corruption drills and submission-locked receipt restoration. Full external custody, registration/grant signing and functioning OS isolation remain unverified; older gap descriptions below should be read with this limited update.
+
 ## Intended product
 
 Build an application for VaultRAM that lets people and agents create applications without becoming protocol engineers. Studio handles construction and understandable review; native authority constrains execution; VaultRAM capacity should back production authority; Mesh transports proofs across domains; Vaulta holds canonical ownership, permissions, state and receipts. Cloud, payments, automatic infrastructure selection and developer deployment are future product layers, not implemented services. The V relationship must follow VaultRAM's actual economic and contract interfaces, not a new token model invented by this application.

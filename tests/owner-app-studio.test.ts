@@ -3,7 +3,11 @@ import { existsSync, readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { ABI, PrivateKey, Serializer } from "@wharfkit/antelope";
+import { ABI, PrivateKey, Serializer, Transaction } from "@wharfkit/antelope";
+import {
+  OwnerRevoke,
+  singleOwnerKey,
+} from "../services/gateway/src/owner-revoke.ts";
 import {
   API,
   Name,
@@ -35,6 +39,22 @@ async function setup() {
   const app = compile(exampleSpec),
     owner = "owner1111111",
     actor = "agent1111111";
+  const ownerKey = PrivateKey.generate("K1");
+  const ownerAccount = {
+    account_name: owner,
+    permissions: [
+      {
+        perm_name: "active",
+        parent: "owner",
+        required_auth: {
+          threshold: 1,
+          keys: [{ key: String(ownerKey.toPublic()), weight: 1 }],
+          accounts: [],
+          waits: [],
+        },
+      },
+    ],
+  };
   const abiBytes = readFileSync(dir + "authority.abi"),
     wasm = readFileSync(dir + "authority.wasm");
   const abi = ABI.from(JSON.parse(abiBytes.toString()));
@@ -88,7 +108,7 @@ async function setup() {
     .send(owner + "@active");
   const rows = (table: string): any[] =>
     contract.tables[table](contract.toBigInt()).getTableRows();
-  const g = new AuthorityGateway(c, directory, abiBytes);
+  const g = new AuthorityGateway(c, directory, abiBytes, "create");
   vi.spyOn(g, "pins").mockResolvedValue({ last_irreversible_block_num: 10 });
   vi.spyOn(g, "permission").mockResolvedValue();
   vi.spyOn(g, "table").mockImplementation(async (table) => rows(table));
@@ -109,6 +129,7 @@ async function setup() {
       return {} as any; // no fabricated RAM trace
     });
   vi.spyOn(g, "rpc").mockImplementation(async (_base, method, body: any) => {
+    if (method === "get_account") return ownerAccount;
     if (method === "get_transaction_status")
       return {
         state: "IRREVERSIBLE",
@@ -119,14 +140,31 @@ async function setup() {
       return {
         block_num: 10,
         id: "b".repeat(64),
-        transactions: g
-          .list()
-          .map((o) => ({ status: "executed", trx: { id: o.txid } })),
+        transactions: [
+          ...g.list().map((o) => o.txid),
+          ...(g.db
+            .prepare(
+              "SELECT name FROM sqlite_master WHERE name='native_owner_ops'",
+            )
+            .get()
+            ? (
+                g.db
+                  .prepare(
+                    "SELECT request FROM native_owner_ops WHERE status!='PREPARED'",
+                  )
+                  .all() as any[]
+              ).map((r) => JSON.parse(r.request).transactionId)
+            : []),
+        ].map((id) => ({ status: "executed", trx: { id } })),
       };
     throw Error("Unexpected test RPC");
   });
   return {
     g,
+    directory,
+    abiBytes,
+    ownerKey,
+    ownerAccount,
     app,
     c,
     contract,
@@ -140,6 +178,197 @@ async function setup() {
 }
 
 describe.skipIf(!available)("owner/app Studio integration", () => {
+  it("owner can revoke even when operational permission is unhealthy", async () => {
+    const t = await setup();
+    try {
+      vi.mocked(t.g.permission).mockRejectedValue(
+        Error("Agent permission widened"),
+      );
+      await expect(t.g.state()).rejects.toThrow("widened");
+      const owner = new OwnerRevoke(t.g),
+        r = await owner.prepare();
+      const signature = String(
+        t.ownerKey.signDigest(
+          Transaction.from(r.transaction).signingDigest(JUNGLE4),
+        ),
+      );
+      expect((await owner.submit(r.id, [signature])).status).toBe(
+        "IRREVERSIBLE",
+      );
+    } finally {
+      t.cleanup();
+    }
+  });
+  it("refuses owner authority that reuses the gateway operational key", async () => {
+    const t = await setup();
+    try {
+      t.ownerAccount.permissions[0].required_auth.keys[0].key = String(
+        PrivateKey.from(t.c.privateKey).toPublic(),
+      );
+      await expect(new OwnerRevoke(t.g).prepare()).rejects.toThrow(
+        "must differ",
+      );
+      expect(t.send).not.toHaveBeenCalled();
+    } finally {
+      t.cleanup();
+    }
+  });
+  it("external owner signs exact revoke; real WASM revokes, rejects subsequent agent execution and cannot replay through gateway", async () => {
+    const t = await setup();
+    try {
+      const owner = new OwnerRevoke(t.g),
+        r = await owner.prepare();
+      expect(JSON.stringify(r)).not.toContain(String(t.ownerKey));
+      const signed = [
+        String(
+          t.ownerKey.signDigest(
+            Transaction.from(r.transaction).signingDigest(JUNGLE4),
+          ),
+        ),
+      ];
+      expect((await owner.submit(r.id, signed)).status).toBe("IRREVERSIBLE");
+      expect(t.rows("grants")[0].revoked).toBe(true);
+      await expect(
+        t.g.prepare({ appId: t.app.appId, text: "after revoke" }),
+      ).rejects.toThrow("revoked");
+      expect((await owner.submit(r.id, signed)).status).toBe("IRREVERSIBLE");
+      expect(t.send).toHaveBeenCalledTimes(1);
+    } finally {
+      t.cleanup();
+    }
+  });
+  it("rejects wrong signer, wrong chain, altered action, expiry and rotated/unsupported owner authority before broadcast", async () => {
+    const t = await setup();
+    try {
+      const owner = new OwnerRevoke(t.g),
+        r = await owner.prepare(),
+        tx = Transaction.from(r.transaction);
+      const sig = (key: PrivateKey, chain = JUNGLE4) => [
+        String(key.signDigest(tx.signingDigest(chain))),
+      ];
+      await expect(
+        owner.submit(r.id, sig(PrivateKey.generate("K1"))),
+      ).rejects.toThrow("signature");
+      await expect(
+        owner.submit(r.id, sig(t.ownerKey, "a".repeat(64))),
+      ).rejects.toThrow("signature");
+      expect(() =>
+        owner.validate({
+          ...r,
+          transaction: { ...r.transaction, actions: [] },
+        }),
+      ).toThrow("binding");
+      t.ownerAccount.permissions[0].required_auth.keys[0].key = String(
+        PrivateKey.generate("K1").toPublic(),
+      );
+      await expect(owner.submit(r.id, sig(t.ownerKey))).rejects.toThrow(
+        "changed",
+      );
+      for (const patch of [
+        { threshold: 2 },
+        { waits: [{ wait_sec: 1, weight: 1 }] },
+        {
+          accounts: [
+            { permission: { actor: "other", permission: "active" }, weight: 1 },
+          ],
+        },
+      ]) {
+        expect(() =>
+          singleOwnerKey(
+            {
+              ...t.ownerAccount,
+              permissions: [
+                {
+                  ...t.ownerAccount.permissions[0],
+                  required_auth: {
+                    ...t.ownerAccount.permissions[0].required_auth,
+                    ...patch,
+                  },
+                },
+              ],
+            },
+            t.c.appBinding.owner,
+          ),
+        ).toThrow("1-of-1");
+      }
+      const clock = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 130000);
+      try {
+        await expect(owner.submit(r.id, sig(t.ownerKey))).rejects.toThrow(
+          "expired",
+        );
+      } finally {
+        clock.mockRestore();
+      }
+      expect(t.send).not.toHaveBeenCalled();
+    } finally {
+      t.cleanup();
+    }
+  });
+  it("owner signature accepted before lost reply is reconciled without resend, even after restart", async () => {
+    const t = await setup();
+    let reopened: AuthorityGateway | undefined;
+    try {
+      const owner = new OwnerRevoke(t.g),
+        r = await owner.prepare();
+      const signature = [
+        String(
+          t.ownerKey.signDigest(
+            Transaction.from(r.transaction).signingDigest(JUNGLE4),
+          ),
+        ),
+      ];
+      t.send.mockRejectedValue(Error("lost reply"));
+      vi.mocked(t.g.rpc).mockImplementation(async (_u, method) => {
+        if (method === "get_account") return t.ownerAccount;
+        throw Error("offline");
+      });
+      expect((await owner.submit(r.id, signature)).status).toBe("UNKNOWN");
+      reopened = new AuthorityGateway(t.c, t.directory, t.abiBytes);
+      const again = new OwnerRevoke(reopened);
+      vi.spyOn(reopened, "pins").mockRejectedValue(Error("offline"));
+      const send = vi.spyOn(reopened.client.v1.chain, "send_transaction");
+      expect((await again.submit(r.id, signature)).status).toBe("UNKNOWN");
+      expect(send).not.toHaveBeenCalled();
+      expect(t.send).toHaveBeenCalledTimes(1);
+    } finally {
+      reopened?.close();
+      t.cleanup();
+    }
+  });
+  it("restores a native export only into submission-locked reconciliation, ignoring claimed success", async () => {
+    const t = await setup();
+    const destination = mkdtempSync(join(tmpdir(), "native-restore-"));
+    let restored: AuthorityGateway | undefined;
+    try {
+      const review = await t.g.prepare({
+        appId: t.app.appId,
+        text: "recover evidence",
+      });
+      const result = await t.g.submit(review.id, review.payloadHash);
+      restored = new AuthorityGateway(t.c, destination, t.abiBytes, "create");
+      vi.spyOn(restored, "pins").mockRejectedValue(Error("offline"));
+      const send = vi.spyOn(restored.client.v1.chain, "send_transaction");
+      const e = (result as any).evidence;
+      expect((await restored.restoreExport(e)).status).toBe("UNKNOWN");
+      await expect(
+        restored.prepare({ appId: t.app.appId, text: "unsafe resume" }),
+      ).rejects.toThrow("read-only");
+      expect(send).not.toHaveBeenCalled();
+      restored.close();
+      restored = new AuthorityGateway(t.c, destination, t.abiBytes);
+      vi.spyOn(restored, "pins").mockImplementation(t.g.pins);
+      vi.spyOn(restored, "rpc").mockImplementation(t.g.rpc);
+      vi.spyOn(restored, "table").mockImplementation(t.g.table);
+      expect((await restored.reconcile(review.id)).status).toBe("IRREVERSIBLE");
+      await expect(
+        restored.prepare({ appId: t.app.appId, text: "still blocked" }),
+      ).rejects.toThrow("read-only");
+    } finally {
+      restored?.close();
+      t.cleanup();
+      rmSync(destination, { recursive: true, force: true });
+    }
+  });
   it("derives the manifest from current grant state and never presents test writes as VaultRAM backing", async () => {
     const t = await setup();
     try {

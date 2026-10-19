@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from "react";
+import { OwnerControls } from "./OwnerControls.tsx";
 type Props = {
   token: string;
   appId?: string;
   appName?: string;
   appHash?: string;
+  ownerControlEnabled?: boolean;
 };
-export function AuthorityPanel({ token, appId, appName, appHash }: Props) {
+export function AuthorityPanel({
+  token,
+  appId,
+  appName,
+  appHash,
+  ownerControlEnabled,
+}: Props) {
   const [state, setState] = useState<any>(),
     [review, setReview] = useState<any>(),
     [text, setText] = useState(
@@ -256,6 +264,13 @@ export function AuthorityPanel({ token, appId, appName, appHash }: Props) {
           </button>
         </div>
       </section>
+      {ownerControlEnabled && (
+        <OwnerControls
+          api={api}
+          refresh={refresh}
+          requests={state?.ownerRequests ?? []}
+        />
+      )}
       <section className="native-card">
         <h2>Chain evidence</h2>
         <p className="muted">

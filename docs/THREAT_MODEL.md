@@ -1,5 +1,7 @@
 # Threat model by deployment
 
+**Latest implementation:** see [Owner signing and recovery](OWNER_SIGNING_RECOVERY.md) for the new revoke-only external signing handoff, SIGKILL/corruption drills and submission-locked receipt restoration. Full external custody, registration/grant signing and functioning OS isolation remain unverified; older gap descriptions below should be read with this limited update.
+
 ## Native owner/app v2
 
 | Attacker / failure                 | Enforced boundary                                                                                              | Remaining exposure                                                                                                          |
