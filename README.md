@@ -2,7 +2,9 @@
 
 A local development studio for a bounded agent marketplace: describe an app, compile a versioned specification, sign an action, inspect state, export evidence.
 
-**Current delivery:** verified Phase 0 Jungle4 core, alongside an explicitly labelled local simulation. The record includes 26 irreversible application transactions, including four manually confirmed MetaMask actions, 76 automated tests (including the separate authority proof) and two prior Linux browser tests. The local desktop wallet demo passed; see `docs/VERIFICATION.md`. The runtime trusts its relayer and is not production infrastructure.
+**Current delivery:** a verified Jungle4 owner/app authority slice, alongside the earlier Phase 0 core and explicitly labelled local simulation. The current suite passes 115 tests. Legacy history includes 26 irreversible application transactions, four manually confirmed MetaMask actions and two prior Linux browser tests. The legacy runtime trusts its relayer; this is not production infrastructure.
+
+**Owner/app v2:** native owner consent, immutable app/spec registration, app-bound grants and typed owner/app receipts are now connected through Studio and verified on a new Jungle4 deployment. The browser write and 16 live/API acceptance checks passed. Start the configured demo with `pnpm demo:owner-app`. See [owner/app evidence and limits](docs/OWNER_APP_AUTHORITY.md). This is an independent application intended for VaultRAM; V and VaultRAM RAM leasing are not yet integrated.
 
 **Native Studio integration:** Public memory now has a real native-authority workspace. Prepare, execute, reconcile, export and reload passed on Jungle4 using a restricted agent key. Start the configured local demo with `pnpm demo:authority`. See [Native Studio](docs/NATIVE_STUDIO.md) for the exact scope and signing trust. The older EVM template remains separate.
 

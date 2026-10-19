@@ -1,5 +1,7 @@
 # Reality and trust
 
+**Current owner/app milestone:** the separate [v2 Studio native-authority flow](OWNER_APP_AUTHORITY.md) is built and live-tested on Jungle4. Native owner consent and immutable app scope are enforced on chain; 115 local tests and 16 live/API checks pass. Historical counts and legacy relayer trust below describe earlier components, not v2 ownership. Native-wallet onboarding, V integration and production deployment remain open.
+
 ## REAL, verified locally
 
 The deterministic compiler validates AppSpec v1 and produces inspectable React source and manifests from controlled templates. Real EOA signatures use EIP-712 and are verified cryptographically. The local gateway persists state, nonces and Ed25519-signed receipts. Tests cover tampering, replay, ownership and expiry. The browser flow and mobile layout were manually exercised.

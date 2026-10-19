@@ -1,5 +1,7 @@
 # Native authority in Studio
 
+This document records **v1**. Its app ID is payload metadata, not on-chain ownership. The newer, separate [owner/app v2 deployment](OWNER_APP_AUTHORITY.md) enforces native owner consent and typed app scope. Use `pnpm demo:owner-app` for that flow; v1 remains available for historical verification.
+
 The Studio now has a native-authority workspace for public memory writes. It uses a real native actor and a narrowly delegated signing key, not an EVM owner asserted by the relayer. The original Templates / EVM demo remains a separate legacy path and retains its documented relayer trust.
 
 ## Deployment and acceptance

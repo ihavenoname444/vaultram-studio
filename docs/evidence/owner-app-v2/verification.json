@@ -1,0 +1,21 @@
+{
+  "model": "OWNER_APP_V2",
+  "appBinding": {
+    "appId": "7707187089270261976",
+    "owner": "vrya3iayygzy",
+    "appHash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+  },
+  "status": "VERIFIED_NATIVE_STUDIO_WRITE",
+  "account": "vralzuwmebbx",
+  "transactionId": "77faae605bd7e167347474a1f1f86e3ef80d34e0df96cd8be1ec1d1de15e8a75",
+  "block": 292894234,
+  "effectId": "42779262017618",
+  "codeHash": "fadd779a8decc9c09e78cde0369c4aa7fff611ea7a39e36af9ce560564b75557",
+  "sourceHash": "c7c4a1588dddbf1b903a801bbb3af69db741d83090b807dcc1b0cc0e04d13255",
+  "checkedAt": "2026-10-19T14:35:12.953Z",
+  "limitations": [
+    "One contract and native account domain; local operator controls the delegated key",
+    "Current code/ABI pinned; upgrade admin and chain remain trusted",
+    "No claim of V necessity or comparative security superiority"
+  ]
+}

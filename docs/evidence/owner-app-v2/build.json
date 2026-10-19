@@ -1,0 +1,9 @@
+{
+  "method": "Official CDT 4.1.1 in temporary Binder Linux session",
+  "compilerVersion": "cdt-cpp version 4.1.1",
+  "cdtPackageSha256": "d946e6b64f297442d19e486401aa49f956080b07a1fa6335f29976106175b588",
+  "repeatBuildByteIdentical": true,
+  "sourceSha256": "c7c4a1588dddbf1b903a801bbb3af69db741d83090b807dcc1b0cc0e04d13255",
+  "wasmSha256": "fadd779a8decc9c09e78cde0369c4aa7fff611ea7a39e36af9ce560564b75557",
+  "abiSha256": "fe8d8cb20c46b9c0f5a6f5ea23756e7b64602a784a1cee28ea0104fcd3cd7fb7"
+}

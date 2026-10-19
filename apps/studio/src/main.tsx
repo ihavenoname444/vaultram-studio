@@ -439,6 +439,7 @@ function Studio() {
           token={config.token}
           appId={app?.appId}
           appName={app?.spec.name}
+          appHash={app?.appHash}
         />
       </div>
     );

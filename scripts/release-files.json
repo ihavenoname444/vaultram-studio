@@ -76,5 +76,16 @@
   "tests/native-evidence.test.ts",
   "tests/dev-boundary.test.ts",
   "services/gateway/src/private-file.ts",
-  "tests/private-file.test.ts"
+  "tests/private-file.test.ts",
+  "contracts/owner-app/authority.cpp",
+  "packages/core/src/app-authority.ts",
+  "tests/owner-app.test.ts",
+  "tests/owner-app-studio.test.ts",
+  "scripts/setup-owner-app.ts",
+  "scripts/test-owner-app.ts",
+  "docs/OWNER_APP_AUTHORITY.md",
+  "docs/evidence/owner-app-v2/native-write.json",
+  "docs/evidence/owner-app-v2/verification.json",
+  "docs/evidence/owner-app-v2/acceptance.json",
+  "docs/evidence/owner-app-v2/build.json"
 ]

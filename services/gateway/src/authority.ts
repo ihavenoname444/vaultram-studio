@@ -18,11 +18,20 @@ import {
   assertNativeBlock,
   assertNativeEffect,
 } from "../../../packages/core/src/native-evidence.ts";
+import {
+  AppBinding,
+  NativeAppId,
+  assertAppBinding,
+  assertAppEffect,
+  assertCompiledApp,
+  type AppAuthorityBinding,
+} from "../../../packages/core/src/app-authority.ts";
 import { nativeExecutionRam } from "./chain.ts";
 const name = z.string().regex(/^[a-z1-5.]{1,12}$/);
 const pin = z.string().regex(/^[a-f0-9]{64}$/);
 export const AuthorityConfig = z
   .object({
+    appBinding: AppBinding.optional(),
     account: name,
     actor: name,
     permission: name.refine((x) => !["active", "owner"].includes(x)),
@@ -41,14 +50,16 @@ const sha = (s: string | Uint8Array) =>
   createHash("sha256").update(s).digest("hex");
 export const NativeWrite = z
   .object({
-    appId: z.string().regex(/^[1-9][0-9]{0,19}$/),
+    appId: NativeAppId,
     text: z.string().min(1).max(256),
   })
   .strict();
-export function nativePayload(input: unknown) {
+export function nativePayload(input: unknown, binding?: AppAuthorityBinding) {
   const b = NativeWrite.parse(input);
+  if (binding && b.appId !== binding.appId)
+    throw Error("Native app outside grant");
   const payload = JSON.stringify({
-    appId: b.appId,
+    ...(binding ? {} : { appId: b.appId }),
     kind: "memory",
     text: b.text,
   });
@@ -97,7 +108,7 @@ export class AuthorityGateway {
     config: AuthoritySettings,
     directory: string,
     abiBytes: Uint8Array = readFileSync(
-      "contracts/build/authority/authority.abi",
+      `contracts/build/${config.appBinding ? "owner-app" : "authority"}/authority.abi`,
     ),
   ) {
     this.c = AuthorityConfig.parse(config);
@@ -246,6 +257,23 @@ export class AuthorityGateway {
         "Local operator controls agent signing. Native contract enforces grant limits. Upgrade administrator and chain remain trusted.",
     };
   }
+  assertApp(app: { appId: string; appHash: string }) {
+    if (this.c.appBinding) assertCompiledApp(app, this.c.appBinding);
+  }
+  async appBinding(grant: any, endpoint: string = this.c.independent) {
+    if (!this.c.appBinding) return undefined;
+    const app = (await this.table("apps", endpoint)).find(
+      (a: any) => String(a.id) === this.c.appBinding!.appId,
+    );
+    assertAppBinding(
+      app,
+      grant,
+      this.c.appBinding,
+      this.c.actor,
+      this.c.permission,
+    );
+    return app;
+  }
   async state() {
     await this.pins(this.c.independent);
     await this.permission(this.c.independent);
@@ -278,6 +306,7 @@ export class AuthorityGateway {
     const grant = grants.find((g: any) => String(g.id) === this.c.grantId);
     return {
       configuration: this.publicConfig(),
+      app: await this.appBinding(grant),
       root: root[0],
       grant,
       effects: effects.filter(
@@ -306,7 +335,7 @@ export class AuthorityGateway {
     return row;
   }
   async prepare(input: unknown) {
-    const payload = nativePayload(input);
+    const payload = nativePayload(input, this.c.appBinding);
     if (
       this.db
         .prepare(
@@ -320,12 +349,14 @@ export class AuthorityGateway {
     const grants = await this.table("grants", this.c.rpc),
       grant = grants.find((g: any) => String(g.id) === this.c.grantId);
     assertGrant(grant, this.c, Math.floor(Date.now() / 1000));
+    await this.appBinding(grant, this.c.rpc);
     if (Buffer.byteLength(payload) > Number(grant.max_payload))
       throw Error("Payload exceeds native grant limit");
     const rid = BigInt("0x" + randomBytes(6).toString("hex")).toString();
     if (rid === "0") throw Error("Retry preparation");
     const c = this.c;
     const data = {
+      ...(c.appBinding ? { app_id: c.appBinding.appId } : {}),
       grant_id: c.grantId,
       id: rid,
       space: c.space,
@@ -389,6 +420,7 @@ export class AuthorityGateway {
       );
     const expected = [
       make("reserve", {
+        ...(c.appBinding ? { app_id: c.appBinding.appId } : {}),
         grant_id: c.grantId,
         id: row.rid,
         space: c.space,
@@ -430,6 +462,13 @@ export class AuthorityGateway {
       throw Error("Native review expired; prepare a new operation");
     await this.pins(this.c.rpc);
     await this.permission();
+    if (this.c.appBinding) {
+      const grant = (await this.table("grants", this.c.rpc)).find(
+        (g: any) => String(g.id) === this.c.grantId,
+      );
+      assertGrant(grant, this.c, Math.floor(Date.now() / 1000));
+      await this.appBinding(grant, this.c.rpc);
+    }
     if (
       this.db
         .prepare(
@@ -520,8 +559,12 @@ export class AuthorityGateway {
         row.payload,
         sha(row.payload),
       );
+      const app = await this.appBinding(grant);
+      if (this.c.appBinding)
+        assertAppEffect(effect, this.c.appBinding, this.c.permission);
       const evidence = {
-        version: 1,
+        version: this.c.appBinding ? 2 : 1,
+        ...(app ? { app } : {}),
         ram: (() => {
           const sample = this.db
             .prepare("SELECT observation FROM native_ram WHERE txid=?")

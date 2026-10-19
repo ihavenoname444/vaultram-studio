@@ -6,6 +6,11 @@ import {
   assertNativeBlock,
   assertNativeEffect,
 } from "../packages/core/src/native-evidence.ts";
+import {
+  AppBinding,
+  assertAppBinding,
+  assertAppEffect,
+} from "../packages/core/src/app-authority.ts";
 const [file, expectedAccount, output] = process.argv.slice(2);
 if (!file || !expectedAccount)
   throw Error(
@@ -14,18 +19,21 @@ if (!file || !expectedAccount)
 const e = JSON.parse(readFileSync(file, "utf8")),
   c = e.configuration,
   o = e.operation;
-const build = JSON.parse(
-  readFileSync("contracts/build/authority/build.json", "utf8"),
-);
+if (![1, 2].includes(e.version) || (e.version === 2) !== !!c.appBinding)
+  throw Error("Evidence authority version mismatch");
+const binding = c.appBinding ? AppBinding.parse(c.appBinding) : undefined;
+const buildDir = "contracts/build/" + (binding ? "owner-app" : "authority");
+const source = binding
+  ? "contracts/owner-app/authority.cpp"
+  : "contracts/authority-proof/authority.cpp";
+const build = JSON.parse(readFileSync(buildDir + "/build.json", "utf8"));
 const hash = (x: Uint8Array | string) =>
   createHash("sha256").update(x).digest("hex");
-const bytes = readFileSync("contracts/build/authority/authority.abi"),
+const bytes = readFileSync(buildDir + "/authority.abi"),
   abi = ABI.from(JSON.parse(bytes.toString()));
 if (
-  hash(readFileSync("contracts/authority-proof/authority.cpp")) !==
-    build.sourceSha256 ||
-  hash(readFileSync("contracts/build/authority/authority.wasm")) !==
-    build.wasmSha256 ||
+  hash(readFileSync(source)) !== build.sourceSha256 ||
+  hash(readFileSync(buildDir + "/authority.wasm")) !== build.wasmSha256 ||
   hash(bytes) !== build.abiSha256
 )
   throw Error("Local reviewed build mismatch");
@@ -57,6 +65,7 @@ const make = (name: string, data: object) =>
   );
 const expected = [
   make("reserve", {
+    ...(binding ? { app_id: binding.appId } : {}),
     grant_id: c.grantId,
     id: o.reservationId,
     space: c.space,
@@ -125,7 +134,16 @@ assertNativeEffect(
   o.payload,
   hash(o.payload),
 );
+if (binding) {
+  const app = await row("apps", binding.appId),
+    grant = await row("grants", c.grantId);
+  assertAppBinding(app, grant, binding, c.actor, c.permission);
+  if (grant.space !== c.space) throw Error("Grant namespace mismatch");
+  assertAppEffect(effect, binding, c.permission);
+}
 const result = {
+  model: binding ? "OWNER_APP_V2" : "NATIVE_GRANT_V1",
+  ...(binding ? { appBinding: binding } : {}),
   status: "VERIFIED_NATIVE_STUDIO_WRITE",
   account: c.account,
   transactionId: o.transactionId,

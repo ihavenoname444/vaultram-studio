@@ -13,8 +13,15 @@ const compiler = process.env.CDT_CPP ?? "cdt-cpp";
 const version = spawnSync(compiler, ["--version"], { encoding: "utf8" });
 if (version.status !== 0 || !version.stdout.includes("4.1.1"))
   throw Error("Official CDT 4.1.1 required; see docs/AUTHORITY_PROOF.md");
-const source = resolve("contracts/authority-proof/authority.cpp"),
-  out = "contracts/build/authority";
+const model = process.argv[2] ?? "v1";
+if (!["v1", "owner-app-v2"].includes(model))
+  throw Error("Unknown authority model");
+const source = resolve(
+    model === "v1"
+      ? "contracts/authority-proof/authority.cpp"
+      : "contracts/owner-app/authority.cpp",
+  ),
+  out = "contracts/build/" + (model === "v1" ? "authority" : "owner-app");
 const stage = mkdtempSync(join(tmpdir(), "vaultram-authority-"));
 const hash = (b: Uint8Array) => createHash("sha256").update(b).digest("hex");
 try {

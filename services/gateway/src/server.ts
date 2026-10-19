@@ -184,7 +184,7 @@ export async function createServer(
   server.post("/api/authority/prepare", async (req) =>
     serial(async () => {
       const body = NativeWrite.parse(req.body);
-      store.app(body.appId);
+      native().assertApp(store.app(body.appId));
       return native().prepare(body);
     }),
   );

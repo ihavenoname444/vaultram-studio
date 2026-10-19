@@ -29,7 +29,11 @@ if (values.VAULTA_PERMISSION && values.VAULTA_PERMISSION !== "relay")
   throw new Error("Demo requires the restricted relay permission");
 process.env.VAULTA_PERMISSION = "relay";
 process.env.VAULTRAM_MODE = "JUNGLE4";
-process.env.VAULTRAM_DATA_DIR = resolve(".data/demo-jungle4");
+process.env.VAULTRAM_DATA_DIR = resolve(
+  process.env.VAULTRAM_AUTHORITY_MODEL === "owner-app-v2"
+    ? ".data/demo-owner-app"
+    : ".data/demo-jungle4",
+);
 process.env.OPENAI_API_KEY = "";
 process.env.OPENAI_MODEL = "";
 const chain = new Jungle(
@@ -131,8 +135,11 @@ console.log(
       cpuAvailable: account.cpu_limit.available,
       netAvailable: account.net_limit.available,
       ai: "FIXTURE — API disabled",
-      wallet: "External EVM EOA required; signature only, no EVM gas",
-      dataDirectory: ".data/demo-jungle4",
+      wallet: process.env.VAULTRAM_AUTHORITY_CONFIG
+        ? "Local restricted native key; native owner/allocator admin keys remain outside the gateway"
+        : "External EVM EOA required; signature only, no EVM gas",
+      authorityModel: process.env.VAULTRAM_AUTHORITY_MODEL ?? "legacy-intent",
+      dataDirectory: process.env.VAULTRAM_DATA_DIR,
       resources:
         "Current RPC observations, not a guarantee of future availability",
     },

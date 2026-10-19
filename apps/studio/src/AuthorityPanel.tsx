@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
-type Props = { token: string; appId?: string; appName?: string };
-export function AuthorityPanel({ token, appId, appName }: Props) {
+type Props = {
+  token: string;
+  appId?: string;
+  appName?: string;
+  appHash?: string;
+};
+export function AuthorityPanel({ token, appId, appName, appHash }: Props) {
   const [state, setState] = useState<any>(),
     [review, setReview] = useState<any>(),
     [text, setText] = useState(
@@ -51,12 +56,19 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
   useEffect(() => setReview(undefined), [appId]);
   const g = state?.grant,
     c = state?.configuration;
+  const binding = c?.appBinding;
+  const appMatches =
+    !binding || (appId === binding.appId && appHash === "0x" + binding.appHash);
   const usable =
     g &&
     !g.revoked &&
     Number(g.expires) * 1000 > now &&
     Number(g.available) > 0;
-  const encoded = JSON.stringify({ appId, kind: "memory", text }),
+  const encoded = JSON.stringify({
+      ...(binding ? {} : { appId }),
+      kind: "memory",
+      text,
+    }),
     bytes = new TextEncoder().encode(encoded).length;
   const expired = review && Date.parse(review.expires + "Z") <= now;
   function download(evidence: unknown, id: string) {
@@ -106,6 +118,23 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
           </p>
         ) : (
           <>
+            {binding ? (
+              <p>
+                Native owner: <strong>{binding.owner}</strong> · Registered app
+                #{binding.appId}
+                <br />
+                App specification hash: <code>{binding.appHash}</code>
+                <br />
+                Owner and app are enforced by the contract. This is a native
+                account binding; it does not prove ownership of a MetaMask
+                address.
+              </p>
+            ) : (
+              <p>
+                Grant v1: application ID is payload metadata. On-chain app
+                ownership is not enforced by this deployment.
+              </p>
+            )}
             <div className="native-grid">
               <div>
                 <small>Native actor</small>
@@ -158,6 +187,12 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
             {appName ?? "Choose or compile an application in Templates first"}
           </strong>
         </p>
+        {!appMatches && (
+          <p role="alert">
+            This application does not match the registered native app. Select
+            the approved app to prepare a write.
+          </p>
+        )}
         <label htmlFor="native-memory">Public memory</label>
         <textarea
           id="native-memory"
@@ -170,11 +205,16 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
         />
         <div className="native-heading">
           <small>
-            {bytes} / 256 UTF-8 bytes, including application binding
+            {bytes} / 256 UTF-8 bytes
+            {binding
+              ? " of public record content"
+              : ", including application metadata"}
           </small>
           <button
             className="button primary"
-            disabled={busy || !usable || !appId || !text || bytes > 256}
+            disabled={
+              busy || !usable || !appMatches || !appId || !text || bytes > 256
+            }
             onClick={() =>
               void task(async () =>
                 setReview(await api("/prepare", { appId, text })),
@@ -262,6 +302,11 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
           state?.effects?.map((e: any) => (
             <article className="native-operation" key={e.id}>
               <strong>Effect #{e.id}</strong>
+              {binding && (
+                <p>
+                  Native owner {e.owner} · App #{e.app_id}
+                </p>
+              )}
               <pre>{e.payload}</pre>
             </article>
           ))
@@ -294,6 +339,12 @@ export function AuthorityPanel({ token, appId, appName }: Props) {
               {review.configuration.actor}@{review.configuration.permission}.
               Jungle4 contract {review.configuration.account}.
             </p>
+            {review.configuration.appBinding && (
+              <p>
+                Native owner {review.configuration.appBinding.owner} · App #
+                {review.configuration.appBinding.appId}
+              </p>
+            )}
             <pre>{review.payload}</pre>
             <p>
               {expired

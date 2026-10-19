@@ -20,7 +20,8 @@
     "format:check": "prettier --check .",
     "demo": "node --import tsx scripts/demo.ts",
     "demo:check": "node --import tsx scripts/demo.ts --check",
-    "demo:authority": "node --import tsx scripts/authority-demo.ts"
+    "demo:authority": "node --import tsx scripts/authority-demo.ts",
+    "demo:owner-app": "node --import tsx scripts/authority-demo.ts owner-app-v2"
   },
   "dependencies": {
     "@wharfkit/antelope": "4.0.2",
