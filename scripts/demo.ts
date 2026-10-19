@@ -136,7 +136,7 @@ console.log(
       netAvailable: account.net_limit.available,
       ai: "FIXTURE — API disabled",
       wallet: process.env.VAULTRAM_AUTHORITY_CONFIG
-        ? "Local restricted native key; native owner/allocator admin keys remain outside the gateway"
+        ? "Local restricted native signer; owner/admin files remain local under the same OS identity, without process isolation"
         : "External EVM EOA required; signature only, no EVM gas",
       authorityModel: process.env.VAULTRAM_AUTHORITY_MODEL ?? "legacy-intent",
       dataDirectory: process.env.VAULTRAM_DATA_DIR,

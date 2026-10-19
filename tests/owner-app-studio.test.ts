@@ -140,6 +140,56 @@ async function setup() {
 }
 
 describe.skipIf(!available)("owner/app Studio integration", () => {
+  it("derives the manifest from current grant state and never presents test writes as VaultRAM backing", async () => {
+    const t = await setup();
+    try {
+      const before = await t.g.state();
+      expect(before.manifest?.limits).toMatchObject({
+        available: 10,
+        consumed: 0,
+        unit: "UNBACKED_TEST_WRITE",
+      });
+      expect(before.manifest?.backing).toEqual({
+        status: "UNAVAILABLE",
+        verified: false,
+        position: null,
+      });
+      const review = await t.g.prepare({
+        appId: t.app.appId,
+        text: "test-only",
+        requirement: "NATIVE_TESTNET_PROOF",
+      });
+      expect(review.manifest).toEqual(before.manifest);
+      await t.g.submit(review.id, review.payloadHash);
+      expect((await t.g.state()).manifest?.limits).toMatchObject({
+        available: 9,
+        consumed: 1,
+      });
+      await t.contract.actions
+        .revoke({ grant_id: 1 })
+        .send(t.c.appBinding.owner + "@active");
+      expect((await t.g.state()).manifest?.limits.revoked).toBe(true);
+    } finally {
+      t.cleanup();
+    }
+  });
+  it("fails closed on requested VaultRAM backing before RPC, journaling or broadcast", async () => {
+    const t = await setup();
+    try {
+      await expect(
+        t.g.prepare({
+          appId: t.app.appId,
+          text: "backed required",
+          requirement: "VAULTRAM_BACKED",
+        }),
+      ).rejects.toThrow("backing unavailable");
+      expect(t.g.table).not.toHaveBeenCalled();
+      expect(t.g.list()).toHaveLength(0);
+      expect(t.send).not.toHaveBeenCalled();
+    } finally {
+      t.cleanup();
+    }
+  });
   it("executes the gateway's signed typed app binding in WASM and checks owner/app evidence", async () => {
     const t = await setup();
     try {

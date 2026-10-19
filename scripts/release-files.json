@@ -87,5 +87,9 @@
   "docs/evidence/owner-app-v2/native-write.json",
   "docs/evidence/owner-app-v2/verification.json",
   "docs/evidence/owner-app-v2/acceptance.json",
-  "docs/evidence/owner-app-v2/build.json"
+  "docs/evidence/owner-app-v2/build.json",
+  "packages/core/src/authority-manifest.ts",
+  "tests/authority-manifest.test.ts",
+  "docs/SECURITY_ASSUMPTIONS.md",
+  "docs/AUTHORITY_INVARIANTS.md"
 ]

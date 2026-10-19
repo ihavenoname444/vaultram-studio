@@ -1,4 +1,20 @@
-# Phase 0 threat model
+# Threat model by deployment
+
+## Native owner/app v2
+
+| Attacker / failure                 | Enforced boundary                                                                                              | Remaining exposure                                                                                                          |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Stolen restricted operational key  | Actual WASM checks owner/app, actor permission, namespace, payload bound, count, replay, expiry and revocation | Can originate arbitrary opaque records within every grant assigned to that key; no separate native user-intent verification |
+| Gateway process or host compromise | HTTP and transaction validation do not protect against arbitrary execution under the gateway OS identity       | Local admin/owner keys are not isolated; cannot claim treasury/owner safety for this threat model                           |
+| Forged capacity claim              | Manifest always reports unavailable backing; backed requests fail before signing                               | Deployed v2 itself accepts administrator-defined test units, not verified VaultRAM positions                                |
+| Malicious payload                  | Payload hash and byte bound; immutable effect owner/app attribution                                            | Payload semantics are untrusted; the contract does not parse a full AppSpec policy or authorize dollar spend                |
+| Shared signer across apps          | Each grant remains bound to its own app and budget                                                             | Compromise reaches all grants assigned to the signer; per-app keys needed for narrower isolation                            |
+| Revocation, expiry, lost reply     | Contract rechecks grant at consume; permanent tombstones; unresolved gateway operations block new preparation  | No app-wide freeze/recovery UI; no automatic release of unresolved reservations; database-loss drill remains                |
+| RPC or upgrade administrator       | Independent selected RPC, code/ABI pins, transaction reconstruction and irreversible inclusion                 | RPC remains trusted, observations are not historical state proofs, admin can change code and pin checks have a race         |
+
+The hostile-key WASM tests deliberately include a successful attacker-authored in-scope write. A test report that omits this residual capability would overstate the model. These are local VM tests; prior live acceptance evidence is recorded separately in `docs/evidence/owner-app-v2/`. This is independent agent review, not an external professional security audit. See AUTHORITY_INVARIANTS.md.
+
+## Legacy phase 0 runtime
 
 Scope: local Studio/gateway, bounded Jungle4 runtime, signed intents and receipts. Public data only. This is an implementation review, not an independent audit. See ARCHITECTURE.md for trust boundaries.
 
@@ -29,6 +45,6 @@ Scope: local Studio/gateway, bounded Jungle4 runtime, signed intents and receipt
 
 Keep .data and environment files local with restrictive permissions. The source release uses an explicit allowlist, forbidden-path checks and secret scanning. Never put secrets in prompts, browser fields, logs or public issues. Exported payloads and addresses are public data; review before sharing. Do not reuse test keys for mainnet.
 
-The runtime administrator can pause execution. The relayer administrator can replace/revoke the child key. Stop the gateway before incident investigation. The Studio does not yet implement per-owner revocation or production key-management automation. Preserve SQLite and prepared transactions to reconcile uncertain operations before restarting writes.
+The legacy runtime administrator can pause execution. The relayer administrator can replace/revoke the child key. Stop the gateway before incident investigation. The legacy Studio does not implement per-owner revocation; native v2 supports owner-authorized grant revocation on chain, but not a user-wallet revocation UI or production key-management automation. Preserve SQLite and prepared transactions to reconcile uncertain operations before restarting writes. Restrictive local file permissions do not isolate secrets from another process under the same OS identity.
 
 Structured timing/operational logging and billing metering are incomplete; current records are not a full production audit service. External review, dependency assessment, recovery tests and measurable abuse controls are required before public hosting or mainnet.

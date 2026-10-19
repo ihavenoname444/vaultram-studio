@@ -1,6 +1,20 @@
 # Architecture and evidence
 
-## Execution path
+## Mission and current native owner/app v2 path
+
+Studio is an application being built for the VaultRAM ecosystem, not the VaultRAM protocol itself. The target is usable infrastructure for human builders and autonomous agents: idea → deterministic specification → understandable permission approval → verified capacity → bounded execution → canonical state → independently checkable receipt. Other networks may supply users, payments, execution or compute; Vaulta supplies authority and canonical state where that provides a real advantage. The target does not require moving every application to Vaulta.
+
+Current v2: deterministic AppSpec → native owner/allocator coauthorization → immutable app ID/full hash registry → restricted actor grant → atomic reserve + consume → public native record → irreversible inclusion checked through a separately selected RPC. See OWNER_APP_AUTHORITY.md for deployment and live evidence. Studio now displays a manifest derived from the observed registry and grant. A specification hash identifies an app; it does not execute every descriptive feature in that specification.
+
+The native contract enforces owner/app, actor permission, namespace, write count, payload size, expiry and revocation. These are **unbacked test write units**, not RAM-byte quotas or VaultRAM/$V positions. A request requiring `VAULTRAM_BACKED` is rejected before preparation; this local admission check does not retrofit backing into the deployed contract. Native test mode remains explicitly usable.
+
+The gateway currently signs with a local operational key and can originate in-scope writes. It is not yet an untrusted transport-only relay. Local owner/admin files under the same OS identity are not isolated from gateway process compromise. Production requires externally controlled owner signing, isolated credentials and a verified capacity provider. No cross-chain execution or settlement is implemented. See SECURITY_ASSUMPTIONS.md and AUTHORITY_INVARIANTS.md for the implementation boundary and next steps.
+
+## Legacy EVM-signature runtime (separate deployment)
+
+The remaining sections describe the original EVM-signature/relayer flow. They must not be used to describe the native v2 owner/app contract above.
+
+### Execution path
 
 Prompt → provider produces descriptive fields → strict AppSpec v1 → reviewed deterministic template → explicit action payload → EIP-712 EOA signature → gateway validation and persistent reservation → Jungle4 transaction → RPC observations → Ed25519 receipt → independent CLI.
 

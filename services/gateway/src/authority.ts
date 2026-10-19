@@ -27,6 +27,11 @@ import {
   type AppAuthorityBinding,
 } from "../../../packages/core/src/app-authority.ts";
 import { nativeExecutionRam } from "./chain.ts";
+import {
+  AuthorityRequirement,
+  assertAuthorityRequirement,
+  authorityManifest,
+} from "../../../packages/core/src/authority-manifest.ts";
 const name = z.string().regex(/^[a-z1-5.]{1,12}$/);
 const pin = z.string().regex(/^[a-f0-9]{64}$/);
 export const AuthorityConfig = z
@@ -52,10 +57,12 @@ export const NativeWrite = z
   .object({
     appId: NativeAppId,
     text: z.string().min(1).max(256),
+    requirement: AuthorityRequirement.default("NATIVE_TESTNET_PROOF"),
   })
   .strict();
 export function nativePayload(input: unknown, binding?: AppAuthorityBinding) {
   const b = NativeWrite.parse(input);
+  assertAuthorityRequirement(b.requirement);
   if (binding && b.appId !== binding.appId)
     throw Error("Native app outside grant");
   const payload = JSON.stringify({
@@ -304,9 +311,16 @@ export class AuthorityGateway {
     )
       throw Error("Authority conservation mismatch");
     const grant = grants.find((g: any) => String(g.id) === this.c.grantId);
+    const app = await this.appBinding(grant);
     return {
       configuration: this.publicConfig(),
-      app: await this.appBinding(grant),
+      app,
+      manifest: this.c.appBinding
+        ? authorityManifest(app, grant, {
+            ...this.c,
+            appBinding: this.c.appBinding,
+          })
+        : undefined,
       root: root[0],
       grant,
       effects: effects.filter(
@@ -349,7 +363,13 @@ export class AuthorityGateway {
     const grants = await this.table("grants", this.c.rpc),
       grant = grants.find((g: any) => String(g.id) === this.c.grantId);
     assertGrant(grant, this.c, Math.floor(Date.now() / 1000));
-    await this.appBinding(grant, this.c.rpc);
+    const app = await this.appBinding(grant, this.c.rpc);
+    const manifest = this.c.appBinding
+      ? authorityManifest(app, grant, {
+          ...this.c,
+          appBinding: this.c.appBinding,
+        })
+      : undefined;
     if (Buffer.byteLength(payload) > Number(grant.max_payload))
       throw Error("Payload exceeds native grant limit");
     const rid = BigInt("0x" + randomBytes(6).toString("hex")).toString();
@@ -401,6 +421,7 @@ export class AuthorityGateway {
       reservationId: rid,
       transactionId: String(tx.id),
       expires: String(tx.expiration),
+      manifest,
       configuration: this.publicConfig(),
       grant,
     };

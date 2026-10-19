@@ -174,8 +174,39 @@ export function AuthorityPanel({ token, appId, appName, appHash }: Props) {
             <p className="muted">
               Local test operator signing with a restricted native key. MetaMask
               is not used for this flow. The key can reserve and consume; it
-              cannot grant more capacity or transfer tokens.
+              cannot grant more capacity or transfer tokens under the checked
+              permission setup. The gateway can originate any write within its
+              grants. Local owner keys are not isolated from a full compromise
+              of this computer.
             </p>
+            {state.manifest && (
+              <section aria-label="Actual permission scope">
+                <h3>What this grant permits</h3>
+                <p>
+                  Append public records to this app and namespace, up to{" "}
+                  {state.manifest.limits.maxPayloadBytes} UTF-8 bytes per
+                  record, including its JSON wrapper. Each reservation uses one
+                  write unit.
+                </p>
+                <p>
+                  The native owner can revoke future execution using{" "}
+                  <code>revoke</code>. Completed records remain public. AppSpec
+                  identity is bound; its descriptive features are not additional
+                  executable permissions.
+                </p>
+                <p>
+                  <strong>VaultRAM backing: not connected.</strong> These are
+                  test write units, not RAM bytes, a V position or a lease.
+                  Payments and external-chain execution are not supported by
+                  this grant.
+                </p>
+                <p className="muted">
+                  Current RPC observation; refreshed on request. The contract
+                  checks limits again at execution. This overview is not a
+                  standalone authorization or consensus proof.
+                </p>
+              </section>
+            )}
           </>
         )}
       </section>

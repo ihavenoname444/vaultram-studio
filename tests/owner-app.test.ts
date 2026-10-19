@@ -244,6 +244,33 @@ describe.skipIf(!available)("owner/app v2: actual WASM", () => {
     await call("consume", { id: 1, payload: "public" });
     await rejected(() => reserve(3), "exhausted");
   });
+  it("hostile operational signer bypasses Studio: arbitrary in-scope content succeeds, expansion fails", async () => {
+    await grant(1, 1);
+    // This is a residual-risk test: there is no separate user-intent check.
+    const payload = "attacker-authored public record";
+    await rejected(() => reserve(1, 1, { app_id: 43 }), "app binding");
+    await rejected(() => reserve(1, 1, { space: "treasury" }), "namespace");
+    await reserve(1, 1, { payload_hash: hash(payload) });
+    await call("consume", { id: 1, payload });
+    expect(table("effects")[0].payload).toBe(payload);
+    await rejected(() => reserve(2), "exhausted");
+    await rejected(() => call("consume", { id: 1, payload }), "not available");
+    conserved();
+  });
+  it("shared operational signer can use both explicitly granted apps, never enlarge either grant", async () => {
+    bc.createAccounts(owner);
+    await grant(1, 1);
+    await c.actions.regapp(appB).send(coauth);
+    await c.actions.grant({ ...grantB, budget: 1 }).send(coauth);
+    await reserve(1);
+    await reserve(2, 2, { app_id: 43 });
+    await call("consume", { id: 1, payload: "public" });
+    await call("consume", { id: 2, payload: "public" });
+    await rejected(() => reserve(3), "exhausted");
+    await rejected(() => reserve(3, 2, { app_id: 43 }), "exhausted");
+    expect(table("effects")).toHaveLength(2);
+    conserved();
+  });
   it("blocks reserved work after principal revocation and cannot reverse completed effects", async () => {
     await grant();
     await reserve(1);

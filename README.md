@@ -2,7 +2,9 @@
 
 A local development studio for a bounded agent marketplace: describe an app, compile a versioned specification, sign an action, inspect state, export evidence.
 
-**Current delivery:** a verified Jungle4 owner/app authority slice, alongside the earlier Phase 0 core and explicitly labelled local simulation. The current suite passes 115 tests. Legacy history includes 26 irreversible application transactions, four manually confirmed MetaMask actions and two prior Linux browser tests. The legacy runtime trusts its relayer; this is not production infrastructure.
+**Current delivery:** a verified Jungle4 owner/app authority slice, alongside the earlier Phase 0 core and explicitly labelled local simulation. The current suite passes 122 tests with all three WASM builds required. Legacy history includes 26 irreversible application transactions, four manually confirmed MetaMask actions and two prior Linux browser tests. The legacy runtime trusts its relayer; this is not production infrastructure.
+
+**Architecture/security alignment:** Studio now presents actual grant limits and explicitly unavailable VaultRAM backing. Requests requiring backed authority fail before signing. Direct hostile-signer tests demonstrate both rejected scope expansion and successful arbitrary content inside a grant. Gateway/owner custody is still local, not isolated. See [assumptions and delivery plan](docs/SECURITY_ASSUMPTIONS.md) and [all 18 directive invariants](docs/AUTHORITY_INVARIANTS.md).
 
 **Owner/app v2:** native owner consent, immutable app/spec registration, app-bound grants and typed owner/app receipts are now connected through Studio and verified on a new Jungle4 deployment. The browser write and 16 live/API acceptance checks passed. Start the configured demo with `pnpm demo:owner-app`. See [owner/app evidence and limits](docs/OWNER_APP_AUTHORITY.md). This is an independent application intended for VaultRAM; V and VaultRAM RAM leasing are not yet integrated.
 
