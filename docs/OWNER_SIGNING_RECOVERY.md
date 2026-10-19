@@ -79,3 +79,11 @@ The active authority of vrya3iayygzy was rotated to the user-supplied active pub
 Anchor connected as vrya3iayygzy@active, but its signature for prepared request 00a85b86-bbe7-4794-97ed-96824ee05560 recovered the public key intended for owner instead of the current on-chain active key. The adapter rejected it before broadcast. This establishes a wallet/key binding mismatch, not a transaction failure on Jungle4. The exact transaction, chain, signer and signature-count checks passed before the public-key check failed.
 
 Correct the wallet's local active-key association using the separately backed-up active key. Do not change on-chain authority or bypass signature verification to accommodate the incorrectly imported wallet. Then repeat a fresh, user-approved revoke, submit the checked signature, independently verify irreversibility and test rejection of subsequent delegated writes. Those live completion checks remain pending. No private key was read or included in this diagnostic.
+
+## Local wallet binding repaired — 2026-10-19
+
+The incorrect local Anchor account record was removed with user authorization, retaining both saved keys. Anchor used https://jungle4.api.eosnation.io and displayed a failed connection. A direct public lookup through https://jungle4.greymass.com/v1/chain/get_accounts_by_authorizers returned vrya3iayygzy@active for the intended active public key. After switching Anchor to that node, automatic detection found the same account under that key; the user authorized its import.
+
+Anchor closed during the password/import flow, but after reopening, its public Key Management view showed the intended active key (6MVH…) linked to one account and the intended owner key (8J18…) linked to zero. Both keys remained listed. The preceding account overview contained vrya3iayygzy and showed no currently selected account. This verifies the saved local association, not a successful signing ceremony or complete custody migration.
+
+The local macOS crash report records Anchor 1.3.12 running translated through Rosetta, EXC_BAD_ACCESS/SIGSEGV, with V8 frames on the faulting thread. The root cause is not established. No Anchor executable or private key was modified or published. Wallet stability, user-reviewed signature verification, live revocation finality and the post-revoke denial test remain pending.
