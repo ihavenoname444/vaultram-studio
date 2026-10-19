@@ -87,3 +87,9 @@ The incorrect local Anchor account record was removed with user authorization, r
 Anchor closed during the password/import flow, but after reopening, its public Key Management view showed the intended active key (6MVH…) linked to one account and the intended owner key (8J18…) linked to zero. Both keys remained listed. The preceding account overview contained vrya3iayygzy and showed no currently selected account. This verifies the saved local association, not a successful signing ceremony or complete custody migration.
 
 The local macOS crash report records Anchor 1.3.12 running translated through Rosetta, EXC_BAD_ACCESS/SIGSEGV, with V8 frames on the faulting thread. The root cause is not established. No Anchor executable or private key was modified or published. Wallet stability, user-reviewed signature verification, live revocation finality and the post-revoke denial test remain pending.
+
+## Live owner revocation verified — 2026-10-19
+
+A fresh Anchor session returned a valid signature from the intended 6MVH… active key. Exact chain, signer, transaction bytes and recovered key checks passed. Following user approval, request 1a9632f0-39e7-4621-aad1-ba0686181988 was submitted. Initial UNKNOWN was reconciled without resubmission to IRREVERSIBLE through the separate verification RPC. Transaction 999bf2b693577eec1d48940106302ef271129b0b3208fe17fde8f08d620b7927 executed in irreversible block 292914270. The verified current grant 1 on vralzuwmebbx has revoked=1. Both saved wallet keys remain present.
+
+This completes the real-wallet revocation ceremony. It does not establish full owner-key custody migration, operating-system isolation, resolution of the Anchor crash, or a fresh live post-revocation agent execution denial test; those remain separate gates.
