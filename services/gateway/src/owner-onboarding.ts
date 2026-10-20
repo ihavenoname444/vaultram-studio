@@ -135,8 +135,7 @@ export class OwnerOnboarding {
   }
   private async preflight(p: EnrollmentPlan, requireUnused: boolean) {
     this.g.assertWritable();
-    await this.g.pins(this.g.c.independent);
-    await this.g.permission(this.g.c.independent);
+    await this.g.operationalChecks();
     const [roots, apps, grants] = await Promise.all(
       ["root", "apps", "grants"].map((t) => this.g.table(t)),
     );

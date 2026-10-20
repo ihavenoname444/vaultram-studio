@@ -237,6 +237,30 @@ describe.skipIf(!available)("owner/app Studio integration", () => {
       t.cleanup();
     }
   });
+  it("external owner can revoke when operational permission guard is unsafe", async () => {
+    const t = await setup();
+    try {
+      vi.mocked(t.g.permission).mockRejectedValue(
+        Error("Restricted native permission must have no children"),
+      );
+      const owner = new OwnerRevoke(t.g),
+        r = await owner.prepare();
+      const signatures = [
+        String(
+          t.ownerKey.signDigest(
+            Transaction.from(r.transaction).signingDigest(JUNGLE4),
+          ),
+        ),
+      ];
+      expect((await owner.submit(r.id, signatures)).status).toBe(
+        "IRREVERSIBLE",
+      );
+      expect(t.rows("grants")[0].revoked).toBe(true);
+      expect(t.g.permission).not.toHaveBeenCalled();
+    } finally {
+      t.cleanup();
+    }
+  });
   it("rejects wrong signer, wrong chain, altered action, expiry and rotated/unsupported owner authority before broadcast", async () => {
     const t = await setup();
     try {

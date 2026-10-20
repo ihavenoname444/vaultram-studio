@@ -496,3 +496,47 @@ describe.skipIf(!available)(
     });
   },
 );
+
+describe.skipIf(!available)("onboarding operational permission gate", () => {
+  for (const side of ["rpc", "independent"] as const) {
+    it(
+      "does not prepare authority when " + side + " reports unsafe operator",
+      async () => {
+        const t = await setup();
+        try {
+          vi.mocked(t.g.permission).mockImplementation(async (endpoint) => {
+            if (endpoint === t.c[side]) throw Error("unsafe operator");
+          });
+          await expect(t.service.prepare(t.input())).rejects.toThrow(
+            "unsafe operator",
+          );
+          expect(t.service.list()).toHaveLength(0);
+          expect(t.send).not.toHaveBeenCalled();
+        } finally {
+          t.cleanup();
+        }
+      },
+    );
+    it(
+      "does not submit owner-approved grant when " + side + " becomes unsafe",
+      async () => {
+        const t = await setup();
+        try {
+          const r = await t.service.prepare(t.input()),
+            sigs = t.sigs(r);
+          vi.mocked(t.g.permission).mockImplementation(async (endpoint) => {
+            if (endpoint === t.c[side]) throw Error("unsafe operator");
+          });
+          await expect(t.service.submit(r.id, sigs)).rejects.toThrow(
+            "unsafe operator",
+          );
+          expect(t.service.row(r.id).status).toBe("PREPARED");
+          expect(t.send).not.toHaveBeenCalled();
+          expect(t.rows("grants")).toHaveLength(0);
+        } finally {
+          t.cleanup();
+        }
+      },
+    );
+  }
+});

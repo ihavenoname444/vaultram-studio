@@ -71,6 +71,7 @@ describe.skipIf(!available)("native Studio safety", () => {
       vi.spyOn(g, "pins").mockResolvedValue({});
       const tables = vi.spyOn(g, "table");
       const rpc = vi.spyOn(g, "rpc").mockResolvedValue({
+        account_name: g.c.actor,
         permissions: [
           {
             perm_name: g.c.permission,
@@ -307,7 +308,10 @@ describe.skipIf(!available)("native Studio safety", () => {
     };
     const read = vi.spyOn(g, "rpc");
     try {
-      read.mockResolvedValue({ permissions: [permission] });
+      read.mockResolvedValue({
+        account_name: g.c.actor,
+        permissions: [permission],
+      });
       await expect(g.permission()).resolves.toBeUndefined();
       for (const patch of [
         { parent: "owner" },
@@ -333,7 +337,10 @@ describe.skipIf(!available)("native Studio safety", () => {
           ],
         },
       ]) {
-        read.mockResolvedValue({ permissions: [{ ...permission, ...patch }] });
+        read.mockResolvedValue({
+          account_name: g.c.actor,
+          permissions: [{ ...permission, ...patch }],
+        });
         await expect(g.permission()).rejects.toThrow();
       }
       for (const auth of [
@@ -351,9 +358,10 @@ describe.skipIf(!available)("native Studio safety", () => {
         },
       ]) {
         read.mockResolvedValue({
+          account_name: g.c.actor,
           permissions: [
             permission,
-            { perm_name: "active", required_auth: auth },
+            { perm_name: "active", parent: "owner", required_auth: auth },
           ],
         });
         await expect(g.permission()).rejects.toThrow();
@@ -407,4 +415,165 @@ describe("native RAM observations", () => {
       expect(nativeExecutionRam(r, txid, account)).toBeNull();
     }
   });
+});
+
+function permissionAccount(g: AuthorityGateway) {
+  const other = String(PrivateKey.generate("K1").toPublic());
+  const auth = (key: string) => ({
+    threshold: 1,
+    keys: [{ key, weight: 1 }],
+    accounts: [],
+    waits: [],
+  });
+  return {
+    account_name: g.c.actor,
+    permissions: [
+      {
+        perm_name: "owner",
+        parent: "",
+        required_auth: auth(other),
+        linked_actions: [],
+      },
+      {
+        perm_name: "active",
+        parent: "owner",
+        required_auth: auth(other),
+        linked_actions: [],
+      },
+      {
+        perm_name: g.c.permission,
+        parent: "active",
+        required_auth: auth(String(PrivateKey.from(g.c.privateKey).toPublic())),
+        linked_actions: ["reserve", "consume"].map((action) => ({
+          account: g.c.account,
+          action,
+        })),
+      },
+    ],
+  };
+}
+function addChild(
+  a: ReturnType<typeof permissionAccount>,
+  g: AuthorityGateway,
+) {
+  a.permissions.push({
+    perm_name: "spend",
+    parent: g.c.permission,
+    required_auth: a.permissions[0].required_auth,
+    linked_actions: [{ account: "eosio.token", action: "transfer" }],
+  });
+  return a;
+}
+describe.skipIf(!available)("operational permission leaf boundary", () => {
+  for (const [label, mutate] of [
+    ["hidden child with different key and transfer link", addChild],
+    [
+      "nested descendant",
+      (a: any, g: AuthorityGateway) => {
+        addChild(a, g);
+        a.permissions.push({
+          ...a.permissions[3],
+          perm_name: "deeper",
+          parent: "spend",
+        });
+        return a;
+      },
+    ],
+    ["wrong account", (a: any) => ({ ...a, account_name: "other1111111" })],
+    [
+      "missing authority arrays",
+      (a: any) => {
+        delete a.permissions[2].required_auth.accounts;
+        return a;
+      },
+    ],
+    [
+      "missing parent",
+      (a: any) => {
+        delete a.permissions[0].parent;
+        return a;
+      },
+    ],
+    [
+      "duplicate permission name",
+      (a: any) => {
+        a.permissions.push(a.permissions[2]);
+        return a;
+      },
+    ],
+  ] as const)
+    it("rejects " + label, async () => {
+      const dir = mkdtempSync(join(tmpdir(), "native-leaf-")),
+        g = configured(dir);
+      try {
+        const a = permissionAccount(g);
+        const rpc = vi.spyOn(g, "rpc").mockResolvedValue(a);
+        await expect(g.permission()).resolves.toBeUndefined();
+        rpc.mockResolvedValue(mutate(a, g));
+        await expect(g.permission()).rejects.toThrow();
+      } finally {
+        g.close();
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+  for (const side of ["rpc", "independent"] as const) {
+    it(
+      "blocks signing/journaling when " + side + " reports a hidden child",
+      async () => {
+        const dir = mkdtempSync(join(tmpdir(), "native-gate-")),
+          g = configured(dir);
+        try {
+          prepareMocks(g);
+          vi.mocked(g.permission).mockRestore();
+          const safe = permissionAccount(g),
+            unsafe = addChild(structuredClone(safe), g);
+          vi.spyOn(g, "rpc").mockImplementation(async (endpoint) =>
+            endpoint === g.c[side] ? unsafe : safe,
+          );
+          const sign = vi.spyOn(PrivateKey.prototype, "signDigest");
+          try {
+            await expect(
+              g.prepare({ appId: "42", text: "blocked" }),
+            ).rejects.toThrow("no children");
+            expect(sign).not.toHaveBeenCalled();
+            expect(g.list()).toHaveLength(0);
+          } finally {
+            sign.mockRestore();
+          }
+        } finally {
+          g.close();
+          rmSync(dir, { recursive: true, force: true });
+        }
+      },
+    );
+    it(
+      "blocks broadcast after widening at " +
+        side +
+        " and leaves review PREPARED",
+      async () => {
+        const dir = mkdtempSync(join(tmpdir(), "native-gate-")),
+          g = configured(dir);
+        try {
+          prepareMocks(g);
+          vi.mocked(g.permission).mockRestore();
+          const safe = permissionAccount(g);
+          const rpc = vi.spyOn(g, "rpc").mockResolvedValue(safe);
+          const r = await g.prepare({ appId: "42", text: "reviewed" });
+          const unsafe = addChild(structuredClone(safe), g);
+          rpc.mockImplementation(async (endpoint) =>
+            endpoint === g.c[side] ? unsafe : safe,
+          );
+          const send = vi.spyOn(g.client.v1.chain, "send_transaction");
+          await expect(g.submit(r.id, r.payloadHash)).rejects.toThrow(
+            "no children",
+          );
+          expect(send).not.toHaveBeenCalled();
+          expect(g.row(r.id).status).toBe("PREPARED");
+        } finally {
+          g.close();
+          rmSync(dir, { recursive: true, force: true });
+        }
+      },
+    );
+  }
 });

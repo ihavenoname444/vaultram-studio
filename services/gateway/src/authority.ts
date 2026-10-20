@@ -343,6 +343,31 @@ export class AuthorityGateway {
       account = await this.rpc(endpoint, "get_account", {
         account_name: c.actor,
       });
+    if (
+      account?.account_name !== c.actor ||
+      !Array.isArray(account.permissions) ||
+      account.permissions.length < 1 ||
+      account.permissions.length > 1000 ||
+      account.permissions.some(
+        (q: any) =>
+          !q ||
+          typeof q.perm_name !== "string" ||
+          !q.perm_name ||
+          typeof q.parent !== "string" ||
+          q.parent === q.perm_name ||
+          !q.required_auth ||
+          !Array.isArray(q.required_auth.keys) ||
+          !Array.isArray(q.required_auth.accounts) ||
+          !Array.isArray(q.required_auth.waits),
+      ) ||
+      new Set(account.permissions.map((q: any) => q.perm_name)).size !==
+        account.permissions.length
+    )
+      throw Error("Malformed native permission account");
+    // Parent authority can satisfy its children, even with unrelated child keys.
+    // Exact direct action links are therefore insufficient: the signer must be a leaf.
+    if (account.permissions.some((q: any) => q.parent === c.permission))
+      throw Error("Restricted native permission must have no children");
     const p = account.permissions.find(
         (p: any) => p.perm_name === c.permission,
       ),
@@ -387,6 +412,14 @@ export class AuthorityGateway {
       )
     )
       throw Error("Agent key reused in another permission");
+  }
+  async operationalChecks() {
+    await Promise.all([
+      this.pins(this.c.rpc),
+      this.pins(this.c.independent),
+      this.permission(this.c.rpc),
+      this.permission(this.c.independent),
+    ]);
   }
   async table(table: string, endpoint: string = this.c.independent) {
     const r = await this.rpc(endpoint, "get_table_rows", {
@@ -505,8 +538,7 @@ export class AuthorityGateway {
         .get()
     )
       throw Error("Reconcile unresolved native operation first");
-    await this.pins(this.c.rpc);
-    await this.permission();
+    await this.operationalChecks();
     const grants = await this.table("grants", this.c.rpc),
       grant = grants.find((g: any) => String(g.id) === this.c.grantId);
     assertGrant(grant, this.c, Math.floor(Date.now() / 1000));
@@ -629,8 +661,7 @@ export class AuthorityGateway {
     const tx = this.boundTransaction(row);
     if (Date.parse(String(tx.expiration) + "Z") <= Date.now())
       throw Error("Native review expired; prepare a new operation");
-    await this.pins(this.c.rpc);
-    await this.permission();
+    await this.operationalChecks();
     if (this.c.appBinding) {
       const grant = (await this.table("grants", this.c.rpc)).find(
         (g: any) => String(g.id) === this.c.grantId,
