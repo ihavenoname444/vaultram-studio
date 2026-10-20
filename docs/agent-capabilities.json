@@ -18,7 +18,9 @@
     "unit": "UNBACKED_TEST_WRITE",
     "executionAuthorized": false,
     "aegisPolicyVerdict": "NOT_EVALUATED",
-    "vaultRamBacking": "UNAVAILABLE"
+    "vaultRamBacking": "UNAVAILABLE",
+    "recordedReportCommand": "node packages/aegis-bridge/verify-recorded.mjs EXPORTED_REPORT.json",
+    "recordedReportAssurance": "INTERNAL_ACCOUNTING_CONSISTENCY_ONLY"
   },
   "unsupported": [
     "V_OR_RAM_BYTE_CONVERSION",

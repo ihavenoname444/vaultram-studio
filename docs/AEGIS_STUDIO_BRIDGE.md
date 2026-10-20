@@ -53,3 +53,17 @@ The next self-contained milestone is a specified authority-event/history binding
 ## Current test-resource issue
 
 Both public RPCs reported zero available CPU for `rlnmfc13nj2m`, while NET had approximately 30 KB available. Request additional Jungle4 CPU delegation before more transaction demos. Read-only audits need no account CPU. The current local UI verification session blocks transaction endpoints; restart the normal `npm run demo:owner-app` after resource preflight succeeds. No mainnet funds are needed for these tests.
+
+## Check an exported report offline
+
+After installing the standalone dependencies above, verify a single JSON report downloaded from Studio or produced by the live CLI:
+
+```sh
+node packages/aegis-bridge/verify-recorded.mjs EXPORTED_REPORT.json
+```
+
+This recomputes accounting from the supplied snapshot and requires the entire reported Aegis result, source pin, deployment profile and digest to match. Altered totals, V backing, authorization or extra Aegis certificates fail. A consistent result is labeled RECORDED_ACCOUNTING_CONSISTENT, with chainStateAuthenticated=false and currentStateChecked=false. A fabricated but internally consistent snapshot can still pass: offline checking does not prove that data came from the chain. Use the live CLI separately for a fresh RPC observation. Neither mode establishes an authenticated checkpoint.
+
+The CLI reads a regular JSON file of at most 2 MB, returns nonzero on failure, and does not echo malformed input or local filesystem paths. The input is one {observation,aegis} report, not the two-provider comparison wrapper.
+
+On 20 October 2026, a clean public download of commit 136f25b91f83bad9bfee3320aa12a23ce44729fc installed only the verifier's five locked transitive/direct packages (install scripts disabled), then reproduced the live digest above without Studio, local configuration or keys. The follow-on recorded-report verifier was tested against that clean dependency installation. All 28 bridge tests passed (15 existing, 13 new); independent agent review found no blocker. This follow-on changes no signing or execution code.
