@@ -142,3 +142,13 @@ A clean temporary directory containing only this package installed five locked d
 The new tests cover explicit profile selection/downgrade, mixed lifecycles, specification mutations and canonical key order, substituted actions/signatures, missing or nonexecuted registration, finality/order, expired/exhausted recorded grants, reused identifiers and preservation of observation labels. Historical checks continue after grant expiry.
 
 An independent AI reviewer ran all 90 tests, rejected 10 additional bundle mutations and 10 additional malicious RPC fixtures, confirmed six disallowed RPC methods never reached transport, and checked concurrent profile isolation and correspondence to the four public source exports. No blocking finding remained. The reviewer used RPC fixtures; the separate live results above were obtained by the implementation agent. This is scoped AI review, not a professional external audit.
+
+## Whole-deployment native accounting audit
+
+Run `node audit-state.mjs --rpc cryptolions` (and separately `--rpc greymass`) to check all root/apps/grants/reservations/effects, not only the lifecycle bundle’s selected grant. This command needs no evidence file, Studio process or private configuration. It uses the fixed external deployment/root pins and existing read-only RPC allowlist.
+
+It checks shared-root conservation, every grant’s status counters, global replay identifiers and exact reservation/effect correspondence. Two complete equal reads plus start/end pin checks are required. The current contract caps capacity at 10,000 units, so a 10,001-row request with explicit completion is sufficient when the RPC returns the full table; incomplete or oversized responses fail closed, and there is no pagination guess or automatic retry. Changing observations return exit 2 (`INCONCLUSIVE`); invalid state/options return exit 1.
+
+Success is `STABLE_CURRENT_RPC_OBSERVATION`, never `VALID`. The output includes public rows, accounting and an observation digest. The digest is not an authenticated Aegis root/checkpoint; head-state rows are not proven to belong to any irreversible block. Equal RPC reads cannot exclude omitted data, transient changes or upgrades. No V/RAM backing is asserted, and revoked/expired grant balances remain accounting balances. Aegis is `NOT_EVALUATED`.
+
+All **152 tests** (90 lifecycle + 62 whole-state tests) passed in a clean package on 2026-10-20. Fresh CryptoLions and Greymass audits at 14:15 UTC returned matching rows/digest: 3 apps, 3 grants, 3 reservations, 2 effects; root 10,000 = 9,894 unallocated + 106 allocated test-write units. See the Studio repository’s `docs/NEXT_AEGIS_V_INTEGRATION.md` and `docs/evidence/owner-app-v2/whole-state-audit.json` for the plan and recorded observations.

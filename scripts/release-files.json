@@ -127,5 +127,10 @@
   "docs/evidence/owner-app-v2/external-app-denial.json",
   "packages/verifier/profile-external.json",
   "packages/verifier/examples/jungle4-external-lifecycle.json",
-  "packages/verifier/test/external.test.mjs"
+  "packages/verifier/test/external.test.mjs",
+  "packages/verifier/native-state.mjs",
+  "packages/verifier/audit-state.mjs",
+  "packages/verifier/test/native-state.test.mjs",
+  "docs/NEXT_AEGIS_V_INTEGRATION.md",
+  "docs/evidence/owner-app-v2/whole-state-audit.json"
 ]

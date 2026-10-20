@@ -23,5 +23,9 @@
   },
   "sourceSha256": "c7c4a1588dddbf1b903a801bbb3af69db741d83090b807dcc1b0cc0e04d13255",
   "allocator": "vrya3iayygzy",
-  "allocatorPublicKey": "PUB_K1_6MVHLMgzwt7hh4MdSwS8jJXJpKfnJ5o9RtQGFMjJSNczGmeRxe"
+  "allocatorPublicKey": "PUB_K1_6MVHLMgzwt7hh4MdSwS8jJXJpKfnJ5o9RtQGFMjJSNczGmeRxe",
+  "root": {
+    "principal": "vrya3iayygzy",
+    "total": 10000
+  }
 }

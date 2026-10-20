@@ -1,6 +1,6 @@
 # Security assumptions and directive alignment
 
-**Latest implementation:** see [Owner signing and recovery](OWNER_SIGNING_RECOVERY.md) for the new revoke-only external signing handoff, SIGKILL/corruption drills and submission-locked receipt restoration. Full external custody, registration/grant signing and functioning OS isolation remain unverified; older gap descriptions below should be read with this limited update.
+**Latest implementation:** external registration/grant, write, owner revocation and subsequent denial are live verified; the standalone verifier covers this lifecycle and now audits whole-deployment accounting. See [next integration work](NEXT_AEGIS_V_INTEGRATION.md) and [owner signing/recovery](OWNER_SIGNING_RECOVERY.md). Full custody isolation, authenticated Aegis history and real VaultRAM/V backing remain unverified. Older gap descriptions below must be read with these completed milestones.
 
 ## Intended product
 
