@@ -12,6 +12,7 @@ export function OwnerControls({
   const [request, setRequest] = useState<any>();
   const [wallet, setWallet] = useState("");
   const [signature, setSignature] = useState("");
+  const [sendAfterApproval, setSendAfterApproval] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   async function run(fn: () => Promise<void>) {
@@ -47,9 +48,10 @@ export function OwnerControls({
       </p>
       <p className="muted">
         Connect Anchor on Jungle4, prepare the request, then approve it in your
-        wallet. Signing does not broadcast; submit the checked signature below.
-        Create new apps and grants in the section above. Key-custody migration
-        is not included. Never enter a private key or seed phrase.
+        wallet. By default, submit the checked signature below. You can instead
+        choose to submit immediately after a checked wallet approval. Create new
+        apps and grants in the section above. Key-custody migration is not
+        included. Never enter a private key or seed phrase.
       </p>
       <button
         className="button"
@@ -85,19 +87,40 @@ export function OwnerControls({
             Jungle4 · Expires {request.transaction.expiration} UTC. Verify the
             exact action and chain in the external signer.
           </p>
+          <label>
+            <input
+              type="checkbox"
+              checked={sendAfterApproval}
+              disabled={busy}
+              onChange={(e) => setSendAfterApproval(e.target.checked)}
+            />
+            Submit immediately after checked wallet approval
+          </label>
           <button
             className="button"
             disabled={busy || !wallet}
             onClick={() =>
               void run(async () => {
-                setSignature(await signOwnerRevocation(request));
-                setMessage(
-                  "Wallet signature checked. Submit signed revocation to send it.",
-                );
+                const checked = await signOwnerRevocation(request);
+                setSignature(checked);
+                if (sendAfterApproval) {
+                  const result = await api("/owner/submit", {
+                    id: request.id,
+                    signatures: [checked],
+                  });
+                  setMessage(result.status);
+                  await refresh();
+                } else {
+                  setMessage(
+                    "Wallet signature checked. Submit signed revocation to send it.",
+                  );
+                }
               })
             }
           >
-            Sign with Anchor
+            {sendAfterApproval
+              ? "Approve and submit with Anchor"
+              : "Sign with Anchor"}
           </button>
           <button className="button" onClick={download}>
             Export unsigned request

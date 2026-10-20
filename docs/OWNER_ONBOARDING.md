@@ -1,9 +1,6 @@
 # Repeatable external owner app/grant approval
 
-Status: external Anchor app/grant approval and a write in that new app were
-verified live on Jungle4 on 2026-10-20. The new grant still needs its own
-owner-revocation/denial ceremony. Earlier revocation evidence remains historical.
-No contract upgrade was made.
+Status: the complete fresh app/grant → write → external owner revocation → denied agent attempt flow was verified live on Jungle4 on 2026-10-20. Earlier evidence remains historical. No contract upgrade was made.
 
 - [App/grant evidence](evidence/owner-app-v2/external-app-grant.json): transaction
   `ca0fa708ded0c4cdb12217beca558079973119a3bf11115f3f69c2330abafff6`,
@@ -14,10 +11,11 @@ No contract upgrade was made.
   for **114 payload bytes**; this is an RPC observation, not independent RAM proof.
 - App `15400335351187373294`, grant `47633037276206`: five writes, 256-byte
   maximum payload, memory namespace, expires 2026-10-21 13:29:19 UTC. One write
-  consumed and four remain. Same native account holds owner and allocator roles.
+  consumed; the four remaining units are unusable after revocation. Same native account holds owner and allocator roles.
+- [External revocation](evidence/owner-app-v2/external-app-revocation.json): transaction `c2475b8905798b370e35b759a48c494a78aa408eb1ed98022c2fccad956110e0`, irreversible block **293061473**, signed by the same external active key.
+- [Post-revocation denial](evidence/owner-app-v2/external-app-denial.json): fresh restricted-agent transaction `ec79febe7f3cd51c18d2d495cc3f8a71de8c7f9473524b897622387fee07ed33` returned `grant revoked`; both RPCs reported unchanged root/app/grant/reservation/effect tables. The grant still had capacity and had not expired, isolating revocation. Rejection is an RPC observation, not an irreversible rejection receipt.
 - An independent AI reviewer checked the exact actions, specification, recovered
-  owner public key and write bindings from public evidence. Its network sandbox
-  prevented its own RPC checks; the implementation agent checked live finality.
+  owner public key and write bindings from public evidence. A subsequent independent review also checked the exact fresh revocation and signed reserve attempt, unused identifiers, unexpired grant with four available writes, and identical before/after snapshots; no blocker was found. The reviewer did not independently fetch live RPC data; the implementation agent checked live finality and state through both RPC endpoints.
 
 ## Operator walkthrough
 

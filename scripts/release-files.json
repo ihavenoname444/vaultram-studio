@@ -122,5 +122,7 @@
   "tests/owner-onboarding.test.ts",
   "docs/OWNER_ONBOARDING.md",
   "docs/evidence/owner-app-v2/external-app-grant.json",
-  "docs/evidence/owner-app-v2/external-app-write.json"
+  "docs/evidence/owner-app-v2/external-app-write.json",
+  "docs/evidence/owner-app-v2/external-app-revocation.json",
+  "docs/evidence/owner-app-v2/external-app-denial.json"
 ]
