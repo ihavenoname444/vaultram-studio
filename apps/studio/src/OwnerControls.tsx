@@ -48,8 +48,8 @@ export function OwnerControls({
       <p className="muted">
         Connect Anchor on Jungle4, prepare the request, then approve it in your
         wallet. Signing does not broadcast; submit the checked signature below.
-        Grant creation and key-custody migration are not included. Never enter a
-        private key or seed phrase.
+        Create new apps and grants in the section above. Key-custody migration
+        is not included. Never enter a private key or seed phrase.
       </p>
       <button
         className="button"

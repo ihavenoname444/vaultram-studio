@@ -26,6 +26,7 @@ import { describe } from "./ai.ts";
 import { AuthorityGateway, NativeWrite } from "./authority.ts";
 import { readPrivateJson } from "./private-file.ts";
 import { OwnerRevoke } from "./owner-revoke.ts";
+import { OwnerOnboarding } from "./owner-onboarding.ts";
 if (process.env.VAULTRAM_SKIP_DOTENV !== "1" && existsSync(".env"))
   process.loadEnvFile(".env");
 export async function createServer(
@@ -98,6 +99,9 @@ export async function createServer(
   const signer = receiptSigner(directory + "/receipt-key.pem");
   const ownerRevoke = authority?.c.appBinding
     ? new OwnerRevoke(authority)
+    : undefined;
+  const onboarding = ownerRevoke
+    ? new OwnerOnboarding(authority!, directory)
     : undefined;
   const demoPath = directory + "/simulation-wallet.key";
   if (mode === "SIMULATED" && !existsSync(demoPath))
@@ -184,24 +188,65 @@ export async function createServer(
       "EOA signature verified by trusted gateway; contract trusts relayer. No origin-chain transaction or bridge.",
   }));
   server.get("/api/apps", async () => store.apps());
-  const native = () => {
+  const context = async (req: { headers: Record<string, unknown> }) => {
     if (!authority) throw new Error("Native authority is not configured");
-    return authority;
+    const id = req.headers["x-native-context"];
+    if (id !== undefined) {
+      if (!onboarding) throw Error("Onboarding is unavailable");
+      return onboarding.context(z.string().uuid().parse(id));
+    }
+    return { gateway: authority, owner: ownerRevoke, app: undefined };
   };
-  server.get("/api/authority", async () => ({
-    ...(await native().state()),
-    ownerRequests: ownerRevoke?.list(),
+  server.get("/api/authority", async (req) => {
+    const c = await context(req);
+    return {
+      ...(await c.gateway.state()),
+      ownerRequests: c.owner?.list(),
+      onboardedApp: c.app
+        ? { appId: c.app.appId, appHash: c.app.appHash, name: c.app.spec.name }
+        : undefined,
+    };
+  });
+  const enrollment = () => {
+    if (!onboarding) throw Error("Native owner/app v2 required");
+    return onboarding;
+  };
+  server.get("/api/authority/onboarding", async () => ({
+    owner: authority?.c.appBinding?.owner,
+    requests: enrollment().list(),
   }));
-  const externalOwner = () => {
-    if (!ownerRevoke) throw Error("Native owner/app v2 required");
-    return ownerRevoke;
+  server.post("/api/authority/onboarding/prepare", async (req) =>
+    serial(() => enrollment().prepare(req.body)),
+  );
+  server.post("/api/authority/onboarding/submit", async (req) =>
+    serial(async () => {
+      const b = z
+        .object({
+          id: z.string().uuid(),
+          signatures: z.array(z.string()).min(1).max(2),
+        })
+        .strict()
+        .parse(req.body);
+      return enrollment().submit(b.id, b.signatures);
+    }),
+  );
+  server.post("/api/authority/onboarding/reconcile", async (req) =>
+    serial(async () => {
+      const b = z.object({ id: z.string().uuid() }).strict().parse(req.body);
+      return enrollment().reconcile(b.id);
+    }),
+  );
+  const externalOwner = async (req: { headers: Record<string, unknown> }) => {
+    const owner = (await context(req)).owner;
+    if (!owner) throw Error("Native owner/app v2 required");
+    return owner;
   };
   server.post("/api/authority/owner/prepare", async (req) =>
     serial(async () => {
       z.object({ action: z.literal("revoke") })
         .strict()
         .parse(req.body);
-      return externalOwner().prepare();
+      return (await externalOwner(req)).prepare();
     }),
   );
   server.post("/api/authority/owner/submit", async (req) =>
@@ -213,20 +258,21 @@ export async function createServer(
         })
         .strict()
         .parse(req.body);
-      return externalOwner().submit(b.id, b.signatures);
+      return (await externalOwner(req)).submit(b.id, b.signatures);
     }),
   );
   server.post("/api/authority/owner/reconcile", async (req) =>
     serial(async () => {
       const b = z.object({ id: z.string().uuid() }).strict().parse(req.body);
-      return externalOwner().reconcile(b.id);
+      return (await externalOwner(req)).reconcile(b.id);
     }),
   );
   server.post("/api/authority/prepare", async (req) =>
     serial(async () => {
       const body = NativeWrite.parse(req.body);
-      native().assertApp(store.app(body.appId));
-      return native().prepare(body);
+      const c = await context(req);
+      c.gateway.assertApp(c.app ?? store.app(body.appId));
+      return c.gateway.prepare(body);
     }),
   );
   server.post("/api/authority/execute", async (req) =>
@@ -238,13 +284,13 @@ export async function createServer(
         })
         .strict()
         .parse(req.body);
-      return native().submit(body.id, body.payloadHash);
+      return (await context(req)).gateway.submit(body.id, body.payloadHash);
     }),
   );
   server.post("/api/authority/reconcile", async (req) =>
     serial(async () => {
       const body = z.object({ id: z.string().uuid() }).strict().parse(req.body);
-      return native().reconcile(body.id);
+      return (await context(req)).gateway.reconcile(body.id);
     }),
   );
   server.get("/api/receipts", async () => store.receipts());
@@ -504,6 +550,7 @@ export async function createServer(
     };
   });
   server.addHook("onClose", async () => {
+    onboarding?.close();
     authority?.close();
     store.close();
   });

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { OwnerControls } from "./OwnerControls.tsx";
+import { OnboardingControls } from "./OnboardingControls.tsx";
 type Props = {
   token: string;
   appId?: string;
@@ -9,9 +10,9 @@ type Props = {
 };
 export function AuthorityPanel({
   token,
-  appId,
-  appName,
-  appHash,
+  appId: selectedAppId,
+  appName: selectedAppName,
+  appHash: selectedAppHash,
   ownerControlEnabled,
 }: Props) {
   const [state, setState] = useState<any>(),
@@ -23,12 +24,19 @@ export function AuthorityPanel({
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
   const [now, setNow] = useState(Date.now());
+  const [contextId, setContextId] = useState("");
+  const appId = state?.onboardedApp?.appId ?? selectedAppId;
+  const appHash = state?.onboardedApp?.appHash ?? selectedAppHash;
+  const appName = state?.onboardedApp?.name ?? selectedAppName;
   async function api(path: string, body?: object) {
     const r = await fetch("/api/authority" + path, {
       method: body ? "POST" : "GET",
-      headers: body
-        ? { "content-type": "application/json", "x-vaultram-token": token }
-        : {},
+      headers: {
+        ...(body
+          ? { "content-type": "application/json", "x-vaultram-token": token }
+          : {}),
+        ...(contextId ? { "x-native-context": contextId } : {}),
+      },
       body: body ? JSON.stringify(body) : undefined,
     });
     const j = await r.json();
@@ -60,7 +68,7 @@ export function AuthorityPanel({
     void task(refresh);
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, [token]);
+  }, [token, contextId]);
   useEffect(() => setReview(undefined), [appId]);
   const g = state?.grant,
     c = state?.configuration;
@@ -107,6 +115,18 @@ export function AuthorityPanel({
         </div>
       )}
       {notice && <p role="status">{notice}</p>}
+      {ownerControlEnabled && (
+        <OnboardingControls
+          token={token}
+          blocked={busy}
+          contextId={contextId}
+          activate={(id) => {
+            setReview(undefined);
+            setState(undefined);
+            setContextId(id);
+          }}
+        />
+      )}
       <section className="native-card" aria-label="Native authority grant">
         <div className="native-heading">
           <h2>Agent authority</h2>
@@ -266,6 +286,7 @@ export function AuthorityPanel({
       </section>
       {ownerControlEnabled && (
         <OwnerControls
+          key={contextId}
           api={api}
           refresh={refresh}
           requests={state?.ownerRequests ?? []}

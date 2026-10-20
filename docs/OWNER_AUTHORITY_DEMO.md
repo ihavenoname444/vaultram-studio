@@ -42,8 +42,9 @@ that submits an attempt; the public checker is strictly read-only.
 These are completed historical steps on this deployment. Grant 1 cannot be
 unrevoked; its remaining 99 write units are unusable. Do not present a replay of
 this evidence as a fresh wallet ceremony. A fresh end-to-end demonstration needs
-a separately approved new grant; Studio does not yet support external
-registration/grant issuance through its UI.
+a separately approved new app and grant. Studio now implements this through
+[external owner/allocator signing](OWNER_ONBOARDING.md); its new live Anchor
+ceremony remains pending.
 
 ## Recheck the live denial safely
 
@@ -73,8 +74,9 @@ light-client verification or proof of historical execution code.
 
 ## Before calling the broader product demo complete
 
-- Implement external owner plus allocator approval for registering a new app
-  and issuing a fresh grant, so a new user can repeat the complete flow.
+- Complete a fresh live Anchor registration/grant ceremony using the new
+  tested onboarding path, then write and revoke that new grant. General
+  account onboarding is still outside this configured-owner demo.
 - Prove gateway isolation from owner/admin files in its deployment environment;
   migrate and test owner recovery custody with safe backups.
 - Obtain and verify VaultRAM's actual lease/claim interface, RAM payer model,

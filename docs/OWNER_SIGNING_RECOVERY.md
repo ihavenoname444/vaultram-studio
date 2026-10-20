@@ -2,7 +2,7 @@
 
 ## Delivered scope
 
-Studio has an Anchor wallet adapter and a developer handoff for **native owner-signed grant revocation**. It prepares one unsigned `revoke` action, exports the Antelope transaction and accepts a returned public signature. No owner private key or seed is accepted by this path. It supports only the current configured Jungle4 owner/app/grant and simple 1-of-1 `active` authority; multisig/delegation fail closed. Registration and grant creation still use the earlier local test provisioning process and are not externally signed through Studio yet.
+Studio has an Anchor wallet adapter and a developer handoff for **native owner-signed grant revocation**. It prepares one unsigned `revoke` action, exports the Antelope transaction and accepts a returned public signature. No owner private key or seed is accepted by this path. It supports only the current configured Jungle4 owner/app/grant and simple 1-of-1 `active` authority; multisig/delegation fail closed. [External registration and grant approval](OWNER_ONBOARDING.md) are now implemented for the configured owner with a separate journal per app/grant; local WASM tests pass and the new live ceremony remains pending.
 
 The gateway reconstructs the exact action/authorization, checks the chain-bound signing digest, expiry, owner/app/grant/code binding and current active public key. It rejects additional actions, extensions, wrong signers/chains, key rotation after review and owner keys reused as its operational key. The signed transaction is persisted before broadcast. Unknown results are reconciled without automatic resend. The native contract—not the signature UI—enforces revocation.
 
@@ -68,7 +68,7 @@ For backups, stop all writers and copy a consistent SQLite backup (including WAL
 
 `tests/owner-app-studio.test.ts` covers owner signatures, wrong keys/chains/actions, stale or unsupported authority, unhealthy agent permission, operational/owner key reuse, actual WASM revocation, and owner-request timeout/restart without resend. Independent review found and prompted fixes to the emergency-revocation dependency and recovery initialization/table checks.
 
-Remaining production gates: full owner-controlled custody; external registration/grant approval with both allocator and owner signatures; validated OS/deployment isolation; full backup-loss and key-rotation drills; upgrade governance; verified VaultRAM backing. No new live revocation or deployment is claimed by these local tests.
+Remaining production gates: full owner-controlled custody; live verification of external registration/grant approval with both allocator and owner signatures; validated OS/deployment isolation; full backup-loss and key-rotation drills; upgrade governance; verified VaultRAM backing. No new live revocation or deployment is claimed by these local tests.
 
 `tests/owner-wallet.test.ts` adds seven local cryptographic boundary tests for exact signatures, request domain, changed wallet transactions, signer/key/chain mismatch, expiry and missing connected wallet. Independent code review also inspected the installed SDK broadcast behavior; it found no blocker in this narrow adapter scope.
 

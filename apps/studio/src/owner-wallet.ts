@@ -7,6 +7,7 @@ import {
 } from "@wharfkit/antelope";
 import { JUNGLE4 } from "../../../packages/core/src/index.ts";
 import type { Session } from "@wharfkit/session";
+import { onboardingTransaction } from "../../../packages/core/src/onboarding.ts";
 let session: Session | undefined;
 let kit: import("@wharfkit/session").SessionKit | undefined;
 export async function connectOwnerWallet() {
@@ -58,6 +59,16 @@ export async function connectOwnerWallet() {
   return String(session.actor) + "@active";
 }
 export function ownerWalletTransaction(request: any) {
+  if (request.version === 2) {
+    const tx = onboardingTransaction(request);
+    const ms = Date.parse(String(tx.expiration) + "Z") - Date.now();
+    if (ms <= 0 || ms > 125000)
+      throw Error("Onboarding request expired; prepare again");
+    const now = Math.floor(Date.now() / 1000);
+    if (request.expires <= now || request.expires > now + 168 * 3600)
+      throw Error("Grant expiry outside the supported seven-day window");
+    return tx;
+  }
   const tx = Transaction.from(request.transaction);
   const a = tx.actions[0];
   if (
@@ -82,18 +93,29 @@ export function ownerWalletTransaction(request: any) {
     throw Error("Request expired; prepare a new unsigned revocation");
   return tx;
 }
-export function verifyOwnerWalletResult(request: any, result: any) {
+export function verifyOwnerWalletResult(
+  request: any,
+  result: any,
+  actor = request.owner,
+) {
   const tx = ownerWalletTransaction(request);
+  const publicKey =
+    request.version === 2
+      ? request.signers.find((s: any) => s.actor === actor)?.publicKey
+      : actor === request.owner
+        ? request.publicKey
+        : undefined;
+  if (!publicKey) throw Error("Wallet account is not a required signer");
   if (String(result.chain.id) !== JUNGLE4) throw Error("Wallet chain mismatch");
   if (
-    String(result.signer.actor) !== request.owner ||
+    String(result.signer.actor) !== actor ||
     String(result.signer.permission) !== "active"
   )
     throw Error("Wallet signer mismatch");
   if (
     !result.resolved ||
     String(result.resolved.chainId) !== JUNGLE4 ||
-    String(result.resolved.signer.actor) !== request.owner ||
+    String(result.resolved.signer.actor) !== actor ||
     String(result.resolved.signer.permission) !== "active"
   )
     throw Error("Wallet resolved signer/chain mismatch");
@@ -108,29 +130,30 @@ export function verifyOwnerWalletResult(request: any, result: any) {
   const recovered = Signature.from(result.signatures[0]).recoverDigest(
     tx.signingDigest(JUNGLE4),
   );
-  if (!recovered.equals(PublicKey.from(request.publicKey)))
+  if (!recovered.equals(PublicKey.from(publicKey)))
     throw Error(
       "Wallet PUBLIC key mismatch. Expected " +
-        request.publicKey +
+        publicKey +
         "; received " +
         String(recovered),
     );
   return String(result.signatures[0]);
 }
 export async function signOwnerRevocation(request: any) {
+  return signOwnerRequest(request, request.owner);
+}
+export async function signOwnerRequest(request: any, actor: string) {
   if (
     !session ||
-    String(session.actor) !== request.owner ||
+    String(session.actor) !== actor ||
     String(session.permission) !== "active" ||
     String(session.chain.id) !== JUNGLE4
   )
-    throw Error(
-      "Connect Anchor with " + request.owner + "@active on Jungle4 first",
-    );
+    throw Error("Connect Anchor with " + actor + "@active on Jungle4 first");
   const tx = ownerWalletTransaction(request);
   const result = await session.transact(
     { transaction: tx },
     { broadcast: false, allowModify: false, transactPlugins: [] },
   );
-  return verifyOwnerWalletResult(request, result);
+  return verifyOwnerWalletResult(request, result, actor);
 }

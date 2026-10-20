@@ -48,12 +48,17 @@ export class OwnerRevoke {
           )
         )
           throw Error("Owner journal status corrupt");
+        if ((row.status === "PREPARED") !== (row.signed === null))
+          throw Error("Owner journal signature/status corrupt");
         this.validate(
           JSON.parse(row.request),
           row.status === "PREPARED" ? undefined : JSON.parse(row.signed),
         );
       }
-      g.db.exec("PRAGMA user_version=2; COMMIT");
+      const version = Number(
+        (g.db.prepare("PRAGMA user_version").get() as any).user_version,
+      );
+      g.db.exec(`PRAGMA user_version=${Math.max(version, 2)}; COMMIT`);
     } catch (e) {
       g.db.exec("ROLLBACK");
       throw e;

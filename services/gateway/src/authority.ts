@@ -114,7 +114,7 @@ export class AuthorityGateway {
   constructor(
     config: AuthoritySettings,
     directory: string,
-    abiBytes: Uint8Array = readFileSync(
+    readonly abiBytes: Uint8Array = readFileSync(
       `contracts/build/${config.appBinding ? "owner-app" : "authority"}/authority.abi`,
     ),
     journalMode: "existing" | "create" | "recovery" = "existing",
@@ -151,7 +151,7 @@ export class AuthorityGateway {
         const version = Number(
           (this.db.prepare("PRAGMA user_version").get() as any).user_version,
         );
-        if (![0, 1, 2].includes(version))
+        if (![0, 1, 2, 3].includes(version))
           throw Error("Unsupported journal version");
         for (const table of [
           "native_domain",
@@ -159,6 +159,7 @@ export class AuthorityGateway {
           "native_ram",
           ...(version >= 1 ? ["native_safety"] : []),
           ...(version >= 2 ? ["native_owner_ops"] : []),
+          ...(version >= 3 ? ["native_onboard_ops"] : []),
         ])
           if (
             !this.db

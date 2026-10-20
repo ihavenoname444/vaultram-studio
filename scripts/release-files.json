@@ -115,5 +115,10 @@
   "packages/verifier/verify.mjs",
   "packages/verifier/verifier.mjs",
   "packages/verifier/test/verifier.test.mjs",
-  "packages/verifier/examples/jungle4-lifecycle.json"
+  "packages/verifier/examples/jungle4-lifecycle.json",
+  "packages/core/src/onboarding.ts",
+  "services/gateway/src/owner-onboarding.ts",
+  "apps/studio/src/OnboardingControls.tsx",
+  "tests/owner-onboarding.test.ts",
+  "docs/OWNER_ONBOARDING.md"
 ]
