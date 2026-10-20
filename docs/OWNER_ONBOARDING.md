@@ -1,9 +1,23 @@
 # Repeatable external owner app/grant approval
 
-Status: implemented and tested locally against the actual owner/app WASM.
-The fresh live Anchor registration/grant ceremony is pending. Earlier live
-write/revocation evidence remains historical, not evidence for this new UI.
-No contract upgrade is required.
+Status: external Anchor app/grant approval and a write in that new app were
+verified live on Jungle4 on 2026-10-20. The new grant still needs its own
+owner-revocation/denial ceremony. Earlier revocation evidence remains historical.
+No contract upgrade was made.
+
+- [App/grant evidence](evidence/owner-app-v2/external-app-grant.json): transaction
+  `ca0fa708ded0c4cdb12217beca558079973119a3bf11115f3f69c2330abafff6`,
+  irreversible block **293059135**, signed externally by the configured active key.
+- [New app write](evidence/owner-app-v2/external-app-write.json): transaction
+  `4b4c0ad36d52131c9f30909b1b164da85be5efa583ff5957c8a9078109358321`,
+  irreversible block **293059227**. The submission trace reports **860 RAM bytes**
+  for **114 payload bytes**; this is an RPC observation, not independent RAM proof.
+- App `15400335351187373294`, grant `47633037276206`: five writes, 256-byte
+  maximum payload, memory namespace, expires 2026-10-21 13:29:19 UTC. One write
+  consumed and four remain. Same native account holds owner and allocator roles.
+- An independent AI reviewer checked the exact actions, specification, recovered
+  owner public key and write bindings from public evidence. Its network sandbox
+  prevented its own RPC checks; the implementation agent checked live finality.
 
 ## Operator walkthrough
 

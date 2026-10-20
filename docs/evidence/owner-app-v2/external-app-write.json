@@ -1,0 +1,121 @@
+{
+  "version": 2,
+  "app": {
+    "id": "15400335351187373294",
+    "owner": "vrya3iayygzy",
+    "app_hash": "d5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+  },
+  "ram": {
+    "transactionId": "4b4c0ad36d52131c9f30909b1b164da85be5efa583ff5957c8a9078109358321",
+    "payer": "vralzuwmebbx",
+    "bytes": 860,
+    "payloadBytes": 114,
+    "source": "SUBMITTING_RPC_EXECUTION_TRACE",
+    "independentlyVerified": false,
+    "observedAt": "2026-10-20T13:30:57.078Z"
+  },
+  "configuration": {
+    "appBinding": {
+      "appId": "15400335351187373294",
+      "owner": "vrya3iayygzy",
+      "appHash": "d5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+    },
+    "account": "vralzuwmebbx",
+    "actor": "rlnmfc13nj2m",
+    "permission": "vrapp",
+    "grantId": "47633037276206",
+    "space": "memory",
+    "codeHash": "fadd779a8decc9c09e78cde0369c4aa7fff611ea7a39e36af9ce560564b75557",
+    "abiHash": "6950d4b8e95d6692917e3c4330cf25e2a3a63d631de7543d414fd09593bfefef",
+    "abiJsonHash": "fe8d8cb20c46b9c0f5a6f5ea23756e7b64602a784a1cee28ea0104fcd3cd7fb7",
+    "rpc": "https://jungle4.greymass.com",
+    "independent": "https://jungle4.cryptolions.io",
+    "chainId": "73e4385a2708e6d7048834fbc1079f2fabb17b3c125b146af438971e90716c4d",
+    "signer": "LOCAL_RESTRICTED_NATIVE_KEY",
+    "trust": "Local operator controls agent signing. Native contract enforces grant limits. Upgrade administrator and chain remain trusted."
+  },
+  "operation": {
+    "id": "102f10d1-2cf8-40e7-b828-18a1d78f8caa",
+    "payload": "{\"kind\":\"memory\",\"text\":\"Externally approved app and bounded grant. Native authority permits this public memory.\"}",
+    "reservationId": "68870939753805",
+    "transactionId": "4b4c0ad36d52131c9f30909b1b164da85be5efa583ff5957c8a9078109358321",
+    "transaction": {
+      "expiration": "2026-10-20T13:32:56",
+      "ref_block_num": 47766,
+      "ref_block_prefix": 3594376760,
+      "max_net_usage_words": 0,
+      "max_cpu_usage_ms": 0,
+      "delay_sec": 0,
+      "context_free_actions": [],
+      "actions": [
+        {
+          "account": "vralzuwmebbx",
+          "name": "reserve",
+          "authorization": [
+            {
+              "actor": "rlnmfc13nj2m",
+              "permission": "vrapp"
+            }
+          ],
+          "data": "2e34446e522b00004d3de643a33e0000eefc694d68fbb8d500000000f84ba5924d3de643a33e00004d3de643a33e00004d3de643a33e000067bbfbb53ea5c78b72a1ee3e176f36dc6699166f44273824b9513338ff32790f"
+        },
+        {
+          "account": "vralzuwmebbx",
+          "name": "consume",
+          "authorization": [
+            {
+              "actor": "rlnmfc13nj2m",
+              "permission": "vrapp"
+            }
+          ],
+          "data": "4d3de643a33e0000727b226b696e64223a226d656d6f7279222c2274657874223a2245787465726e616c6c7920617070726f7665642061707020616e6420626f756e646564206772616e742e204e617469766520617574686f72697479207065726d6974732074686973207075626c6963206d656d6f72792e227d"
+        }
+      ],
+      "transaction_extensions": [],
+      "signatures": [
+        "SIG_K1_K1ExCaG3CTe7TmuzL23nGyXjpqsbttF7BxeSgtknELupqnDScT7n9Nu9k7AVToLT7xL6ZdFWBJDepuu4U5hoMd3PokJGXQ"
+      ],
+      "context_free_data": []
+    }
+  },
+  "block": 293059227,
+  "blockId": "1177ba9b7bcc6f1e8f2a0a30abcf527e18853f986f095e035533061b01ebb898",
+  "effect": {
+    "id": "68870939753805",
+    "reservation": "68870939753805",
+    "grant_id": "47633037276206",
+    "app_id": "15400335351187373294",
+    "owner": "vrya3iayygzy",
+    "actor": "rlnmfc13nj2m",
+    "actor_permission": "vrapp",
+    "space": "memory",
+    "payload": "{\"kind\":\"memory\",\"text\":\"Externally approved app and bounded grant. Native authority permits this public memory.\"}"
+  },
+  "reservation": {
+    "id": "68870939753805",
+    "grant_id": "47633037276206",
+    "obligation": "68870939753805",
+    "nullifier": "68870939753805",
+    "effect_id": "68870939753805",
+    "payload_hash": "67bbfbb53ea5c78b72a1ee3e176f36dc6699166f44273824b9513338ff32790f",
+    "status": 1
+  },
+  "grant": {
+    "id": "47633037276206",
+    "app_id": "15400335351187373294",
+    "owner": "vrya3iayygzy",
+    "actor": "rlnmfc13nj2m",
+    "actor_permission": "vrapp",
+    "space": "memory",
+    "budget": 5,
+    "available": 4,
+    "reserved": 0,
+    "quarantined": 0,
+    "consumed": 1,
+    "expires": 1792589359,
+    "max_payload": 256,
+    "revoked": 0
+  },
+  "verifiedAt": "2026-10-20T13:31:10.138Z",
+  "verification": "IRREVERSIBLE_INCLUSION_AND_EFFECT_VIA_INDEPENDENT_RPC"
+}
