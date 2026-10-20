@@ -20,7 +20,10 @@
     "aegisPolicyVerdict": "NOT_EVALUATED",
     "vaultRamBacking": "UNAVAILABLE",
     "recordedReportCommand": "node packages/aegis-bridge/verify-recorded.mjs EXPORTED_REPORT.json",
-    "recordedReportAssurance": "INTERNAL_ACCOUNTING_CONSISTENCY_ONLY"
+    "recordedReportAssurance": "INTERNAL_ACCOUNTING_CONSISTENCY_ONLY",
+    "combinedFlowCommand": "node packages/aegis-bridge/verify-flow.mjs packages/verifier/examples/jungle4-external-lifecycle.json cryptolions",
+    "combinedFlowAssurance": "RPC_OBSERVED_LIFECYCLE_AND_ACCOUNTING_CONSISTENCY",
+    "completeAuthorityHistory": false
   },
   "unsupported": [
     "V_OR_RAM_BYTE_CONVERSION",

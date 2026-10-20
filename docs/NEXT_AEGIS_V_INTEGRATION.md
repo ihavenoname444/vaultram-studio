@@ -72,3 +72,17 @@ The new auditor adds 62 adversarial tests; all 152 standalone tests passed in a 
 Full Aegis acceptance remains `NOT_EVALUATED`: authenticated checkpoint/history, authority-universe/root bindings, caller-selected policy, real exclusive backing and complete mediation are not supplied. Actual VaultRAM/V integration remains unavailable. These checks do not certify production readiness or comparative chain safety.
 
 The independent AI reviewer found no blocker, ran the then-current 151 tests, rejected 12 additional ledger mutations, checked a valid unrelated owner/actor grant and changing-snapshot handling. The unrelated-grant case is now also a permanent regression test, bringing the suite to 152 tests. The reviewer used local fixtures, not live RPC checks.
+
+## Follow-on consistency checks — 20 October 2026
+
+Studio now calls the unmodified pinned Aegis accounting kernel. Exported accounting reports can be recomputed offline. A combined read-only command binds the previously verified external-owner lifecycle to the same complete ledger used by Aegis; before/after observations must match and all observation windows must be monotone. See [Aegis Studio bridge](AEGIS_STUDIO_BRIDGE.md). These are consistency improvements, not completion of work item 1 above.
+
+Before implementing an accepted-history store, specify and independently review these inputs:
+
+- **Trust anchor:** an authenticated source and its acceptance rule (for example a separately reviewed consensus proof or explicitly trusted attestor). RPC URLs or self-signed local reports are not equivalent to chain authentication.
+- **Transition envelope:** chain/contract, deployment code/ABI epoch, previous accepted state reference, next state reference, transaction/action order and payload commitment, plus authenticated inclusion/execution evidence and complete relevant state changes. A list of selected successful transactions does not prove completeness.
+- **Acceptance behavior:** authenticate before accepting; reject missing predecessors, duplicates/replays, conflicting successors, incorrect deployment epochs and unexplained state deltas. An atomic durable update must advance the accepted head and consumed-event cursor together. Recovery must preserve already accepted history and reject rollback.
+- **Revocation and upgrades:** define finality, delayed/reordered observations, code/authority changes and who may change the acceptance policy. Bind policy changes into history; never silently reset the trusted head.
+- **Required negative tests:** forged source signatures, incomplete transitions, unrelated authority changes, same-parent forks, replay, interrupted persistence, rollback, code upgrades and expiry/revocation ordering.
+
+Until source authentication and completeness can actually be supplied, keep the product at `NOT_EVALUATED` for full Aegis. Do not create an 'accepted checkpoint' database from hashed RPC snapshots. This design decision prevents local persistence from being misrepresented as stronger security.

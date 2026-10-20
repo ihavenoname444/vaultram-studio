@@ -67,3 +67,22 @@ This recomputes accounting from the supplied snapshot and requires the entire re
 The CLI reads a regular JSON file of at most 2 MB, returns nonzero on failure, and does not echo malformed input or local filesystem paths. The input is one {observation,aegis} report, not the two-provider comparison wrapper.
 
 On 20 October 2026, a clean public download of commit 136f25b91f83bad9bfee3320aa12a23ce44729fc installed only the verifier's five locked transitive/direct packages (install scripts disabled), then reproduced the live digest above without Studio, local configuration or keys. The follow-on recorded-report verifier was tested against that clean dependency installation. All 28 bridge tests passed (15 existing, 13 new); independent agent review found no blocker. This follow-on changes no signing or execution code.
+
+## Verify the lifecycle and accounting together
+
+```sh
+node packages/aegis-bridge/verify-flow.mjs packages/verifier/examples/jungle4-external-lifecycle.json cryptolions
+node packages/aegis-bridge/verify-flow.mjs packages/verifier/examples/jungle4-external-lifecycle.json greymass
+```
+
+This read-only composition forces the reviewed external-v2 deployment profile. It checks signed consent locally before network access, audits the complete ledger, runs the existing lifecycle verifier with its current-row queries bound to that exact ledger, then audits again. Block inclusion, code/ABI and chain metadata come from the same selected RPC. An allowlisted snapshot adapter supplies only the exact app/grant/reservation/effect rows; it does not perform separate filtered RPC queries that could describe a different ledger. Returned rows are cloned and normalized without mutating the audited snapshot.
+
+Success requires equal whole-ledger digests across the lifecycle checks and nonregressing head/irreversible metadata throughout the observation window. Any ledger change or window regression is inconclusive; no automatic retry, provider fallback or submission occurs. Malformed evidence or mismatched consent/state/inclusion fails. CLI exit codes: 0 = bounded observed-flow checks passed, 1 = invalid, 2 = unavailable/inconclusive. Existing claim levels are preserved, including recorded-only historical denial and RAM traces.
+
+The result includes the exact signed registration, write and revocation transaction IDs plus app/hash/owner/grant/reservation identifiers and observation digest. Its status is `OBSERVED_LIFECYCLE_ACCOUNTING_MATCH`, **not** full Aegis acceptance. `authenticatedCheckpoint`, `completeAuthorityHistory` and `executionAuthorized` remain false. All test budgets remain unbacked test-write units.
+
+Both live provider runs matched on 20 October 2026 at approximately 14:41 UTC / 16:41 Amsterdam. Public results are in [combined-flow.json](evidence/owner-app-v2/combined-flow.json). Twelve additional adversarial tests cover altered consent, incorrect owner/revocation/payload/inclusion, changes to unrelated grants, code swaps, provider loss and regressing observation windows. All 40 bridge tests and 152 standalone verifier tests passed. No contract, signing, Studio session or execution-path change was required.
+
+Equal sampled reads do not detect all transient changes or prove state at a particular block. This composition is an incremental consistency check; it does not close the authenticated-history work item below.
+
+Independent agent review of the combined verifier found no blocking issue and independently ran all 40 bridge tests. Its review did not use live RPC; the two live provider runs above were performed separately. The 12 new tests also passed with the isolated standalone dependency installation.

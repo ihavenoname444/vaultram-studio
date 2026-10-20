@@ -146,5 +146,8 @@
   "docs/agent-capabilities.json",
   "docs/evidence/owner-app-v2/aegis-accounting.json",
   "packages/aegis-bridge/verify-recorded.mjs",
-  "packages/aegis-bridge/test/recorded.test.mjs"
+  "packages/aegis-bridge/test/recorded.test.mjs",
+  "packages/aegis-bridge/verify-flow.mjs",
+  "packages/aegis-bridge/test/flow.test.mjs",
+  "docs/evidence/owner-app-v2/combined-flow.json"
 ]
