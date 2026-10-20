@@ -1,0 +1,25 @@
+{
+  "id": "jungle4-owner-app-v2-demo",
+  "chainId": "73e4385a2708e6d7048834fbc1079f2fabb17b3c125b146af438971e90716c4d",
+  "contract": "vralzuwmebbx",
+  "codeHash": "fadd779a8decc9c09e78cde0369c4aa7fff611ea7a39e36af9ce560564b75557",
+  "abiHash": "6950d4b8e95d6692917e3c4330cf25e2a3a63d631de7543d414fd09593bfefef",
+  "abiJsonHash": "fe8d8cb20c46b9c0f5a6f5ea23756e7b64602a784a1cee28ea0104fcd3cd7fb7",
+  "app": {
+    "appId": "7707187089270261976",
+    "owner": "vrya3iayygzy",
+    "appHash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+  },
+  "actor": "rlnmfc13nj2m",
+  "permission": "vrapp",
+  "grantId": "1",
+  "space": "memory",
+  "ownerPublicKey": "PUB_K1_6MVHLMgzwt7hh4MdSwS8jJXJpKfnJ5o9RtQGFMjJSNczGmeRxe",
+  "agentPublicKey": "PUB_K1_7JvQBgV8rFLX26NGBo1srPCc22MRMrwqJGF5yWtQ8pKKdykcvX",
+  "grant": {
+    "budget": 100,
+    "max_payload": 256,
+    "expires": 1793025195
+  },
+  "sourceSha256": "c7c4a1588dddbf1b903a801bbb3af69db741d83090b807dcc1b0cc0e04d13255"
+}

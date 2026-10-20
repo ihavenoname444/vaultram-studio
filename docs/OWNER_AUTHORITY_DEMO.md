@@ -5,6 +5,11 @@ Jungle4. The demonstrated boundary is **owner → app → restricted agent →
 public memory write → owner revocation → denied agent request**.
 It does not yet integrate VaultRAM leasing or the V token.
 
+External reviewers can now use the [standalone evidence checker](../packages/verifier/README.md)
+with its included public lifecycle bundle, without Studio, build artifacts or
+private configuration. The live-denial runner below is a separate operator test
+that submits an attempt; the public checker is strictly read-only.
+
 ## A three-minute walkthrough
 
 1. Open Studio's native owner/app authority view. Identify contract

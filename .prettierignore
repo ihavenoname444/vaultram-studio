@@ -6,3 +6,6 @@ contracts/build
 pnpm-lock.yaml
 test-results
 playwright-report
+# Preserve the reviewed CDT ABI bytes and generated standalone npm lock.
+packages/verifier/authority.abi.json
+packages/verifier/package-lock.json

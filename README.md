@@ -1,10 +1,12 @@
 # VaultRAM Studio
 
-**Owner control and recovery:** Anchor signing adapter for native owner-signed revocation and conservative journal recovery are implemented and locally tested. OS isolation is a fail-closed launch recipe that cannot activate in this executor; real external-wallet signing and key-custody migration remain unverified. See [details and limitations](docs/OWNER_SIGNING_RECOVERY.md).
+**Owner control and recovery:** real native Anchor revocation is verified irreversible, followed by an observed denied agent reservation and unchanged state from two RPCs. Full owner recovery custody and OS isolation remain unfinished. See [the current evidence walkthrough](docs/OWNER_AUTHORITY_DEMO.md).
+
+**Verify without Studio:** [the standalone Jungle4 evidence checker](packages/verifier/README.md) runs from its own folder with Node/npm, public evidence and read-only RPC access. No private keys or Studio installation are required. It distinguishes checked signatures/inclusion/current state from historical observations. It complements the existing [Aegis reference verifier](https://github.com/ihavenoname444/aegis); it does not replace its authority rules or claim full Aegis acceptance.
 
 A local development studio for a bounded agent marketplace: describe an app, compile a versioned specification, sign an action, inspect state, export evidence.
 
-**Current delivery:** a verified Jungle4 owner/app authority slice, alongside the earlier Phase 0 core and explicitly labelled local simulation. The current suite passes 143 tests with all three WASM builds required. Legacy history includes 26 irreversible application transactions, four manually confirmed MetaMask actions and two prior Linux browser tests. The legacy runtime trusts its relayer; this is not production infrastructure.
+**Current delivery:** a verified Jungle4 owner/app authority slice, alongside the earlier Phase 0 core and explicitly labelled local simulation. The Studio suite passes 150 tests with all three WASM builds required; the standalone verifier adds its own adversarial tests. Legacy history includes 26 irreversible application transactions, four manually confirmed MetaMask actions and two prior Linux browser tests. The legacy runtime trusts its relayer; this is not production infrastructure.
 
 **Architecture/security alignment:** Studio now presents actual grant limits and explicitly unavailable VaultRAM backing. Requests requiring backed authority fail before signing. Direct hostile-signer tests demonstrate both rejected scope expansion and successful arbitrary content inside a grant. Gateway/owner custody is still local, not isolated. See [assumptions and delivery plan](docs/SECURITY_ASSUMPTIONS.md) and [all 18 directive invariants](docs/AUTHORITY_INVARIANTS.md).
 
