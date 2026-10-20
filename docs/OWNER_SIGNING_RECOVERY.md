@@ -8,7 +8,9 @@ The gateway reconstructs the exact action/authorization, checks the chain-bound 
 
 Revocation intentionally does not require the operational agent permission to remain healthy. Current code pins and app/grant ownership are still required. The UI retains the owner control panel when the operational authority overview fails. This is not recovery from a hostile upgraded contract or an offline chain.
 
-Local tests generate a separate owner key, verify its signature, execute the transaction against actual owner/app WASM and verify subsequent agent writes fail. Network/finality responses in those tests are fixtures. The live Studio unsigned-request step may be inspected without changing any authority. **Anchor has returned a signature, but it failed the configured active-key check; no live revocation has been broadcast. Full owner custody has not migrated.** MetaMask's EVM signature is not a substitute for this Antelope signature. The Anchor adapter uses official WharfKit SessionKit with in-memory session storage, Jungle4 only, exact owner@active matching, broadcast disabled and transaction modification disabled. It rechecks returned transaction bytes and recovers the signature key before accepting it. This is locally tested integration code, not evidence that a real wallet ceremony has succeeded.
+Local tests generate a separate owner key and execute signed revocation against actual owner/app WASM; their network/finality responses are fixtures. Separately, a real Anchor ceremony succeeded on Jungle4 on 2026-10-19, followed by a live post-revocation denial test on 2026-10-20. The exact chain, signer, encoded transaction and recovered active key were checked before submission. Revocation was verified irreversible; a subsequent restricted-agent reserve was rejected with grant revoked and unchanged table snapshots from both RPCs. See the [demo guide and public evidence](OWNER_AUTHORITY_DEMO.md).
+
+The adapter uses official WharfKit SessionKit with in-memory sessions, Jungle4 only, exact owner@active matching, broadcast disabled and transaction modification disabled. MetaMask's EVM signature is not a substitute for this native Antelope signature. Full owner custody and operating-system isolation remain unverified.
 
 ## Using Anchor
 
@@ -17,7 +19,7 @@ Local tests generate a separate owner key, verify its signature, execute the tra
 3. Prepare unsigned revocation, select Sign with Anchor and review the actual contract, revoke action and owner@active authorization in the wallet. Signing alone does not broadcast.
 4. Submit the checked signature in Studio. On timeout use Reconcile; wait for irreversible verification and then confirm the revoked agent cannot write.
 
-Key generation and an on-chain active-key rotation have occurred; complete custody migration and the successful real-wallet drill remain unfinished. The app never requests a seed or private key.
+The on-chain active-key rotation and real-wallet revocation drill are verified; complete owner custody migration remains unfinished. The app never requests a seed or private key.
 
 ## Using the developer handoff
 
@@ -66,19 +68,19 @@ For backups, stop all writers and copy a consistent SQLite backup (including WAL
 
 `tests/owner-app-studio.test.ts` covers owner signatures, wrong keys/chains/actions, stale or unsupported authority, unhealthy agent permission, operational/owner key reuse, actual WASM revocation, and owner-request timeout/restart without resend. Independent review found and prompted fixes to the emergency-revocation dependency and recovery initialization/table checks.
 
-Remaining production gates: a verified external native wallet and owner-controlled custody; external registration/grant approval with both allocator and owner signatures; validated OS/deployment isolation; full backup-loss and key-rotation drills; upgrade governance; verified VaultRAM backing. No new live revocation or deployment is claimed by these local tests.
+Remaining production gates: full owner-controlled custody; external registration/grant approval with both allocator and owner signatures; validated OS/deployment isolation; full backup-loss and key-rotation drills; upgrade governance; verified VaultRAM backing. No new live revocation or deployment is claimed by these local tests.
 
 `tests/owner-wallet.test.ts` adds seven local cryptographic boundary tests for exact signatures, request domain, changed wallet transactions, signer/key/chain mismatch, expiry and missing connected wallet. Independent code review also inspected the installed SDK broadcast behavior; it found no blocker in this narrow adapter scope.
 
-The Anchor adapter verifies the SDK's encoded `resolved.transaction`, not its decoded display transaction, so verification needs no inferred action ABI. A regression test covers the real SDK response shape with decoded action data. Fail-closed diagnostics distinguish chain, signer, transaction-byte, signature-count and recovered-public-key mismatches; no private keys are logged. Full suite: 143 tests with all three WASM builds required. Real-wallet revocation remains incomplete until separately recorded live verification succeeds.
+The Anchor adapter verifies the SDK's encoded `resolved.transaction`, not its decoded display transaction, so verification needs no inferred action ABI. A regression test covers the real SDK response shape with decoded action data. Fail-closed diagnostics distinguish chain, signer, transaction-byte, signature-count and recovered-public-key mismatches; no private keys are logged. Full suite: 143 tests with all three WASM builds required. Real-wallet revocation is now separately verified; see the current status above and chronological record below.
 
-## Live Anchor diagnostic — 2026-10-19
+## Historical diagnostic (superseded by successful revocation) — 2026-10-19
 
 The active authority of vrya3iayygzy was rotated to the user-supplied active public key in transaction ba3b9397cc74051448c8b01da8c70bb331c7051694083357a8e3277874c25ff8, block 292905995; a separate RPC had irreversible block 292906026 when checked. The original owner recovery authority remains unchanged. This is partial custody migration, not complete key isolation.
 
 Anchor connected as vrya3iayygzy@active, but its signature for prepared request 00a85b86-bbe7-4794-97ed-96824ee05560 recovered the public key intended for owner instead of the current on-chain active key. The adapter rejected it before broadcast. This establishes a wallet/key binding mismatch, not a transaction failure on Jungle4. The exact transaction, chain, signer and signature-count checks passed before the public-key check failed.
 
-Correct the wallet's local active-key association using the separately backed-up active key. Do not change on-chain authority or bypass signature verification to accommodate the incorrectly imported wallet. Then repeat a fresh, user-approved revoke, submit the checked signature, independently verify irreversibility and test rejection of subsequent delegated writes. Those live completion checks remain pending. No private key was read or included in this diagnostic.
+Correct the wallet's local active-key association using the separately backed-up active key. Do not change on-chain authority or bypass signature verification to accommodate the incorrectly imported wallet. Then repeat a fresh, user-approved revoke, submit the checked signature, independently verify irreversibility and test rejection of subsequent delegated writes. These checks were pending at this diagnostic stage; see the subsequent completion record. No private key was read or included in this diagnostic.
 
 ## Local wallet binding repaired — 2026-10-19
 
@@ -86,10 +88,10 @@ The incorrect local Anchor account record was removed with user authorization, r
 
 Anchor closed during the password/import flow, but after reopening, its public Key Management view showed the intended active key (6MVH…) linked to one account and the intended owner key (8J18…) linked to zero. Both keys remained listed. The preceding account overview contained vrya3iayygzy and showed no currently selected account. This verifies the saved local association, not a successful signing ceremony or complete custody migration.
 
-The local macOS crash report records Anchor 1.3.12 running translated through Rosetta, EXC_BAD_ACCESS/SIGSEGV, with V8 frames on the faulting thread. The root cause is not established. No Anchor executable or private key was modified or published. Wallet stability, user-reviewed signature verification, live revocation finality and the post-revoke denial test remain pending.
+The local macOS crash report records Anchor 1.3.12 running translated through Rosetta, EXC_BAD_ACCESS/SIGSEGV, with V8 frames on the faulting thread. The root cause is not established. No Anchor executable or private key was modified or published. At this stage the signing and denial tests were pending; they subsequently passed. Wallet crash stability remains unverified.
 
 ## Live owner revocation verified — 2026-10-19
 
 A fresh Anchor session returned a valid signature from the intended 6MVH… active key. Exact chain, signer, transaction bytes and recovered key checks passed. Following user approval, request 1a9632f0-39e7-4621-aad1-ba0686181988 was submitted. Initial UNKNOWN was reconciled without resubmission to IRREVERSIBLE through the separate verification RPC. Transaction 999bf2b693577eec1d48940106302ef271129b0b3208fe17fde8f08d620b7927 executed in irreversible block 292914270. The verified current grant 1 on vralzuwmebbx has revoked=1. Both saved wallet keys remain present.
 
-This completes the real-wallet revocation ceremony. It does not establish full owner-key custody migration, operating-system isolation, resolution of the Anchor crash, or a fresh live post-revocation agent execution denial test; those remain separate gates.
+This completes the real-wallet revocation ceremony. It does not establish full owner-key custody migration, operating-system isolation or resolution of the Anchor crash. The post-revocation denial test was completed on 2026-10-20 and is documented in the demo guide.

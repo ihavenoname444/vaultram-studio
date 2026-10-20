@@ -1,8 +1,8 @@
 # Reality and trust
 
-**Owner control and recovery:** Anchor signing adapter for native owner-signed revocation and conservative journal recovery are implemented and locally tested. OS isolation is a fail-closed launch recipe that cannot activate in this executor; real external-wallet signing and key-custody migration remain unverified. See [details and limitations](OWNER_SIGNING_RECOVERY.md).
+**Owner control and recovery:** Anchor signing adapter for native owner-signed revocation and conservative journal recovery are implemented and locally tested. OS isolation is a fail-closed launch recipe that cannot activate in this executor; real Anchor revocation is verified irreversible, and a subsequent restricted-agent request was rejected with unchanged state. Full owner custody migration remains unverified. See the [current demo and evidence](OWNER_AUTHORITY_DEMO.md). See [details and limitations](OWNER_SIGNING_RECOVERY.md).
 
-**Current owner/app milestone:** the separate [v2 Studio native-authority flow](OWNER_APP_AUTHORITY.md) is built and live-tested on Jungle4. Native owner consent and immutable app scope are enforced on chain; 143 local tests pass, with 16 earlier live/API acceptance checks recorded separately. The manifest/security pass changes no deployed contract. Historical counts and legacy relayer trust below describe earlier components, not v2 ownership. Native-wallet onboarding, V integration and production deployment remain open.
+**Current owner/app milestone:** the separate [v2 Studio native-authority flow](OWNER_APP_AUTHORITY.md) is built and live-tested on Jungle4. Native owner consent and immutable app scope are enforced on chain; 150 local tests pass, with 16 earlier live/API acceptance checks recorded separately. The manifest/security pass changes no deployed contract. Historical counts and legacy relayer trust below describe earlier components, not v2 ownership. Native-wallet onboarding, V integration and production deployment remain open.
 
 **Current security boundary:** [SECURITY_ASSUMPTIONS.md](SECURITY_ASSUMPTIONS.md) distinguishes native test-write conservation from verified VaultRAM backing, which is missing. The local signer can originate in-scope writes; same-user owner/admin files are not isolated from process compromise. [AUTHORITY_INVARIANTS.md](AUTHORITY_INVARIANTS.md) maps the directive's 18 requirements to actual evidence and gaps.
 
@@ -30,7 +30,7 @@ The gateway verifies EVM signatures; the contract trusts the relayer. It does no
 
 ## PLANNED
 
-Reputation beyond agent status, payments, interoperable messaging, Solana/exSat adapters, arbitrary application templates, integration of scoped autonomous authority into Studio, managed RAM, finance and token economics are not implemented. No independent security audit has occurred. “Reviewed template” means reviewed during implementation, not externally audited.
+Reputation beyond agent status, payments, interoperable messaging, Solana/exSat adapters, arbitrary application templates, general-purpose autonomous execution beyond the demonstrated scoped native-memory flow, managed RAM, finance and token economics are not implemented. No independent security audit has occurred. “Reviewed template” means reviewed during implementation, not externally audited.
 
 ## Separate native authority proof
 

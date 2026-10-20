@@ -1,0 +1,89 @@
+{
+  "request": {
+    "version": 1,
+    "id": "1a9632f0-39e7-4621-aad1-ba0686181988",
+    "chainId": "73e4385a2708e6d7048834fbc1079f2fabb17b3c125b146af438971e90716c4d",
+    "contract": "vralzuwmebbx",
+    "codeHash": "fadd779a8decc9c09e78cde0369c4aa7fff611ea7a39e36af9ce560564b75557",
+    "owner": "vrya3iayygzy",
+    "grantId": "1",
+    "app": {
+      "appId": "7707187089270261976",
+      "owner": "vrya3iayygzy",
+      "appHash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+    },
+    "publicKey": "PUB_K1_6MVHLMgzwt7hh4MdSwS8jJXJpKfnJ5o9RtQGFMjJSNczGmeRxe",
+    "transactionId": "999bf2b693577eec1d48940106302ef271129b0b3208fe17fde8f08d620b7927",
+    "signingDigest": "a07e09e96593d62be972fc75306d82988c18a3a4568f6ad7cf80f3a318e67691",
+    "transaction": {
+      "expiration": "2026-10-19T17:23:19",
+      "ref_block_num": 33832,
+      "ref_block_prefix": 3698839491,
+      "max_net_usage_words": 0,
+      "max_cpu_usage_ms": 0,
+      "delay_sec": 0,
+      "context_free_actions": [],
+      "actions": [
+        {
+          "account": "vralzuwmebbx",
+          "name": "revoke",
+          "authorization": [
+            {
+              "actor": "vrya3iayygzy",
+              "permission": "active"
+            }
+          ],
+          "data": "0100000000000000"
+        }
+      ],
+      "transaction_extensions": []
+    },
+    "review": "Revoke this grant: future reserve/consume stop; completed public records remain. No transfer, key change or grant expansion."
+  },
+  "signedTransaction": {
+    "expiration": "2026-10-19T17:23:19",
+    "ref_block_num": 33832,
+    "ref_block_prefix": 3698839491,
+    "max_net_usage_words": 0,
+    "max_cpu_usage_ms": 0,
+    "delay_sec": 0,
+    "context_free_actions": [],
+    "actions": [
+      {
+        "account": "vralzuwmebbx",
+        "name": "revoke",
+        "authorization": [
+          {
+            "actor": "vrya3iayygzy",
+            "permission": "active"
+          }
+        ],
+        "data": "0100000000000000"
+      }
+    ],
+    "transaction_extensions": [],
+    "signatures": [
+      "SIG_K1_Jyi6FvmHnHRWE6K3JKYcKJZmguL9nhG21pSiDB5rcxtdzX1F3p7CPgRP4AVhpR9b7BJPRTdaYAZVXLnHTMHzLEH5MoeHCQ"
+    ],
+    "context_free_data": []
+  },
+  "block": 292914270,
+  "blockId": "1175845e0bde5e6467ab682cd596829bfc52b4b58213ef1c9c004669faa18fe6",
+  "grant": {
+    "id": 1,
+    "app_id": "7707187089270261976",
+    "owner": "vrya3iayygzy",
+    "actor": "rlnmfc13nj2m",
+    "actor_permission": "vrapp",
+    "space": "memory",
+    "budget": 100,
+    "available": 99,
+    "reserved": 0,
+    "quarantined": 0,
+    "consumed": 1,
+    "expires": 1793025195,
+    "max_payload": 256,
+    "revoked": 1
+  },
+  "trust": "IRREVERSIBLE_INCLUSION_AND_CURRENT_STATE_VIA_TRUSTED_RPC"
+}

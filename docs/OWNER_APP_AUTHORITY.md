@@ -30,7 +30,7 @@ Official CDT 4.1.1 compiled the public source twice in temporary free Binder Lin
 - Example app: **Agent Commons**, ID `7707187089270261976`, native owner `vrya3iayygzy`.
 - Specification hash (Keccak-256 of canonical validated AppSpec): `6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98`.
 - Actor: `rlnmfc13nj2m@vrapp`, a newly generated separate key/permission linked only to this contract's `reserve` and `consume`.
-- Grant 1: 100 bounded writes, memory namespace, max 256 payload bytes, expiry **2026-10-26 14:33:15 UTC**. One UI write consumed one unit; 99 remain at verification.
+- Grant 1: 100 bounded writes, memory namespace, max 256 payload bytes, expiry **2026-10-26 14:33:15 UTC**. One UI write consumed one unit. The remaining 99 are now unusable because the owner revoked grant 1; revocation does not recycle them.
 - UI write transaction: `77faae605bd7e167347474a1f1f86e3ef80d34e0df96cd8be1ec1d1de15e8a75`, irreversible block **292894234**, effect `42779262017618`.
 - Submitting RPC observed **1,293 RAM bytes** for this transaction and **99 payload bytes**. This includes contract bookkeeping; it is not a marginal storage price, independently verified RAM trace or demonstrated V saving.
 - Provisioning used **91 free test EOS**: 85 RAM, 5 CPU, 1 NET. No mainnet assets, paid API or GitHub runner was used. This is not a mainnet cost estimate.
@@ -64,8 +64,8 @@ Fresh operator setup uses `scripts/setup-owner-app.ts provision` then `deploy`. 
 
 ## Remaining boundaries and next step
 
-The local operator still holds the owner's/admin keys outside the gateway. Native wallet approval and self-service owner onboarding are not implemented. The UI cannot register arbitrary apps or issue grants by itself. Legacy template agent/service/status actions retain their separate relayer model. An agent key can use every grant explicitly assigned to its actor/permission pair; separate keys/permissions are needed for isolation between apps at the key level. Parent account authorities retain ultimate native control.
+Native owner-signed revocation through Anchor is implemented and live verified; see the [current demo](OWNER_AUTHORITY_DEMO.md). Active authority uses the external wallet key, but original owner recovery/admin material remains local and OS isolation is not established. Self-service native owner onboarding is not implemented. The UI cannot register arbitrary apps or issue grants by itself. Legacy template agent/service/status actions retain their separate relayer model. An agent key can use every grant explicitly assigned to its actor/permission pair; separate keys/permissions are needed for isolation between apps at the key level. Parent account authorities retain ultimate native control.
 
 The contract provides bounded public writes, not dollar limits, a byte RAM lease cap, arbitrary execution, arbitrary multichain authority or a hosted multi-tenant service. Global reservation IDs can be squatted; grants/rows are append-only; ambiguous failed submissions still need operator reconciliation. Code-upgrade governance, resource exhaustion, owner recovery and independent production audit remain open.
 
-Next: add native-wallet owner registration and grant/revoke approval using this verified contract boundary. In parallel, obtain VaultRAM's actual leasing flow, RAM payer/permissions, reclaim/expiry terms and how V participates. Integrate those observed interfaces without inventing a V requirement. This proof makes no comparative claim that Vaulta is the safest chain.
+Next: add native-wallet owner registration and grant approval using this verified contract boundary. In parallel, obtain VaultRAM's actual leasing flow, RAM payer/permissions, reclaim/expiry terms and how V participates. Integrate those observed interfaces without inventing a V requirement. This proof makes no comparative claim that Vaulta is the safest chain.

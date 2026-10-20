@@ -100,5 +100,11 @@
   "tests/native-recovery.test.ts",
   "docs/OWNER_SIGNING_RECOVERY.md",
   "apps/studio/src/owner-wallet.ts",
-  "tests/owner-wallet.test.ts"
+  "tests/owner-wallet.test.ts",
+  "scripts/test-owner-revocation.ts",
+  "scripts/lib/revocation-evidence.ts",
+  "tests/revocation-evidence.test.ts",
+  "docs/OWNER_AUTHORITY_DEMO.md",
+  "docs/evidence/owner-app-v2/owner-revocation.json",
+  "docs/evidence/owner-app-v2/post-revoke-denial.json"
 ]
