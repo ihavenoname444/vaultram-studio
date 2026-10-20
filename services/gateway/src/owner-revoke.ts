@@ -1,3 +1,4 @@
+import { prepareJournal, submissionOutcome } from "./submission-lifecycle.ts";
 import {
   Action,
   Transaction,
@@ -183,12 +184,14 @@ export class OwnerRevoke {
       review:
         "Revoke this grant: future reserve/consume stop; completed public records remain. No transfer, key change or grant expansion.",
     };
-    this.validate(request);
-    this.g.db
-      .prepare(
-        "INSERT INTO native_owner_ops(id,request,status) VALUES(?,?,'PREPARED')",
-      )
-      .run(request.id, JSON.stringify(request));
+    prepareJournal(this.g.db, "native_owner_ops", () => {
+      this.validate(request);
+      this.g.db
+        .prepare(
+          "INSERT INTO native_owner_ops(id,request,status) VALUES(?,?,'PREPARED')",
+        )
+        .run(request.id, JSON.stringify(request));
+    });
     return request;
   }
   async submit(id: string, signatures: unknown) {
@@ -222,12 +225,31 @@ export class OwnerRevoke {
       await this.g.client.v1.chain.send_transaction(signed);
     } catch {
       this.g.db
-        .prepare("UPDATE native_owner_ops SET status='UNKNOWN' WHERE id=?")
+        .prepare(
+          "UPDATE native_owner_ops SET status='UNKNOWN' WHERE id=? AND status!='IRREVERSIBLE'",
+        )
         .run(id);
     }
     return this.reconcile(id);
   }
   async reconcile(id: string) {
+    const result = await this.reconcileOnce(id);
+    const row = this.row(id);
+    return {
+      ...result,
+      status: row.status,
+      lifecycle: submissionOutcome(
+        row.status,
+        result.status === "IRREVERSIBLE" &&
+          !(
+            "verificationUnavailable" in result &&
+            result.verificationUnavailable
+          ),
+        true, // A completed revocation never grants permission for a new intent.
+      ),
+    };
+  }
+  private async reconcileOnce(id: string) {
     const row = this.row(id);
     if (row.status === "PREPARED") return { id, status: "PREPARED" };
     try {
@@ -273,13 +295,17 @@ export class OwnerRevoke {
     } catch {
       if (row.status !== "IRREVERSIBLE")
         this.g.db
-          .prepare("UPDATE native_owner_ops SET status='UNKNOWN' WHERE id=?")
+          .prepare(
+            "UPDATE native_owner_ops SET status='UNKNOWN' WHERE id=? AND status!='IRREVERSIBLE'",
+          )
           .run(id);
       return {
         id,
-        status: row.status === "IRREVERSIBLE" ? "IRREVERSIBLE" : "UNKNOWN",
+        status: this.row(id).status,
         verificationUnavailable: true,
-        evidence: row.evidence ? JSON.parse(row.evidence) : null,
+        evidence: this.row(id).evidence
+          ? JSON.parse(this.row(id).evidence)
+          : null,
       };
     }
   }

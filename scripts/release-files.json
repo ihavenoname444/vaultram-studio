@@ -149,5 +149,7 @@
   "packages/aegis-bridge/test/recorded.test.mjs",
   "packages/aegis-bridge/verify-flow.mjs",
   "packages/aegis-bridge/test/flow.test.mjs",
-  "docs/evidence/owner-app-v2/combined-flow.json"
+  "docs/evidence/owner-app-v2/combined-flow.json",
+  "services/gateway/src/submission-lifecycle.ts",
+  "docs/SUBMISSION_RECOVERY_PROOF.md"
 ]

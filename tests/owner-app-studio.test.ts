@@ -178,6 +178,224 @@ async function setup() {
 }
 
 describe.skipIf(!available)("owner/app Studio integration", () => {
+  it.each(["native", "owner"])(
+    "%s late failed reconciliation preserves concurrent finalization",
+    async (kind) => {
+      const t = await setup();
+      try {
+        const service = kind === "native" ? t.g : new OwnerRevoke(t.g);
+        const r =
+          kind === "native"
+            ? await t.g.prepare({ appId: t.app.appId, text: "one effect" })
+            : await (service as OwnerRevoke).prepare();
+        if (kind === "native") await t.g.submit(r.id, (r as any).payloadHash);
+        else
+          await (service as OwnerRevoke).submit(r.id, [
+            String(
+              t.ownerKey.signDigest(
+                Transaction.from((r as any).transaction).signingDigest(JUNGLE4),
+              ),
+            ),
+          ]);
+        const table = kind === "native" ? "native_ops" : "native_owner_ops";
+        t.g.db
+          .prepare(
+            "UPDATE " +
+              table +
+              " SET status='UNKNOWN',evidence=NULL WHERE id=?",
+          )
+          .run(r.id);
+        let rejectSlow!: (e: Error) => void;
+        vi.mocked(t.g.pins).mockImplementationOnce(
+          () =>
+            new Promise((_resolve, reject) => {
+              rejectSlow = reject;
+            }),
+        );
+        const slow = service.reconcile(r.id);
+        expect((await service.reconcile(r.id)).status).toBe("IRREVERSIBLE");
+        rejectSlow(Error("late timeout"));
+        expect(await slow).toMatchObject({
+          status: "IRREVERSIBLE",
+          verificationUnavailable: true,
+        });
+        expect(service.row(r.id).status).toBe("IRREVERSIBLE");
+        expect(service.row(r.id).evidence).toBeTruthy();
+        expect(t.send).toHaveBeenCalledTimes(1);
+      } finally {
+        t.cleanup();
+      }
+    },
+  );
+  it.each(["native", "owner"])(
+    "%s late lost send response cannot erase independently reconciled finality",
+    async (kind) => {
+      const t = await setup();
+      try {
+        const service = kind === "native" ? t.g : new OwnerRevoke(t.g);
+        const r =
+          kind === "native"
+            ? await t.g.prepare({ appId: t.app.appId, text: "one" })
+            : await (service as OwnerRevoke).prepare();
+        const execute = t.send.getMockImplementation()!;
+        let lose!: (e: Error) => void;
+        t.send.mockImplementationOnce(async (tx) => {
+          await execute(tx);
+          return new Promise((_resolve, reject) => {
+            lose = reject;
+          });
+        });
+        const pending =
+          kind === "native"
+            ? t.g.submit(r.id, (r as any).payloadHash)
+            : (service as OwnerRevoke).submit(r.id, [
+                String(
+                  t.ownerKey.signDigest(
+                    Transaction.from((r as any).transaction).signingDigest(
+                      JUNGLE4,
+                    ),
+                  ),
+                ),
+              ]);
+        await vi.waitFor(() => expect(lose).toBeTypeOf("function"));
+        expect((await service.reconcile(r.id)).status).toBe("IRREVERSIBLE");
+        vi.mocked(t.g.pins).mockRejectedValue(Error("stale/offline RPC"));
+        lose(Error("response lost after execution"));
+        const result = await pending;
+        expect(result.status).toBe("IRREVERSIBLE");
+        expect(result.lifecycle).toMatchObject({
+          state: "FINALIZED",
+          nextAction: "RECONCILE",
+          submissionBlockCleared: false,
+        });
+        expect(service.row(r.id).evidence).toBeTruthy();
+        expect(t.send).toHaveBeenCalledTimes(1);
+      } finally {
+        t.cleanup();
+      }
+    },
+  );
+  it.each(["UNKNOWN", "IN_BLOCK", "FORKED", "FAILED"])(
+    "keeps ambiguous submission blocked on RPC status %s until corroborated finality",
+    async (state) => {
+      const t = await setup();
+      try {
+        const r = await t.g.prepare({ appId: t.app.appId, text: "one effect" });
+        const rpc = vi.mocked(t.g.rpc),
+          original = rpc.getMockImplementation()!;
+        rpc.mockImplementation(async (base, method, body) =>
+          method === "get_transaction_status"
+            ? { state }
+            : original(base, method, body),
+        );
+        const submitted = await t.g.submit(r.id, r.payloadHash);
+        expect(submitted.lifecycle).toMatchObject({
+          state: "SUBMITTED",
+          nextAction: "RECONCILE",
+          submissionBlockCleared: false,
+          automaticRebroadcast: false,
+        });
+        expect(t.rows("effects")).toHaveLength(1);
+        for (let i = 0; i < 3; i++) {
+          expect((await t.g.submit(r.id, r.payloadHash)).status).not.toBe(
+            "IRREVERSIBLE",
+          );
+          await t.g.reconcile(r.id);
+        }
+        await expect(
+          t.g.prepare({ appId: t.app.appId, text: "second" }),
+        ).rejects.toThrow("unresolved");
+        rpc.mockImplementation(original);
+        vi.mocked(t.g.pins).mockResolvedValueOnce({
+          last_irreversible_block_num: 9,
+        });
+        expect((await t.g.reconcile(r.id)).status).toBe("UNKNOWN");
+        expect((await t.g.reconcile(r.id)).lifecycle).toMatchObject({
+          state: "FINALIZED",
+          nextAction: "STOP",
+          submissionBlockCleared: true,
+        });
+        rpc.mockRejectedValue(Error("stale observation"));
+        expect((await t.g.reconcile(r.id)).lifecycle).toMatchObject({
+          state: "FINALIZED",
+          nextAction: "RECONCILE",
+          submissionBlockCleared: false,
+        });
+        expect(t.send).toHaveBeenCalledTimes(1);
+        expect(t.rows("effects")).toHaveLength(1);
+      } finally {
+        t.cleanup();
+      }
+    },
+  );
+  it("owner prepare rechecks unresolved requests after network awaits", async () => {
+    const t = await setup();
+    try {
+      const owner = new OwnerRevoke(t.g),
+        first = await owner.prepare();
+      const head = await t.g.client.v1.chain.get_info();
+      let release!: () => void;
+      vi.mocked(t.g.client.v1.chain.get_info).mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            release = () => resolve(head);
+          }),
+      );
+      const pending = owner.prepare();
+      await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+      t.send.mockRejectedValue(Error("timeout"));
+      // Signature validation/key lookup still succeeds; only finality observation fails.
+      const rpc = vi.mocked(t.g.rpc),
+        original = rpc.getMockImplementation()!;
+      rpc.mockImplementation(async (base, method, body) => {
+        if (method === "get_transaction_status") throw Error("offline");
+        return original(base, method, body);
+      });
+      await owner.submit(first.id, [
+        String(
+          t.ownerKey.signDigest(
+            Transaction.from(first.transaction).signingDigest(JUNGLE4),
+          ),
+        ),
+      ]);
+      release();
+      await expect(pending).rejects.toThrow("unresolved");
+      expect(owner.list()).toHaveLength(1);
+    } finally {
+      t.cleanup();
+    }
+  });
+  it("actual WASM rejection has no effect but an RPC failure cannot release the uncertain journal", async () => {
+    const t = await setup();
+    try {
+      const r = await t.g.prepare({
+        appId: t.app.appId,
+        text: "revoked during broadcast",
+      });
+      const execute = t.send.getMockImplementation()!;
+      t.send.mockImplementationOnce(async (tx) => {
+        await t.contract.actions
+          .revoke({ grant_id: 1 })
+          .send(t.c.appBinding.owner + "@active");
+        return execute(tx); // actual WASM refuses the now-revoked grant
+      });
+      const result = await t.g.submit(r.id, r.payloadHash);
+      expect(result.lifecycle).toMatchObject({
+        state: "UNKNOWN",
+        nextAction: "RECONCILE",
+        submissionBlockCleared: false,
+      });
+      expect(t.rows("effects")).toHaveLength(0);
+      expect(t.rows("reservations")).toHaveLength(0);
+      await t.g.submit(r.id, r.payloadHash);
+      await expect(
+        t.g.prepare({ appId: t.app.appId, text: "new" }),
+      ).rejects.toThrow("unresolved");
+      expect(t.send).toHaveBeenCalledTimes(1);
+    } finally {
+      t.cleanup();
+    }
+  });
   it("owner can revoke even when operational permission is unhealthy", async () => {
     const t = await setup();
     try {

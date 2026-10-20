@@ -132,6 +132,74 @@ describe.skipIf(!available)("native Studio safety", () => {
     ])
       expect(() => assertGrant({ ...grant, ...patch }, c, 100)).toThrow();
   });
+  it("does not sign a new intent when submission becomes unresolved during prepare", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "native-prepare-race-"));
+    const g = configured(dir),
+      other = new AuthorityGateway(g.c, dir, abiBytes);
+    try {
+      prepareMocks(g);
+      prepareMocks(other);
+      const first = await g.prepare({ appId: "42", text: "first" });
+      let release!: () => void;
+      const head = await other.client.v1.chain.get_info();
+      vi.mocked(other.client.v1.chain.get_info).mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            release = () => resolve(head);
+          }),
+      );
+      const pending = other.prepare({
+        appId: "42",
+        text: "must not be signed",
+      });
+      await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+      vi.spyOn(g.client.v1.chain, "send_transaction").mockRejectedValue(
+        Error("timeout"),
+      );
+      vi.spyOn(g, "rpc").mockRejectedValue(Error("offline"));
+      await g.submit(first.id, first.payloadHash);
+      release();
+      await expect(pending).rejects.toThrow("unresolved");
+      expect(g.list()).toHaveLength(1);
+    } finally {
+      other.close();
+      g.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  it("a recovery lock acquired during preflight prevents broadcast", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "native-lock-race-")),
+      g = configured(dir);
+    try {
+      prepareMocks(g);
+      const r = await g.prepare({ appId: "42", text: "locked" });
+      let release!: () => void;
+      vi.spyOn(g, "operationalChecks").mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            release = resolve;
+          }),
+      );
+      const send = vi
+        .spyOn(g.client.v1.chain, "send_transaction")
+        .mockRejectedValue(Error("must not send"));
+      vi.spyOn(g, "rpc").mockRejectedValue(Error("offline"));
+      const pending = g.submit(r.id, r.payloadHash);
+      await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+      g.db
+        .prepare(
+          "INSERT OR REPLACE INTO native_safety(id,recovery_locked) VALUES(1,1)",
+        )
+        .run();
+      release();
+      await expect(pending).rejects.toThrow();
+      expect(send).not.toHaveBeenCalled();
+      expect(g.row(r.id).status).toBe("PREPARED");
+    } finally {
+      g.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
   it("blocks an already prepared second operation after an ambiguous first submission", async () => {
     const dir = mkdtempSync(join(tmpdir(), "native-studio-"));
     const g = configured(dir);

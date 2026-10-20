@@ -333,6 +333,65 @@ describe.skipIf(!available)(
         t.cleanup();
       }
     });
+    it("onboarding late send failure preserves independently finalized evidence", async () => {
+      const t = await setup();
+      try {
+        const r = await t.service.prepare(t.input());
+        const execute = t.send.getMockImplementation()!;
+        let lose!: (e: Error) => void;
+        t.send.mockImplementationOnce(async (tx) => {
+          await execute(tx);
+          return new Promise((_resolve, reject) => {
+            lose = reject;
+          });
+        });
+        const pending = t.service.submit(r.id, t.sigs(r));
+        await vi.waitFor(() => expect(lose).toBeTypeOf("function"));
+        expect((await t.service.reconcile(r.id)).status).toBe("IRREVERSIBLE");
+        vi.mocked(t.g.pins).mockRejectedValue(Error("offline"));
+        lose(Error("lost response"));
+        expect((await pending).lifecycle).toMatchObject({
+          state: "FINALIZED",
+          nextAction: "RECONCILE",
+          submissionBlockCleared: false,
+        });
+        expect(t.service.row(r.id).evidence).toBeTruthy();
+        expect(t.send).toHaveBeenCalledTimes(1);
+      } finally {
+        t.cleanup();
+      }
+    });
+    it("onboarding prepare cannot create another request after an overlapping ambiguous submission", async () => {
+      const t = await setup();
+      try {
+        const first = await t.service.prepare(t.input("first"));
+        const head = await t.g.client.v1.chain.get_info();
+        let release!: () => void;
+        vi.mocked(t.g.client.v1.chain.get_info).mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              release = () => resolve(head);
+            }),
+        );
+        const pending = t.service.prepare(t.input("second"));
+        await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+        t.send.mockRejectedValue(Error("timeout"));
+        const original = t.rpc.getMockImplementation()!;
+        t.rpc.mockImplementation(async (base, method, body) => {
+          if (method === "get_transaction_status") throw Error("offline");
+          return original(base, method, body);
+        });
+        expect((await t.service.submit(first.id, t.sigs(first))).status).toBe(
+          "UNKNOWN",
+        );
+        release();
+        await expect(pending).rejects.toThrow("unresolved");
+        expect(t.service.list()).toHaveLength(1);
+        expect(t.send).toHaveBeenCalledTimes(1);
+      } finally {
+        t.cleanup();
+      }
+    });
     it("retains UNKNOWN across restart and never resends a lost response", async () => {
       const t = await setup();
       try {
@@ -413,6 +472,60 @@ describe.skipIf(!available)(
           return original(endpoint, method, body);
         });
         await expect(t.service.context(r.id)).rejects.toThrow("Fresh verified");
+      } finally {
+        t.cleanup();
+      }
+    });
+    it("parent recovery lock acquired during onboarding preflight prevents broadcast", async () => {
+      const t = await setup();
+      try {
+        const r = await t.service.prepare(t.input());
+        let release!: () => void;
+        vi.spyOn(t.g, "operationalChecks").mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              release = resolve;
+            }),
+        );
+        const pending = t.service.submit(r.id, t.sigs(r));
+        await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+        t.g.db
+          .prepare(
+            "INSERT OR REPLACE INTO native_safety(id,recovery_locked) VALUES(1,1)",
+          )
+          .run();
+        release();
+        await expect(pending).rejects.toThrow();
+        expect(t.send).not.toHaveBeenCalled();
+        expect(t.service.row(r.id).status).toBe("PREPARED");
+      } finally {
+        t.cleanup();
+      }
+    });
+    it("parent recovery lock acquired while activating an app cannot be bypassed", async () => {
+      const t = await setup();
+      try {
+        const r = await t.service.prepare(t.input());
+        await t.service.submit(r.id, t.sigs(r));
+        let release!: () => void;
+        vi.mocked(t.g.pins).mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              release = () => resolve({ last_irreversible_block_num: 10 });
+            }),
+        );
+        const pending = t.service.context(r.id).then(() => "activated");
+        await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+        t.g.db
+          .prepare(
+            "INSERT OR REPLACE INTO native_safety(id,recovery_locked) VALUES(1,1)",
+          )
+          .run();
+        release();
+        await expect(pending).rejects.toThrow(
+          "Recovery journal is read-only for submission",
+        );
+        expect(t.send).toHaveBeenCalledTimes(1);
       } finally {
         t.cleanup();
       }

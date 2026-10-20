@@ -1,3 +1,9 @@
+import { Store } from "../services/gateway/src/store.ts";
+import {
+  compile,
+  exampleSpec,
+  makeIntent,
+} from "../packages/core/src/index.ts";
 import { afterEach, expect, it, vi } from "vitest";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, existsSync, rmSync } from "node:fs";
@@ -113,6 +119,133 @@ it.each([
         ).toBe(1);
     } finally {
       await s?.server.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  },
+);
+
+it("submitted but non-final legacy transactions remain unresolved; stale receipts cannot erase finality", () => {
+  const store = new Store(":memory:");
+  try {
+    const app = compile(exampleSpec),
+      intent = makeIntent(
+        app,
+        { action: "createagent", id: "1", name: "One", description: "test" },
+        "0x" + "33".repeat(20),
+        "1",
+        "vaultdemo111",
+      );
+    store.reserve("one", intent, "fixture");
+    store.status("one", "SUBMITTED");
+    expect(store.unresolved(intent.appId, intent.owner)).toBe(true);
+    const finalized = {
+      receipt: { status: "IRREVERSIBLE", blockNum: 10 },
+      signature: "fixture",
+      publicKey: "fixture",
+    } as any;
+    store.saveReceipt("one", finalized);
+    store.saveReceipt("one", {
+      ...finalized,
+      receipt: { status: "UNKNOWN", blockNum: null },
+    });
+    expect(store.get("one")!.receipt).toEqual(finalized);
+    expect(store.get("one")!.status).toBe("IRREVERSIBLE");
+  } finally {
+    store.close();
+  }
+});
+
+it.each(["/api/intent", "/api/execute"])(
+  "%s rechecks unresolved work after awaiting the chain nonce",
+  async (url) => {
+    const { privateKeyToAccount } = await import("viem/accounts");
+    const { typedData } = await import("../packages/core/src/index.ts");
+    const directory = mkdtempSync(join(tmpdir(), "legacy-nonce-race-"));
+    for (const [key, value] of Object.entries({
+      VAULTA_RPC: "https://unused.example",
+      VAULTA_RUNTIME: "runtime11111",
+      VAULTA_RELAYER: "relayacct111",
+      VAULTA_RELAYER_PRIVATE_KEY: "unused-fake-chain-only",
+      VAULTA_CODE_HASH: "ab".repeat(32),
+      VAULTA_ABI_HASH: "cd".repeat(32),
+    }))
+      vi.stubEnv(key, value);
+    vi.spyOn(Jungle.prototype, "check").mockResolvedValue({
+      chain_id: JUNGLE4,
+    });
+    const s = await createServer({ directory, mode: "JUNGLE4" });
+    try {
+      const app = compile(exampleSpec),
+        wallet = privateKeyToAccount(("0x" + "33".repeat(32)) as `0x${string}`);
+      s.store.putApp(app);
+      s.store.deploy(app.appId);
+      const payload = {
+        action: "createagent",
+        id: "2",
+        name: "two",
+        description: "fixture",
+      } as const;
+      const intent = makeIntent(
+        app,
+        payload,
+        wallet.address,
+        "2",
+        "runtime11111",
+        1,
+        "0x" + "ab".repeat(32),
+      );
+      let release!: () => void;
+      vi.spyOn(Jungle.prototype, "nextNonce").mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            release = () => resolve("2");
+          }),
+      );
+      const broadcast = vi
+        .spyOn(Jungle.prototype, "broadcast")
+        .mockRejectedValue(Error("must not broadcast"));
+      const prepare = vi
+        .spyOn(Jungle.prototype, "prepare")
+        .mockRejectedValue(Error("must not prepare"));
+      const pending = s.server.inject({
+        method: "POST",
+        url,
+        headers: { host: "127.0.0.1", "x-vaultram-token": s.token },
+        payload:
+          url === "/api/intent"
+            ? {
+                appId: app.appId,
+                owner: wallet.address,
+                payload,
+                sourceChainId: 1,
+              }
+            : {
+                intent,
+                signature: await wallet.signTypedData(typedData(intent)),
+              },
+      });
+      const response = Promise.resolve(pending);
+      await vi.waitFor(() => expect(release).toBeTypeOf("function"));
+      const first = makeIntent(
+        app,
+        { ...payload, id: "1" },
+        wallet.address,
+        "1",
+        "runtime11111",
+        1,
+        "0x" + "ab".repeat(32),
+      );
+      s.store.reserve("first", first, "fixture");
+      s.store.status("first", "UNKNOWN");
+      release();
+      const result = await response;
+      expect(result.statusCode).toBe(400);
+      expect(result.json().error).toContain("unresolved");
+      expect(prepare).not.toHaveBeenCalled();
+      expect(broadcast).not.toHaveBeenCalled();
+      expect(s.store.receipts()).toHaveLength(1);
+    } finally {
+      await s.server.close();
       rmSync(directory, { recursive: true, force: true });
     }
   },

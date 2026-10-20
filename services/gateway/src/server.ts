@@ -359,6 +359,10 @@ export async function createServer(
     const nonce = chain
       ? await chain.nextNonce(app.appId, owner.toLowerCase())
       : store.nextNonce(app.appId, owner.toLowerCase());
+    if (chain && store.unresolved(app.appId, owner.toLowerCase()))
+      throw new Error(
+        "Previous submission is unresolved; reconcile before creating another intent",
+      );
     if (
       chain &&
       BigInt(nonce) < BigInt(store.nextNonce(app.appId, owner.toLowerCase()))

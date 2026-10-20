@@ -1,3 +1,4 @@
+import { prepareJournal, submissionOutcome } from "./submission-lifecycle.ts";
 import { randomUUID, randomBytes } from "node:crypto";
 import { resolve } from "node:path";
 import {
@@ -247,25 +248,28 @@ export class OwnerOnboarding {
       signingDigest: String(tx.signingDigest(JUNGLE4)),
       transaction: JSON.parse(JSON.stringify(tx)),
     };
-    this.validate(request);
-    // Initialize the child journal BEFORE any signed submission is possible.
-    // Activation always opens existing mode: lost files are never regenerated.
-    const child = new AuthorityGateway(
-      this.childConfig(request),
-      this.childDirectory(request.id),
-      this.g.abiBytes,
-      "create",
-    );
-    try {
-      new OwnerRevoke(child);
-    } finally {
-      child.close();
-    }
-    this.g.db
-      .prepare(
-        "INSERT INTO native_onboard_ops(id,request,status) VALUES(?,?,'PREPARED')",
-      )
-      .run(request.id, JSON.stringify(request));
+    prepareJournal(this.g.db, "native_onboard_ops", () => {
+      this.g.assertWritable();
+      this.validate(request);
+      // Initialize the child journal BEFORE any signed submission is possible.
+      // Activation always opens existing mode: lost files are never regenerated.
+      const child = new AuthorityGateway(
+        this.childConfig(request),
+        this.childDirectory(request.id),
+        this.g.abiBytes,
+        "create",
+      );
+      try {
+        new OwnerRevoke(child);
+      } finally {
+        child.close();
+      }
+      this.g.db
+        .prepare(
+          "INSERT INTO native_onboard_ops(id,request,status) VALUES(?,?,'PREPARED')",
+        )
+        .run(request.id, JSON.stringify(request));
+    });
     return request;
   }
   async submit(id: string, signatures: unknown) {
@@ -298,7 +302,7 @@ export class OwnerOnboarding {
     if (
       this.g.db
         .prepare(
-          "UPDATE native_onboard_ops SET signed=?,status='PENDING' WHERE id=? AND status='PREPARED' AND NOT EXISTS(SELECT 1 FROM native_onboard_ops WHERE status IN ('PENDING','UNKNOWN'))",
+          "UPDATE native_onboard_ops SET signed=?,status='PENDING' WHERE id=? AND status='PREPARED' AND NOT EXISTS(SELECT 1 FROM native_safety WHERE recovery_locked=1) AND NOT EXISTS(SELECT 1 FROM native_onboard_ops WHERE status IN ('PENDING','UNKNOWN'))",
         )
         .run(JSON.stringify(signed), id).changes !== 1
     )
@@ -307,12 +311,39 @@ export class OwnerOnboarding {
       await this.g.client.v1.chain.send_transaction(signed);
     } catch {
       this.g.db
-        .prepare("UPDATE native_onboard_ops SET status='UNKNOWN' WHERE id=?")
+        .prepare(
+          "UPDATE native_onboard_ops SET status='UNKNOWN' WHERE id=? AND status!='IRREVERSIBLE'",
+        )
         .run(id);
     }
     return this.reconcile(id);
   }
   async reconcile(id: string) {
+    const result = await this.reconcileOnce(id);
+    const row = this.row(id);
+    const blocked =
+      this.g.db.prepare("SELECT recovery_locked FROM native_safety").get()
+        ?.recovery_locked === 1 ||
+      !!this.g.db
+        .prepare(
+          "SELECT 1 FROM native_onboard_ops WHERE status IN ('PENDING','UNKNOWN') LIMIT 1",
+        )
+        .get();
+    return {
+      ...result,
+      status: row.status,
+      lifecycle: submissionOutcome(
+        row.status,
+        result.status === "IRREVERSIBLE" &&
+          !(
+            "verificationUnavailable" in result &&
+            result.verificationUnavailable
+          ),
+        blocked,
+      ),
+    };
+  }
+  private async reconcileOnce(id: string) {
     const row = this.row(id),
       request = JSON.parse(row.request),
       p = planOf(request),
@@ -413,6 +444,7 @@ export class OwnerOnboarding {
       throw Error(
         "Fresh verified onboarding required before selecting this app",
       );
+    this.g.assertWritable();
     const request = JSON.parse(this.row(id).request);
     const child = this.openChild(request);
     child.gateway.assertWritable();

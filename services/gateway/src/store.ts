@@ -94,7 +94,7 @@ export class Store {
   unresolved(app: string, owner: string) {
     return !!this.db
       .prepare(
-        "SELECT 1 FROM submissions WHERE app=? AND owner=? AND status IN ('RESERVED','BROADCASTING','UNKNOWN') LIMIT 1",
+        "SELECT 1 FROM submissions WHERE app=? AND owner=? AND status IN ('RESERVED','BROADCASTING','UNKNOWN','SUBMITTED') LIMIT 1",
       )
       .get(app, owner);
   }
@@ -106,9 +106,9 @@ export class Store {
       .run("released:" + hash, hash);
   }
   reserve(hash: string, intent: Intent, signature: string) {
-    this.db
+    const result = this.db
       .prepare(
-        "INSERT INTO submissions(hash,app,owner,nonce,intent,signature,status) VALUES(?,?,?,?,?,?,?)",
+        "INSERT INTO submissions(hash,app,owner,nonce,intent,signature,status) SELECT ?,?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM submissions WHERE app=? AND owner=? AND status IN ('RESERVED','BROADCASTING','UNKNOWN','SUBMITTED'))",
       )
       .run(
         hash,
@@ -118,6 +118,12 @@ export class Store {
         JSON.stringify(intent),
         signature,
         "RESERVED",
+        intent.appId,
+        intent.owner,
+      );
+    if (result.changes !== 1)
+      throw new Error(
+        "Previous submission is unresolved; reconcile before reserving another intent",
       );
   }
   status(hash: string, status: string, prepared?: unknown) {
@@ -129,7 +135,9 @@ export class Store {
   }
   saveReceipt(hash: string, receipt: SignedReceipt) {
     this.db
-      .prepare("UPDATE submissions SET receipt=?,status=? WHERE hash=?")
+      .prepare(
+        "UPDATE submissions SET receipt=?,status=? WHERE hash=? AND status!='IRREVERSIBLE'",
+      )
       .run(JSON.stringify(receipt), receipt.receipt.status, hash);
   }
   receipts() {

@@ -1,3 +1,4 @@
+import { prepareJournal, submissionOutcome } from "./submission-lifecycle.ts";
 import {
   ABI,
   Action,
@@ -581,18 +582,29 @@ export class AuthorityGateway {
       ...head.getTransactionHeader(120),
       actions: [make("reserve", data), make("consume", { id: rid, payload })],
     });
-    const signed = SignedTransaction.from({
-      ...tx,
-      signatures: [
-        PrivateKey.from(c.privateKey).signDigest(tx.signingDigest(JUNGLE4)),
-      ],
+    const id = prepareJournal(this.db, "native_ops", () => {
+      this.assertWritable();
+      const signed = SignedTransaction.from({
+        ...tx,
+        signatures: [
+          PrivateKey.from(c.privateKey).signDigest(tx.signingDigest(JUNGLE4)),
+        ],
+      });
+      const id = randomUUID();
+      this.db
+        .prepare(
+          "INSERT INTO native_ops(id,payload,rid,txid,transaction_json,status) VALUES(?,?,?,?,?,?)",
+        )
+        .run(
+          id,
+          payload,
+          rid,
+          String(tx.id),
+          JSON.stringify(signed),
+          "PREPARED",
+        );
+      return id;
     });
-    const id = randomUUID();
-    this.db
-      .prepare(
-        "INSERT INTO native_ops(id,payload,rid,txid,transaction_json,status) VALUES(?,?,?,?,?,?)",
-      )
-      .run(id, payload, rid, String(tx.id), JSON.stringify(signed), "PREPARED");
     return {
       id,
       payload,
@@ -672,7 +684,7 @@ export class AuthorityGateway {
     if (
       this.db
         .prepare(
-          "UPDATE native_ops SET status='PENDING' WHERE id=? AND status='PREPARED' AND NOT EXISTS (SELECT 1 FROM native_ops WHERE status IN ('PENDING','UNKNOWN'))",
+          "UPDATE native_ops SET status='PENDING' WHERE id=? AND status='PREPARED' AND NOT EXISTS(SELECT 1 FROM native_safety WHERE recovery_locked=1) AND NOT EXISTS (SELECT 1 FROM native_ops WHERE status IN ('PENDING','UNKNOWN'))",
         )
         .run(id).changes !== 1
     ) {
@@ -700,13 +712,38 @@ export class AuthorityGateway {
     } catch {
       this.db
         .prepare(
-          "UPDATE native_ops SET status='UNKNOWN',error='Submission outcome uncertain; reconcile without resubmitting' WHERE id=?",
+          "UPDATE native_ops SET status='UNKNOWN',error='Submission outcome uncertain; reconcile without resubmitting' WHERE id=? AND status!='IRREVERSIBLE'",
         )
         .run(id);
     }
     return this.reconcile(id);
   }
   async reconcile(id: string) {
+    const result = await this.reconcileOnce(id);
+    const row = this.row(id);
+    const blocked =
+      this.db.prepare("SELECT recovery_locked FROM native_safety").get()
+        ?.recovery_locked === 1 ||
+      !!this.db
+        .prepare(
+          "SELECT 1 FROM native_ops WHERE status IN ('PENDING','UNKNOWN') LIMIT 1",
+        )
+        .get();
+    return {
+      ...result,
+      status: row.status,
+      lifecycle: submissionOutcome(
+        row.status,
+        result.status === "IRREVERSIBLE" &&
+          !(
+            "verificationUnavailable" in result &&
+            result.verificationUnavailable
+          ),
+        blocked,
+      ),
+    };
+  }
+  private async reconcileOnce(id: string) {
     const row = this.row(id);
     if (row.status === "PREPARED")
       return { id, status: row.status, transactionId: row.txid };
@@ -722,7 +759,9 @@ export class AuthorityGateway {
           transactionId: row.txid,
           observedChainStatus: s.state,
           verificationUnavailable: row.status === "IRREVERSIBLE",
-          evidence: row.evidence ? JSON.parse(row.evidence) : null,
+          evidence: this.row(id).evidence
+            ? JSON.parse(this.row(id).evidence)
+            : null,
         };
       const n = Number(s.block_number);
       if (
@@ -806,14 +845,16 @@ export class AuthorityGateway {
       if (row.status !== "IRREVERSIBLE")
         this.db
           .prepare(
-            "UPDATE native_ops SET status='UNKNOWN',error='Independent verification unavailable; reconcile without resubmitting' WHERE id=?",
+            "UPDATE native_ops SET status='UNKNOWN',error='Independent verification unavailable; reconcile without resubmitting' WHERE id=? AND status!='IRREVERSIBLE'",
           )
           .run(id);
       return {
         id,
-        status: row.status === "IRREVERSIBLE" ? "IRREVERSIBLE" : "UNKNOWN",
+        status: this.row(id).status,
         transactionId: row.txid,
-        evidence: row.evidence ? JSON.parse(row.evidence) : null,
+        evidence: this.row(id).evidence
+          ? JSON.parse(this.row(id).evidence)
+          : null,
         verificationUnavailable: true,
       };
     }
