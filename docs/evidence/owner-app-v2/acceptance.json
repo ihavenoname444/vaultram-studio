@@ -1,0 +1,449 @@
+{
+  "complete": true,
+  "account": "vralzuwmebbx",
+  "checks": [
+    {
+      "case": "missing session token",
+      "status": 403
+    },
+    {
+      "case": "foreign origin",
+      "status": 403
+    },
+    {
+      "case": "review hash substitution",
+      "status": 400
+    },
+    {
+      "case": "same-operation replay",
+      "status": "same irreversible transaction; no extra effect"
+    },
+    {
+      "case": "agent key cannot grant",
+      "transactionId": "e1f5d160bbb5db04dd54583269819a8b4c74fcb4d17d0ae7e502c53411720ed7",
+      "transaction": {
+        "expiration": "2026-10-19T14:36:59",
+        "ref_block_num": 13880,
+        "ref_block_prefix": 3231986885,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "grant",
+            "authorization": [
+              {
+                "actor": "rlnmfc13nj2m",
+                "permission": "vrapp"
+              }
+            ],
+            "data": "6300000000000000d8486ec1d26df56a20c59b23a02567bc00000000805acddd00000000f84ba5920100000000000000a338d66a0000000000010000"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_JwZfhccDK8S6RerARHHFc5TTkpwoDZ8RCTmT6rUvM1nWp7aWEWqa5pv9SsbERjLSGi9HcE8akaHi4TEdCQrPD1KxZp6UcS"
+        ],
+        "context_free_data": []
+      },
+      "status": "REJECTED_UNCHANGED",
+      "error": "irrelevant_auth_exception: Irrelevant authority included at /v1/chain/send_transaction {\"code\":3090005,\"name\":\"irrelevant_auth_exception\",\"what\":\"Irrelevant authority included\",\"details\":[{\"message\":\"action declares irrelevant authority '{\\\"actor\\\":\\\"rlnmfc13nj2m\\\",\\\"permission\\\":\\\"vrapp\\\"}'; minimum authority is {\\\"actor\\\":\\\"rlnmfc13nj2m\\\",\\\"permission\\\":\\\"active\\\"}\",\"file\":\"authorization_manager.cpp\",\"line_number\":540,\"method\":\"check_authorization\"}]}",
+      "unchanged": true
+    },
+    {
+      "case": "agent key cannot transfer tokens",
+      "transactionId": "5f7b5efd868e9154718abd9bd151dfeed8647879d61ef1491c49182189b6f9d3",
+      "transaction": {
+        "expiration": "2026-10-19T14:36:59",
+        "ref_block_num": 13880,
+        "ref_block_prefix": 3231986885,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "eosio.token",
+            "name": "transfer",
+            "authorization": [
+              {
+                "actor": "rlnmfc13nj2m",
+                "permission": "vrapp"
+              }
+            ],
+            "data": "20c59b23a02567bce03ff3deb861fcdd102700000000000004454f5300000000166d7573742072656a6563742073636f706564206b6579"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_KfshLpevjaNtPE5R5mgfaGVyZpviF65n6GEUf5yVH8Uv9vLxHetpipQANRCg7DZSyCSCthndvQo62ZUGQYknRDm4Y3p8oa"
+        ],
+        "context_free_data": []
+      },
+      "status": "REJECTED_UNCHANGED",
+      "error": "irrelevant_auth_exception: Irrelevant authority included at /v1/chain/send_transaction {\"code\":3090005,\"name\":\"irrelevant_auth_exception\",\"what\":\"Irrelevant authority included\",\"details\":[{\"message\":\"action declares irrelevant authority '{\\\"actor\\\":\\\"rlnmfc13nj2m\\\",\\\"permission\\\":\\\"vrapp\\\"}'; minimum authority is {\\\"actor\\\":\\\"rlnmfc13nj2m\\\",\\\"permission\\\":\\\"active\\\"}\",\"file\":\"authorization_manager.cpp\",\"line_number\":540,\"method\":\"check_authorization\"}]}",
+      "unchanged": true
+    },
+    {
+      "case": "allocator cannot register app without owner's consent",
+      "transactionId": "d8380c3847aaad6fc5f4bf3004c040cd0d00f72414f53af197526786cfd9fcbb",
+      "transaction": {
+        "expiration": "2026-10-19T14:36:59",
+        "ref_block_num": 13880,
+        "ref_block_prefix": 3231986885,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "regapp",
+            "authorization": [
+              {
+                "actor": "vrya3iayygzy",
+                "permission": "active"
+              }
+            ],
+            "data": "d9486ec1d26df56a20c59b23a02567bc28f3ae92945e257d611b07bc9d19145e29eb51c80a5c56b8862c0b820603c815"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_KBuz8oseMoJF48bmNcm2DByoZiAPhnsVXcw2c2w8c1XDJHVn8uz7o3M2HwUnKGNNjfUvRbTnwj3tPeTkyJonb542z16wgC"
+        ],
+        "context_free_data": []
+      },
+      "status": "REJECTED_UNCHANGED",
+      "error": "missing_auth_exception: Missing required authority at /v1/chain/send_transaction {\"code\":3090004,\"name\":\"missing_auth_exception\",\"what\":\"Missing required authority\",\"details\":[{\"message\":\"missing authority of rlnmfc13nj2m/active\",\"file\":\"apply_context.cpp\",\"line_number\":284,\"method\":\"require_authorization\"},{\"message\":\"vralzuwmebbx <= vralzuwmebbx::regapp pending console output: \",\"file\":\"apply_context.cpp\",\"line_number\":134,\"method\":\"exec_one\"}]}",
+      "unchanged": true
+    },
+    {
+      "case": "separate owner and allocator co-sign app registration",
+      "transactionId": "fe77d5cc42f6b1206b8f533dfebd5b902eab700e362378dd7042c2a7ad579d73",
+      "transaction": {
+        "expiration": "2026-10-19T14:37:01",
+        "ref_block_num": 13884,
+        "ref_block_prefix": 2143592824,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "regapp",
+            "authorization": [
+              {
+                "actor": "vrya3iayygzy",
+                "permission": "active"
+              },
+              {
+                "actor": "rlnmfc13nj2m",
+                "permission": "active"
+              }
+            ],
+            "data": "d9486ec1d26df56a20c59b23a02567bc28f3ae92945e257d611b07bc9d19145e29eb51c80a5c56b8862c0b820603c815"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_K6W5aGAKmCnPq5TS1gR2cJ38JHbDE7yYkS2VTucXjgTfHG8qkWYPvF2nJbeiGViF6vBVdHgHnngPdnHcVBpDFoXk215wG9",
+          "SIG_K1_Jz4P1WzT4JrXoZCWhgnFVTj8BQiWNFTjr3PyhoyCDdgjdBWhtNZqm5BULqt3j9NDh2BqZ3QUMnDb36fw4foGhNcGYPYo5A"
+        ],
+        "context_free_data": []
+      },
+      "status": "IRREVERSIBLE",
+      "block": 292894272,
+      "unchanged": false
+    },
+    {
+      "case": "allocator cannot grant another owner's app without consent",
+      "transactionId": "12bd298afabcba80c99a7972279a04315e580dff93934b94856fa018d5c6fba3",
+      "transaction": {
+        "expiration": "2026-10-19T14:37:03",
+        "ref_block_num": 13888,
+        "ref_block_prefix": 789157816,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "grant",
+            "authorization": [
+              {
+                "actor": "vrya3iayygzy",
+                "permission": "active"
+              }
+            ],
+            "data": "6300000000000000d9486ec1d26df56a20c59b23a02567bc00000000805acddd00000000f84ba5920100000000000000a338d66a0000000000010000"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_JxS3dwCD6VyG7Eg7Ud4mi99szVGmjGju1xVGVgiLvfb3gmwChii2ekMnDbDk5pE2vWAWRPoVtTabFudrBLR8xGrLXfx1Ui"
+        ],
+        "context_free_data": []
+      },
+      "status": "REJECTED_UNCHANGED",
+      "error": "missing_auth_exception: Missing required authority at /v1/chain/send_transaction {\"code\":3090004,\"name\":\"missing_auth_exception\",\"what\":\"Missing required authority\",\"details\":[{\"message\":\"missing authority of rlnmfc13nj2m/active\",\"file\":\"apply_context.cpp\",\"line_number\":284,\"method\":\"require_authorization\"},{\"message\":\"vralzuwmebbx <= vralzuwmebbx::grant pending console output: \",\"file\":\"apply_context.cpp\",\"line_number\":134,\"method\":\"exec_one\"}]}",
+      "unchanged": true
+    },
+    {
+      "case": "app A grant cannot write registered app B",
+      "transactionId": "734a3bc00eb29fd98dc541c36cb9f7667698cf4886523f0e8f3993c539a85c23",
+      "transaction": {
+        "expiration": "2026-10-19T14:37:03",
+        "ref_block_num": 13888,
+        "ref_block_prefix": 789157816,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "reserve",
+            "authorization": [
+              {
+                "actor": "rlnmfc13nj2m",
+                "permission": "vrapp"
+              }
+            ],
+            "data": "0100000000000000b90b000000000000d9486ec1d26df56a00000000f84ba592b90b000000000000b90b000000000000b90b000000000000cc6814e90d202c4dba9807ca8c32e7ca488d04c2a7448fb8bdd1c7669ddf3fd0"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_K1MosJA4QVHdr12h2uNTQ62UPWpvVPR86PUAEfgxv8L2nF34dGGrkhKT38hUyviJdKBMoXMbkbaXqtr5KrFCvdem8unucp"
+        ],
+        "context_free_data": []
+      },
+      "status": "REJECTED_UNCHANGED",
+      "error": "eosio_assert_message_exception: eosio_assert_message assertion failure at /v1/chain/send_transaction {\"code\":3050003,\"name\":\"eosio_assert_message_exception\",\"what\":\"eosio_assert_message assertion failure\",\"details\":[{\"message\":\"assertion failure with message: app binding mismatch\",\"file\":\"cf_system.cpp\",\"line_number\":14,\"method\":\"eosio_assert\"},{\"message\":\"vralzuwmebbx <= vralzuwmebbx::reserve pending console output: \",\"file\":\"apply_context.cpp\",\"line_number\":134,\"method\":\"exec_one\"}]}",
+      "unchanged": true
+    },
+    {
+      "case": "failed consume rolls back reservation atomically",
+      "transactionId": "e4787d175e21902bae8eb6a9de0f470dbc36d78ad8ec5157391b201c9c590d71",
+      "transaction": {
+        "expiration": "2026-10-19T14:37:03",
+        "ref_block_num": 13888,
+        "ref_block_prefix": 789157816,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "reserve",
+            "authorization": [
+              {
+                "actor": "rlnmfc13nj2m",
+                "permission": "vrapp"
+              }
+            ],
+            "data": "0100000000000000ba0b000000000000d8486ec1d26df56a00000000f84ba592ba0b000000000000ba0b000000000000ba0b0000000000004ad0a69a9a13d7ec018f3a9e0fe0d158c80b327fffaedde4691ec05b7255e52c"
+          },
+          {
+            "account": "vralzuwmebbx",
+            "name": "consume",
+            "authorization": [
+              {
+                "actor": "rlnmfc13nj2m",
+                "permission": "vrapp"
+              }
+            ],
+            "data": "ba0b0000000000000874616d7065726564"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_JxRGZTk2DUscgfTgPnA3S37ViHpwYhCiYhyY5RKsQYS5jzKyNRYLUqQZot7XrjUPmT7HrdN3SquhCfrvRBg7jtEMPrxRT2"
+        ],
+        "context_free_data": []
+      },
+      "status": "REJECTED_UNCHANGED",
+      "error": "eosio_assert_message_exception: eosio_assert_message assertion failure at /v1/chain/send_transaction {\"code\":3050003,\"name\":\"eosio_assert_message_exception\",\"what\":\"eosio_assert_message assertion failure\",\"details\":[{\"message\":\"assertion failure with message: payload binding mismatch\",\"file\":\"cf_system.cpp\",\"line_number\":14,\"method\":\"eosio_assert\"},{\"message\":\"vralzuwmebbx <= vralzuwmebbx::consume pending console output: \",\"file\":\"apply_context.cpp\",\"line_number\":134,\"method\":\"exec_one\"}]}",
+      "unchanged": true
+    },
+    {
+      "case": "owner creates revocation-test grant",
+      "transactionId": "866a8b018b437f38e8c7c09762980ac3dbf36e14456a8e4ac3ddd01cf8fd4f8c",
+      "transaction": {
+        "expiration": "2026-10-19T14:37:03",
+        "ref_block_num": 13888,
+        "ref_block_prefix": 789157816,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "grant",
+            "authorization": [
+              {
+                "actor": "vrya3iayygzy",
+                "permission": "active"
+              }
+            ],
+            "data": "0200000000000000d8486ec1d26df56a20c59b23a02567bc00000000805acddd00000000f84ba5920100000000000000a338d66a0000000000010000"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_KVjvKfjcNMn3mDaQJrrVaynTh1UoKLWLAdUTXbD9NoHWiFYuX7zrhGBUiBQCKhEXN4afWnazVF4uUqfQR4uUWAvuLf6BVj"
+        ],
+        "context_free_data": []
+      },
+      "status": "IRREVERSIBLE",
+      "block": 292894278,
+      "unchanged": false
+    },
+    {
+      "case": "wrong namespace rejected",
+      "transactionId": "59f4191eab1f8464496556f6b1b68444bf2ba4d07d92d7dddc24d53cfe93eb26",
+      "transaction": {
+        "expiration": "2026-10-19T14:37:06",
+        "ref_block_num": 13893,
+        "ref_block_prefix": 3367106791,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "reserve",
+            "authorization": [
+              {
+                "actor": "rlnmfc13nj2m",
+                "permission": "vrapp"
+              }
+            ],
+            "data": "0200000000000000d107000000000000d8486ec1d26df56a000000fe6a6cd4cdd107000000000000d107000000000000d107000000000000abda1a17e22f593c0479fefe59df11c892ba66cfb906bd8b08477e05f34a5798"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_K8a84kWSV6BtHbmxSPwXtmRe2tJu2mh6HerhsAMtdPJKcQnhPh1yQxbZRqhgbLoTk11SCyBxxawJC5SKsp7sB7uUKMtrVQ"
+        ],
+        "context_free_data": []
+      },
+      "status": "REJECTED_UNCHANGED",
+      "error": "eosio_assert_message_exception: eosio_assert_message assertion failure at /v1/chain/send_transaction {\"code\":3050003,\"name\":\"eosio_assert_message_exception\",\"what\":\"eosio_assert_message assertion failure\",\"details\":[{\"message\":\"assertion failure with message: namespace mismatch\",\"file\":\"cf_system.cpp\",\"line_number\":14,\"method\":\"eosio_assert\"},{\"message\":\"vralzuwmebbx <= vralzuwmebbx::reserve pending console output: \",\"file\":\"apply_context.cpp\",\"line_number\":134,\"method\":\"exec_one\"}]}",
+      "unchanged": true
+    },
+    {
+      "case": "reserve before revocation",
+      "transactionId": "0916dea124c9eefd7e753fc8cd45682836210f4d00eb00a689ad2eaf40f60af8",
+      "transaction": {
+        "expiration": "2026-10-19T14:37:06",
+        "ref_block_num": 13893,
+        "ref_block_prefix": 3367106791,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "reserve",
+            "authorization": [
+              {
+                "actor": "rlnmfc13nj2m",
+                "permission": "vrapp"
+              }
+            ],
+            "data": "0200000000000000d107000000000000d8486ec1d26df56a00000000f84ba592d107000000000000d107000000000000d107000000000000abda1a17e22f593c0479fefe59df11c892ba66cfb906bd8b08477e05f34a5798"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_Kko6GrmWfigbkho2rtZSP18WBxychxPJe1xLPxavPBpsNyHEwgcQCDFEizkenmfFWn7Bkto9Ww2r8VMbWz1EK52Wc7FPrq"
+        ],
+        "context_free_data": []
+      },
+      "status": "IRREVERSIBLE",
+      "block": 292894283,
+      "unchanged": false
+    },
+    {
+      "case": "owner revokes",
+      "transactionId": "cc6cdb61cf0fc68615c62b866dd6140ee1a843e87d6d352de6296fe0363b6d88",
+      "transaction": {
+        "expiration": "2026-10-19T14:37:07",
+        "ref_block_num": 13896,
+        "ref_block_prefix": 424312788,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "revoke",
+            "authorization": [
+              {
+                "actor": "vrya3iayygzy",
+                "permission": "active"
+              }
+            ],
+            "data": "0200000000000000"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_Kf82kYodJneQhsxrrhzyWkB8oVYyYipdF8CK67FZq16UZgCcgyJcNv29FmtQwqwDzvv2ihyd2vgNCfpnvbXm2U2BQBr6Fc"
+        ],
+        "context_free_data": []
+      },
+      "status": "IRREVERSIBLE",
+      "block": 292894287,
+      "unchanged": false
+    },
+    {
+      "case": "revoked grant cannot consume",
+      "transactionId": "8c3df2c96e1f8154d38d64b2200752d6e1b27fd17dcb69847077fcb6a386cecd",
+      "transaction": {
+        "expiration": "2026-10-19T14:37:09",
+        "ref_block_num": 13900,
+        "ref_block_prefix": 1381396911,
+        "max_net_usage_words": 0,
+        "max_cpu_usage_ms": 0,
+        "delay_sec": 0,
+        "context_free_actions": [],
+        "actions": [
+          {
+            "account": "vralzuwmebbx",
+            "name": "consume",
+            "authorization": [
+              {
+                "actor": "rlnmfc13nj2m",
+                "permission": "vrapp"
+              }
+            ],
+            "data": "d107000000000000157265766f636174696f6e20616363657074616e6365"
+          }
+        ],
+        "transaction_extensions": [],
+        "signatures": [
+          "SIG_K1_JvokR8rMYe5azk5rDsazTiV9QFXnNjsrEYGPNutfrUnfeNQXBBmGhx9vff445RNRBuUyvxHHL1mq4ZqAoL4PVuK8Jvn79T"
+        ],
+        "context_free_data": []
+      },
+      "status": "REJECTED_UNCHANGED",
+      "error": "eosio_assert_message_exception: eosio_assert_message assertion failure at /v1/chain/send_transaction {\"code\":3050003,\"name\":\"eosio_assert_message_exception\",\"what\":\"eosio_assert_message assertion failure\",\"details\":[{\"message\":\"assertion failure with message: grant revoked\",\"file\":\"cf_system.cpp\",\"line_number\":14,\"method\":\"eosio_assert\"},{\"message\":\"vralzuwmebbx <= vralzuwmebbx::consume pending console output: \",\"file\":\"apply_context.cpp\",\"line_number\":134,\"method\":\"exec_one\"}]}",
+      "unchanged": true
+    }
+  ],
+  "limitations": [
+    "Rejected RPC results and unchanged snapshots are observations, not finalized rejection receipts"
+  ]
+}

@@ -1,0 +1,52 @@
+# Threat model by deployment
+
+**Latest implementation:** see [Owner signing and recovery](OWNER_SIGNING_RECOVERY.md) for the new revoke-only external signing handoff, SIGKILL/corruption drills and submission-locked receipt restoration. Full external custody, registration/grant signing and functioning OS isolation remain unverified; older gap descriptions below should be read with this limited update.
+
+## Native owner/app v2
+
+| Attacker / failure                 | Enforced boundary                                                                                              | Remaining exposure                                                                                                          |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Stolen restricted operational key  | Actual WASM checks owner/app, actor permission, namespace, payload bound, count, replay, expiry and revocation | Can originate arbitrary opaque records within every grant assigned to that key; no separate native user-intent verification |
+| Gateway process or host compromise | HTTP and transaction validation do not protect against arbitrary execution under the gateway OS identity       | Local admin/owner keys are not isolated; cannot claim treasury/owner safety for this threat model                           |
+| Forged capacity claim              | Manifest always reports unavailable backing; backed requests fail before signing                               | Deployed v2 itself accepts administrator-defined test units, not verified VaultRAM positions                                |
+| Malicious payload                  | Payload hash and byte bound; immutable effect owner/app attribution                                            | Payload semantics are untrusted; the contract does not parse a full AppSpec policy or authorize dollar spend                |
+| Shared signer across apps          | Each grant remains bound to its own app and budget                                                             | Compromise reaches all grants assigned to the signer; per-app keys needed for narrower isolation                            |
+| Revocation, expiry, lost reply     | Contract rechecks grant at consume; permanent tombstones; unresolved gateway operations block new preparation  | No app-wide freeze/recovery UI; no automatic release of unresolved reservations; database-loss drill remains                |
+| RPC or upgrade administrator       | Independent selected RPC, code/ABI pins, transaction reconstruction and irreversible inclusion                 | RPC remains trusted, observations are not historical state proofs, admin can change code and pin checks have a race         |
+
+The hostile-key WASM tests deliberately include a successful attacker-authored in-scope write. A test report that omits this residual capability would overstate the model. These are local VM tests; prior live acceptance evidence is recorded separately in `docs/evidence/owner-app-v2/`. This is independent agent review, not an external professional security audit. See AUTHORITY_INVARIANTS.md.
+
+## Legacy phase 0 runtime
+
+Scope: local Studio/gateway, bounded Jungle4 runtime, signed intents and receipts. Public data only. This is an implementation review, not an independent audit. See ARCHITECTURE.md for trust boundaries.
+
+| Threat                   | Asset and attack path                  | Current mitigation                                                                   | Residual risk / production requirement                                                              |
+| ------------------------ | -------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Forged EVM signature     | Owner state via fabricated signature   | EIP-712 EOA verification                                                             | Relayer can bypass gateway; on-chain verified authorization needed to remove this trust             |
+| Replay                   | Duplicate writes/resource use          | Persistent app/owner nonce; unique reservation; atomic chain nonce                   | Database loss/crash recovery needs drills and retained evidence                                     |
+| Cross-app reuse          | Another app’s state                    | Full app hash and ID signed and checked                                              | Administrator can alter runtime; govern upgrades                                                    |
+| Domain/chain replay      | Wrong destination/runtime              | Domain chain context and salt; signed Jungle4/runtime/code pin                       | No origin-chain event proof; adapters need separate verification                                    |
+| Nonce race               | Duplicate or reordered writes          | Serialized gateway and SQLite uniqueness; contract exact-next nonce                  | Multiple independent gateways may leave rejected/unknown reservations; coordinate fleet             |
+| Expired intent           | Stale authority                        | Five-minute maximum in gateway and contract                                          | Clock/network delays; surface rejection and re-sign explicitly                                      |
+| Relayer compromise       | All delegated app writes and payer RAM | Restricted child key; bounded actions/rows; no admin key in gateway                  | Can impersonate any EOA; key custody, quotas, rotation and incident response required               |
+| Malicious payload        | State integrity or script execution    | Strict schemas, escaped React text, no arbitrary actions/code                        | UI/dependency compromise remains; independent review                                                |
+| RAM exhaustion           | Payer quota                            | Field/app/row caps; limited account resources; request rate limit                    | Admission allowance is not exact meter; per-owner quotas and calibrated economics needed            |
+| Oversized write          | RAM and CPU                            | UTF-8 limits; C++ field checks; HTTP body cap                                        | Bounds require compiled runtime tests before live use                                               |
+| Duplicate submission     | Repeated writes after timeout          | Persist signed transaction first; UNKNOWN on ambiguity; reconcile                    | Manual handling when archival evidence unavailable; no blind retry                                  |
+| RPC failure or deception | Status, nonce and evidence             | Chain/code/ABI checks, inclusion/LIB check, separately chosen verifier RPC           | RPC remains trusted; add multiple providers/light-client or archival evidence                       |
+| Origin reorg             | Unsupported origin claims              | Only signature identity is used; no origin transaction claimed                       | Any future event adapter must define finality/reorg handling                                        |
+| Vaulta failure/fork      | Receipt incorrectly claims success     | Executed status and block inclusion plus irreversibility                             | Ambiguous submissions may remain UNKNOWN; improve trace-based failure classification                |
+| UI compromise            | User signs unintended payload          | Review panel and signed exact payload/runtime/expiry                                 | Malicious frontend can mislead; wallet-readable fields, release signing and audits                  |
+| AI prompt injection      | Escape bounded compiler                | Fixed schema/actions/template; no model executable code                              | Descriptive text may mislead; provider tests and user review required                               |
+| Supply chain             | Malicious dependency/template          | Exact lockfile; SHA-pinned actions; checksummed CDT; no model code evaluation        | Pins do not establish package trust; dependency review and reproducible artifact comparisons needed |
+| API abuse                | Local CPU/storage/provider spend       | Loopback binding, Host/Origin/token checks, body/rate limits                         | Local malicious processes bypass browser protections; never expose publicly without auth/quotas     |
+| Receipt substitution     | Fake execution evidence                | Ed25519 signature and external key pin; EOA signature and transaction reconstruction | Trust in signer and RPC remains; timestamps and RAM attribution are not independently proven        |
+| Admin compromise         | Runtime upgrade or pause policy        | Separate runtime administration and gateway code/ABI pins                            | Pin check has an upgrade race; multisig/timelocks and upgrade governance needed                     |
+
+## Operational controls
+
+Keep .data and environment files local with restrictive permissions. The source release uses an explicit allowlist, forbidden-path checks and secret scanning. Never put secrets in prompts, browser fields, logs or public issues. Exported payloads and addresses are public data; review before sharing. Do not reuse test keys for mainnet.
+
+The legacy runtime administrator can pause execution. The relayer administrator can replace/revoke the child key. Stop the gateway before incident investigation. The legacy Studio does not implement per-owner revocation; native v2 supports owner-authorized grant revocation on chain, but not a user-wallet revocation UI or production key-management automation. Preserve SQLite and prepared transactions to reconcile uncertain operations before restarting writes. Restrictive local file permissions do not isolate secrets from another process under the same OS identity.
+
+Structured timing/operational logging and billing metering are incomplete; current records are not a full production audit service. External review, dependency assessment, recovery tests and measurable abuse controls are required before public hosting or mainnet.

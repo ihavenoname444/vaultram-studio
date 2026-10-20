@@ -1,0 +1,447 @@
+{
+  "version": 1,
+  "comparison": "MATCHING_RPC_OBSERVATIONS",
+  "authenticatedCheckpoint": false,
+  "reports": [
+    {
+      "observation": {
+        "version": 1,
+        "status": "STABLE_CURRENT_RPC_OBSERVATION",
+        "profile": "jungle4-external-owner-lifecycle-v2",
+        "chainId": "73e4385a2708e6d7048834fbc1079f2fabb17b3c125b146af438971e90716c4d",
+        "contract": "vralzuwmebbx",
+        "codeHash": "fadd779a8decc9c09e78cde0369c4aa7fff611ea7a39e36af9ce560564b75557",
+        "abiHash": "6950d4b8e95d6692917e3c4330cf25e2a3a63d631de7543d414fd09593bfefef",
+        "checkedAt": "2026-10-20T14:28:12.031Z",
+        "rpc": "cryptolions",
+        "window": {
+          "start": {
+            "headBlock": 293066094,
+            "lastIrreversibleBlock": 293066092
+          },
+          "end": {
+            "headBlock": 293066095,
+            "lastIrreversibleBlock": 293066093
+          }
+        },
+        "snapshot": {
+          "root": [
+            {
+              "principal": "vrya3iayygzy",
+              "total": 10000,
+              "available": 9894,
+              "registered": 3
+            }
+          ],
+          "apps": [
+            {
+              "id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "app_hash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+            },
+            {
+              "id": "7707187089270261977",
+              "owner": "rlnmfc13nj2m",
+              "app_hash": "28f3ae92945e257d611b07bc9d19145e29eb51c80a5c56b8862c0b820603c815"
+            },
+            {
+              "id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "app_hash": "d5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+            }
+          ],
+          "grants": [
+            {
+              "id": "1",
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 100,
+              "available": 99,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": "1793025195",
+              "max_payload": 256,
+              "revoked": true
+            },
+            {
+              "id": "2",
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 1,
+              "available": 0,
+              "reserved": 1,
+              "quarantined": 0,
+              "consumed": 0,
+              "expires": "1792424099",
+              "max_payload": 256,
+              "revoked": true
+            },
+            {
+              "id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 5,
+              "available": 4,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": "1792589359",
+              "max_payload": 256,
+              "revoked": true
+            }
+          ],
+          "reservations": [
+            {
+              "id": "2001",
+              "grant_id": "2",
+              "obligation": "2001",
+              "nullifier": "2001",
+              "effect_id": "2001",
+              "payload_hash": "abda1a17e22f593c0479fefe59df11c892ba66cfb906bd8b08477e05f34a5798",
+              "status": 0
+            },
+            {
+              "id": "42779262017618",
+              "grant_id": "1",
+              "obligation": "42779262017618",
+              "nullifier": "42779262017618",
+              "effect_id": "42779262017618",
+              "payload_hash": "d9de0c8daf5d447dea50fbfb27841db4d8c5965ce64ebb75bfd36956ed733111",
+              "status": 1
+            },
+            {
+              "id": "68870939753805",
+              "grant_id": "47633037276206",
+              "obligation": "68870939753805",
+              "nullifier": "68870939753805",
+              "effect_id": "68870939753805",
+              "payload_hash": "67bbfbb53ea5c78b72a1ee3e176f36dc6699166f44273824b9513338ff32790f",
+              "status": 1
+            }
+          ],
+          "effects": [
+            {
+              "id": "42779262017618",
+              "reservation": "42779262017618",
+              "grant_id": "1",
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Owner-approved app. Delegated memory write enforced by native authority.\"}"
+            },
+            {
+              "id": "68870939753805",
+              "reservation": "68870939753805",
+              "grant_id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Externally approved app and bounded grant. Native authority permits this public memory.\"}"
+            }
+          ]
+        },
+        "counts": {
+          "apps": 3,
+          "grants": 3,
+          "reservations": 3,
+          "effects": 2
+        },
+        "accounting": {
+          "unit": "UNBACKED_TEST_WRITE",
+          "rootTotal": 10000,
+          "rootAvailable": 9894,
+          "allocated": 106,
+          "grantCounters": {
+            "available": 103,
+            "reserved": 1,
+            "quarantined": 0,
+            "consumed": 2
+          }
+        },
+        "observationDigest": "4dcbfc6d8472049c39fcbec8997ba9b17b8b4956375f9f234da5ff27d4ce8b79",
+        "aegisPolicyVerdict": "NOT_EVALUATED",
+        "backing": {
+          "status": "UNAVAILABLE",
+          "asset": null
+        },
+        "trust": [
+          "Two equal complete RPC reads, not an atomic snapshot or authenticated checkpoint.",
+          "Observation digest identifies these rows; it is not an Aegis authority-state root or proof of canonical history.",
+          "Head-state rows are not proven to belong to any irreversible block; RPC completeness and chain governance remain trusted.",
+          "Counters are unbacked native test writes, not RAM bytes, V locks, leases or fresh executable authority.",
+          "No transaction signing, submission, custody changes or capacity certificate is performed."
+        ]
+      },
+      "aegis": {
+        "version": 1,
+        "check": "AEGIS_REFERENCE_CONSERVATION",
+        "scope": "NATIVE_TEST_WRITE_ACCOUNTING_ONLY",
+        "source": {
+          "repository": "https://github.com/ihavenoname444/aegis",
+          "commit": "01bcce77bce0bd13ae2bb10d691f5c6c4a7c6038",
+          "version": "0.0.17",
+          "module": "src/authority-kernel.js",
+          "sha256": "96159b63474754fbdc0fdf387c022197027f4d04e1a6153e903a1f675906167d",
+          "function": "conservationReport"
+        },
+        "observationDigest": "4dcbfc6d8472049c39fcbec8997ba9b17b8b4956375f9f234da5ff27d4ce8b79",
+        "unit": "UNBACKED_TEST_WRITE",
+        "result": {
+          "root_authorized": 10000,
+          "available": 9997,
+          "reserved": 1,
+          "quarantined": 0,
+          "consumed": 2,
+          "released": 0,
+          "accounted": 10000,
+          "conserved": true
+        },
+        "executionAuthorized": false,
+        "aegisPolicyVerdict": "NOT_EVALUATED",
+        "vaultRamBacking": "UNAVAILABLE",
+        "missing": [
+          "AUTHENTICATED_AUTHORITY_HISTORY",
+          "ACCEPTED_UNIVERSE_ROOT_AND_POLICY_BINDINGS",
+          "VERIFIED_VAULTRAM_CAPACITY_INTERFACE",
+          "UNIQUE_RESOURCE_ENCUMBRANCE",
+          "COMPLETE_MEDIATION_AND_CUSTODY_ISOLATION"
+        ],
+        "trust": "Accounting projection only. Includes revoked/expired available balances; neither executable authority nor an authenticated Aegis state/checkpoint. No V, RAM-byte or certificate conversion."
+      }
+    },
+    {
+      "observation": {
+        "version": 1,
+        "status": "STABLE_CURRENT_RPC_OBSERVATION",
+        "profile": "jungle4-external-owner-lifecycle-v2",
+        "chainId": "73e4385a2708e6d7048834fbc1079f2fabb17b3c125b146af438971e90716c4d",
+        "contract": "vralzuwmebbx",
+        "codeHash": "fadd779a8decc9c09e78cde0369c4aa7fff611ea7a39e36af9ce560564b75557",
+        "abiHash": "6950d4b8e95d6692917e3c4330cf25e2a3a63d631de7543d414fd09593bfefef",
+        "checkedAt": "2026-10-20T14:28:12.403Z",
+        "rpc": "greymass",
+        "window": {
+          "start": {
+            "headBlock": 293066094,
+            "lastIrreversibleBlock": 293066092
+          },
+          "end": {
+            "headBlock": 293066094,
+            "lastIrreversibleBlock": 293066092
+          }
+        },
+        "snapshot": {
+          "root": [
+            {
+              "principal": "vrya3iayygzy",
+              "total": 10000,
+              "available": 9894,
+              "registered": 3
+            }
+          ],
+          "apps": [
+            {
+              "id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "app_hash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+            },
+            {
+              "id": "7707187089270261977",
+              "owner": "rlnmfc13nj2m",
+              "app_hash": "28f3ae92945e257d611b07bc9d19145e29eb51c80a5c56b8862c0b820603c815"
+            },
+            {
+              "id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "app_hash": "d5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+            }
+          ],
+          "grants": [
+            {
+              "id": "1",
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 100,
+              "available": 99,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": "1793025195",
+              "max_payload": 256,
+              "revoked": true
+            },
+            {
+              "id": "2",
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 1,
+              "available": 0,
+              "reserved": 1,
+              "quarantined": 0,
+              "consumed": 0,
+              "expires": "1792424099",
+              "max_payload": 256,
+              "revoked": true
+            },
+            {
+              "id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 5,
+              "available": 4,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": "1792589359",
+              "max_payload": 256,
+              "revoked": true
+            }
+          ],
+          "reservations": [
+            {
+              "id": "2001",
+              "grant_id": "2",
+              "obligation": "2001",
+              "nullifier": "2001",
+              "effect_id": "2001",
+              "payload_hash": "abda1a17e22f593c0479fefe59df11c892ba66cfb906bd8b08477e05f34a5798",
+              "status": 0
+            },
+            {
+              "id": "42779262017618",
+              "grant_id": "1",
+              "obligation": "42779262017618",
+              "nullifier": "42779262017618",
+              "effect_id": "42779262017618",
+              "payload_hash": "d9de0c8daf5d447dea50fbfb27841db4d8c5965ce64ebb75bfd36956ed733111",
+              "status": 1
+            },
+            {
+              "id": "68870939753805",
+              "grant_id": "47633037276206",
+              "obligation": "68870939753805",
+              "nullifier": "68870939753805",
+              "effect_id": "68870939753805",
+              "payload_hash": "67bbfbb53ea5c78b72a1ee3e176f36dc6699166f44273824b9513338ff32790f",
+              "status": 1
+            }
+          ],
+          "effects": [
+            {
+              "id": "42779262017618",
+              "reservation": "42779262017618",
+              "grant_id": "1",
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Owner-approved app. Delegated memory write enforced by native authority.\"}"
+            },
+            {
+              "id": "68870939753805",
+              "reservation": "68870939753805",
+              "grant_id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Externally approved app and bounded grant. Native authority permits this public memory.\"}"
+            }
+          ]
+        },
+        "counts": {
+          "apps": 3,
+          "grants": 3,
+          "reservations": 3,
+          "effects": 2
+        },
+        "accounting": {
+          "unit": "UNBACKED_TEST_WRITE",
+          "rootTotal": 10000,
+          "rootAvailable": 9894,
+          "allocated": 106,
+          "grantCounters": {
+            "available": 103,
+            "reserved": 1,
+            "quarantined": 0,
+            "consumed": 2
+          }
+        },
+        "observationDigest": "4dcbfc6d8472049c39fcbec8997ba9b17b8b4956375f9f234da5ff27d4ce8b79",
+        "aegisPolicyVerdict": "NOT_EVALUATED",
+        "backing": {
+          "status": "UNAVAILABLE",
+          "asset": null
+        },
+        "trust": [
+          "Two equal complete RPC reads, not an atomic snapshot or authenticated checkpoint.",
+          "Observation digest identifies these rows; it is not an Aegis authority-state root or proof of canonical history.",
+          "Head-state rows are not proven to belong to any irreversible block; RPC completeness and chain governance remain trusted.",
+          "Counters are unbacked native test writes, not RAM bytes, V locks, leases or fresh executable authority.",
+          "No transaction signing, submission, custody changes or capacity certificate is performed."
+        ]
+      },
+      "aegis": {
+        "version": 1,
+        "check": "AEGIS_REFERENCE_CONSERVATION",
+        "scope": "NATIVE_TEST_WRITE_ACCOUNTING_ONLY",
+        "source": {
+          "repository": "https://github.com/ihavenoname444/aegis",
+          "commit": "01bcce77bce0bd13ae2bb10d691f5c6c4a7c6038",
+          "version": "0.0.17",
+          "module": "src/authority-kernel.js",
+          "sha256": "96159b63474754fbdc0fdf387c022197027f4d04e1a6153e903a1f675906167d",
+          "function": "conservationReport"
+        },
+        "observationDigest": "4dcbfc6d8472049c39fcbec8997ba9b17b8b4956375f9f234da5ff27d4ce8b79",
+        "unit": "UNBACKED_TEST_WRITE",
+        "result": {
+          "root_authorized": 10000,
+          "available": 9997,
+          "reserved": 1,
+          "quarantined": 0,
+          "consumed": 2,
+          "released": 0,
+          "accounted": 10000,
+          "conserved": true
+        },
+        "executionAuthorized": false,
+        "aegisPolicyVerdict": "NOT_EVALUATED",
+        "vaultRamBacking": "UNAVAILABLE",
+        "missing": [
+          "AUTHENTICATED_AUTHORITY_HISTORY",
+          "ACCEPTED_UNIVERSE_ROOT_AND_POLICY_BINDINGS",
+          "VERIFIED_VAULTRAM_CAPACITY_INTERFACE",
+          "UNIQUE_RESOURCE_ENCUMBRANCE",
+          "COMPLETE_MEDIATION_AND_CUSTODY_ISOLATION"
+        ],
+        "trust": "Accounting projection only. Includes revoked/expired available balances; neither executable authority nor an authenticated Aegis state/checkpoint. No V, RAM-byte or certificate conversion."
+      }
+    }
+  ]
+}

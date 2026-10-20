@@ -1,0 +1,54 @@
+{
+  "name": "vaultram-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=22.16"
+  },
+  "scripts": {
+    "dev": "tsx scripts/dev.ts",
+    "gateway": "tsx services/gateway/src/server.ts",
+    "build": "tsc --noEmit && vite build --config apps/studio/vite.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run && node --test packages/verifier/test/*.test.mjs && npm run test:aegis",
+    "test:verifier": "node --test packages/verifier/test/*.test.mjs",
+    "test:e2e": "playwright test",
+    "verify": "tsx scripts/verify.ts",
+    "preflight": "tsx scripts/preflight.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "demo": "node --import tsx scripts/demo.ts",
+    "demo:check": "node --import tsx scripts/demo.ts --check",
+    "demo:authority": "node --import tsx scripts/authority-demo.ts",
+    "demo:owner-app": "node --import tsx scripts/authority-demo.ts owner-app-v2",
+    "test:aegis": "node --test packages/aegis-bridge/test/*.test.mjs"
+  },
+  "dependencies": {
+    "@wharfkit/antelope": "4.0.2",
+    "@wharfkit/session": "4.0.2",
+    "@wharfkit/wallet-plugin-anchor": "4.0.2",
+    "@wharfkit/web-renderer": "4.0.2",
+    "fastify": "5.12.7",
+    "lucide-react": "1.57.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "viem": "2.57.6",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vaulta/vert": "2.1.1",
+    "@vitejs/plugin-react": "6.1.2",
+    "@wharfkit/antelope-vert": "npm:@wharfkit/antelope@1.2.0",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.4"
+  }
+}

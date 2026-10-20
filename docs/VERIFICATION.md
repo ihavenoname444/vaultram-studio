@@ -1,0 +1,54 @@
+# Verification record
+
+Recorded during implementation on 2026-10-15 and 2026-10-16. This file distinguishes checks from intended capability.
+
+## Confirmed so far
+
+- Final TypeScript checking, production Vite build and formatting checks pass.
+- 56 automated tests pass with REQUIRE_WASM=1 and none skipped: protocol binding, UTF-8/uint64 boundaries, persistent gateway and atomic replay/owner handling, RPC finality handling, independent CLI positive/tampering checks, source publication exclusion/secret/symlink checks, and execution of the actual compiled WASM in VeRT.
+- Official CDT 4.1.1 compiled the runtime in a free temporary Binder Linux session. Two builds produced byte-identical WASM and ABI files. Only public contract source was uploaded; deployment keys stayed local. Build hashes and reproduction instructions are in BUILD_PROOF.md.
+- In-app-browser manual flow compiled the example, activated local runtime, created an agent, published a service, wrote a memory, updated status and verified the receipt signature. All three rows and four receipts remained after reload.
+- Mobile viewport 390×844 passed a visual layout check; document width equals viewport width (390 px), with no horizontal overflow. Desktop view was restored.
+- Exported simulation evidence passes the independent CLI. Local evidence is excluded from publication; the CLI test creates its own ephemeral keys and evidence.
+- Two dedicated Jungle4 accounts were created through the official faucet and read back through RPC; operational details remain local.
+- A child permission was linked to runtime execution and its transaction inclusion and irreversibility were verified. Reconciliation handles the observed difference between a preliminary block number and actual inclusion.
+
+## Browser and recovery checks
+
+Two Playwright tests passed in free Binder Linux with the Playwright Chromium headless shell, including a fresh run after the expiry UX and startup changes. They cover compile/deploy, simulation, receipt check, export, reload/persistence, mobile-width overflow, all four actions through a controlled EIP-1193 test provider, and rejection of substituted review data before any signature. The expiry regression verifies that an expired request can be refreshed with an unchanged payload and a renewed deadline, without triggering a wallet signature automatically. Local macOS browser startup was blocked by the OS sandbox; the successful Linux run is separate evidence. Only audited public source was uploaded; no deployment keys or local operational data were sent.
+
+Five SIGKILL recovery cases are included in the 56-test suite. They use real gateway processes, SQLite and cryptographic signatures against a controlled fake chain. See HARDENING.md for the exact boundaries.
+
+Reproduce on a Linux host with Node 22+: `pnpm install --frozen-lockfile`, `pnpm exec playwright install --with-deps chromium`, `pnpm test:e2e`. The test configuration uses dedicated loopback ports and a fresh data directory, forces simulation and disables AI-provider credentials.
+
+## Live Jungle4 proof
+
+The reviewed WASM and app registration are irreversible. All four actions executed through the live gateway, producing three rows and nonce 4. Independent verification through CryptoLions RPC checked EOA and receipt signatures, exact intent-to-transaction binding, pinned code/ABI and irreversible inclusion for all four transactions. An additional 18-action, two-owner matrix is irreversible and passes the same independent verifier. The gateway submitted through Greymass RPC. Keys remained local. This is RPC-based verification, not a trustless light-client proof.
+
+## Human-wallet acceptance and remaining limits
+
+- The local desktop MetaMask four-action demo acceptance passed: createagent, pubservice, writemem and setstate are irreversible in blocks 292264399, 292264806, 292264914 and 292265067. Independent CryptoLions verification passed all four EOA/receipt signatures, exact intent-to-transaction bindings, code/ABI pins and irreversible inclusions. After Chrome reload, all four receipts remained and the three owner-scoped rows were present with the agent paused.
+- RAM traces are recorded for 18 additional irreversible actions, with a versioned dataset in RAM_MODEL.md. Historical RAM trace verification and held-out estimator validation remain open.
+- The earlier 22 successful live chain tests used separate locally generated EOAs and real EIP-712 signatures; the four later human MetaMask actions are separate evidence.
+- OpenAI integration is implemented but no key/model was supplied, so no provider call was tested.
+- The automated browser provider uses an ephemeral EOA; it does not complete the human MetaMask acceptance gate or validate mobile-wallet UX.
+
+Official CDT Linux binaries cannot run directly on ARM macOS. Earlier local and IDE alternatives did not produce artifacts. The successful Binder build uses the official Linux compiler and its pinned package checksum.
+
+## Public review and CI
+
+Source is published for review in https://github.com/ihavenoname444/vaultram-studio/pull/1. An explicit source allowlist excludes private environment, keys, databases and local operational records. Source packaging uses the same audit.
+
+GitHub did not allocate a runner: initial runs and a retry stopped before any build step because of an account-level restriction. The successful build and checks were performed independently of GitHub Actions. No payment was made. The workflow still requires WASM tests when a runner is available.
+
+## Demo handoff preparation
+
+The operator chose manual ChatGPT collaboration; integrated AI calls are outside the current demo acceptance gate. The `pnpm demo` entry point forces Jungle4, disables AI API credentials and uses a dedicated persistent local demo journal. Its live preflight passed against the deployed code and ABI, registered example, unpaused runtime, dedicated restricted relay key/link and available RAM/CPU/NET. The UI was opened in Chrome in JUNGLE4 mode without a demo signer. The four-action human MetaMask sequence and final reload checks passed; follow WALLET_DEMO.md to reproduce.
+
+The 56-test suite, typecheck, production build and formatting passed after adding the launcher. Signing review now displays the full owner and the expandable exact intent. Public agent cards are explicitly labelled public. Typecheck, production build, formatting and both Linux browser tests also passed after the expiry UX change; the live handoff startup is separately checked locally.
+
+During an earlier human MetaMask attempt, a signature returned after the intent deadline and was rejected before submission. Studio now displays a live countdown and an explicit refresh button after expiry. Refresh preserves the payload, validates the replacement intent, and requires another deliberate signing action. A post-signing expiry check prevents submitting an intent that expired while the wallet prompt was open. The protocol lifetime limit is unchanged. A subsequent four-action sequence was manually confirmed in MetaMask and passed independent verification and final reload checks. No mobile-wallet support or production certification is implied.
+
+## Separate native authority verification, 2026-10-16
+
+The full suite now passes 70 tests with REQUIRE_WASM=1 and REQUIRE_AUTHORITY=1, with no skips. A separately deployed contract at vradqgskurpl completed a 33-case live matrix. Independent CryptoLions checks verified deployment and 14 positive matrix transactions, pinned code/ABI, conservation and exact current state. Nineteen ordinary rejection observations plus the fresh race-loser retry left state unchanged. These are not irreversible rejection receipts. The two original race submissions produced one irreversible winner; the loser was later reported FAILED and its fresh retry was rejected. See [AUTHORITY_PROOF.md](AUTHORITY_PROOF.md) for scope, limitations, hashes, reproduction and the remaining integration gaps. The earlier sections retain the historical Studio test counts.

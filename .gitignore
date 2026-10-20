@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.data/
+test-results/
+playwright-report/
+contracts/build/
+
+# Local verification artifacts are never published
+docs/example-simulation-evidence.json
+docs/example-receipt-public.pem
+docs/testnet-accounts.json

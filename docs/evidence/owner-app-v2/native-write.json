@@ -1,0 +1,121 @@
+{
+  "version": 2,
+  "app": {
+    "id": "7707187089270261976",
+    "owner": "vrya3iayygzy",
+    "app_hash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+  },
+  "ram": {
+    "transactionId": "77faae605bd7e167347474a1f1f86e3ef80d34e0df96cd8be1ec1d1de15e8a75",
+    "payer": "vralzuwmebbx",
+    "bytes": 1293,
+    "payloadBytes": 99,
+    "source": "SUBMITTING_RPC_EXECUTION_TRACE",
+    "independentlyVerified": false,
+    "observedAt": "2026-10-19T14:34:42.590Z"
+  },
+  "configuration": {
+    "appBinding": {
+      "appId": "7707187089270261976",
+      "owner": "vrya3iayygzy",
+      "appHash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+    },
+    "account": "vralzuwmebbx",
+    "actor": "rlnmfc13nj2m",
+    "permission": "vrapp",
+    "grantId": "1",
+    "space": "memory",
+    "codeHash": "fadd779a8decc9c09e78cde0369c4aa7fff611ea7a39e36af9ce560564b75557",
+    "abiHash": "6950d4b8e95d6692917e3c4330cf25e2a3a63d631de7543d414fd09593bfefef",
+    "abiJsonHash": "fe8d8cb20c46b9c0f5a6f5ea23756e7b64602a784a1cee28ea0104fcd3cd7fb7",
+    "rpc": "https://jungle4.greymass.com",
+    "independent": "https://jungle4.cryptolions.io",
+    "chainId": "73e4385a2708e6d7048834fbc1079f2fabb17b3c125b146af438971e90716c4d",
+    "signer": "LOCAL_RESTRICTED_NATIVE_KEY",
+    "trust": "Local operator controls agent signing. Native contract enforces grant limits. Upgrade administrator and chain remain trusted."
+  },
+  "operation": {
+    "id": "e2e0459c-5129-434e-bfff-cc599d4e6af2",
+    "payload": "{\"kind\":\"memory\",\"text\":\"Owner-approved app. Delegated memory write enforced by native authority.\"}",
+    "reservationId": "42779262017618",
+    "transactionId": "77faae605bd7e167347474a1f1f86e3ef80d34e0df96cd8be1ec1d1de15e8a75",
+    "transaction": {
+      "expiration": "2026-10-19T14:36:09",
+      "ref_block_num": 13780,
+      "ref_block_prefix": 1746838354,
+      "max_net_usage_words": 0,
+      "max_cpu_usage_ms": 0,
+      "delay_sec": 0,
+      "context_free_actions": [],
+      "actions": [
+        {
+          "account": "vralzuwmebbx",
+          "name": "reserve",
+          "authorization": [
+            {
+              "actor": "rlnmfc13nj2m",
+              "permission": "vrapp"
+            }
+          ],
+          "data": "01000000000000005260b752e8260000d8486ec1d26df56a00000000f84ba5925260b752e82600005260b752e82600005260b752e8260000d9de0c8daf5d447dea50fbfb27841db4d8c5965ce64ebb75bfd36956ed733111"
+        },
+        {
+          "account": "vralzuwmebbx",
+          "name": "consume",
+          "authorization": [
+            {
+              "actor": "rlnmfc13nj2m",
+              "permission": "vrapp"
+            }
+          ],
+          "data": "5260b752e8260000637b226b696e64223a226d656d6f7279222c2274657874223a224f776e65722d617070726f766564206170702e2044656c656761746564206d656d6f727920777269746520656e666f72636564206279206e617469766520617574686f726974792e227d"
+        }
+      ],
+      "transaction_extensions": [],
+      "signatures": [
+        "SIG_K1_KhEaNV8SHJVAt6GpSZm2MpC4RYMcfb6gTGZeugUK5tYtmWG1YWaHE6EHXq87gDsPUr7aUNo7mzhtwwT6bfpruYJZnNQ2ux"
+      ],
+      "context_free_data": []
+    }
+  },
+  "block": 292894234,
+  "blockId": "1175361a80ac0d38a39170b228718cc61929e5bfc35b9c819a2e7c041890a57d",
+  "effect": {
+    "id": "42779262017618",
+    "reservation": "42779262017618",
+    "grant_id": 1,
+    "app_id": "7707187089270261976",
+    "owner": "vrya3iayygzy",
+    "actor": "rlnmfc13nj2m",
+    "actor_permission": "vrapp",
+    "space": "memory",
+    "payload": "{\"kind\":\"memory\",\"text\":\"Owner-approved app. Delegated memory write enforced by native authority.\"}"
+  },
+  "reservation": {
+    "id": "42779262017618",
+    "grant_id": 1,
+    "obligation": "42779262017618",
+    "nullifier": "42779262017618",
+    "effect_id": "42779262017618",
+    "payload_hash": "d9de0c8daf5d447dea50fbfb27841db4d8c5965ce64ebb75bfd36956ed733111",
+    "status": 1
+  },
+  "grant": {
+    "id": 1,
+    "app_id": "7707187089270261976",
+    "owner": "vrya3iayygzy",
+    "actor": "rlnmfc13nj2m",
+    "actor_permission": "vrapp",
+    "space": "memory",
+    "budget": 100,
+    "available": 99,
+    "reserved": 0,
+    "quarantined": 0,
+    "consumed": 1,
+    "expires": 1793025195,
+    "max_payload": 256,
+    "revoked": 0
+  },
+  "verifiedAt": "2026-10-19T14:34:59.384Z",
+  "verification": "IRREVERSIBLE_INCLUSION_AND_EFFECT_VIA_INDEPENDENT_RPC"
+}

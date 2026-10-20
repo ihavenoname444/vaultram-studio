@@ -1,0 +1,404 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "app_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "app_hash",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "consume",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "payload",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "effect_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "reservation",
+                    "type": "uint64"
+                },
+                {
+                    "name": "grant_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "app_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "actor",
+                    "type": "name"
+                },
+                {
+                    "name": "actor_permission",
+                    "type": "name"
+                },
+                {
+                    "name": "space",
+                    "type": "name"
+                },
+                {
+                    "name": "payload",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "grant",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "app_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "actor",
+                    "type": "name"
+                },
+                {
+                    "name": "actor_permission",
+                    "type": "name"
+                },
+                {
+                    "name": "space",
+                    "type": "name"
+                },
+                {
+                    "name": "budget",
+                    "type": "uint64"
+                },
+                {
+                    "name": "expires",
+                    "type": "uint64"
+                },
+                {
+                    "name": "max_payload",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
+            "name": "grant_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "app_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "actor",
+                    "type": "name"
+                },
+                {
+                    "name": "actor_permission",
+                    "type": "name"
+                },
+                {
+                    "name": "space",
+                    "type": "name"
+                },
+                {
+                    "name": "budget",
+                    "type": "uint64"
+                },
+                {
+                    "name": "available",
+                    "type": "uint64"
+                },
+                {
+                    "name": "reserved",
+                    "type": "uint64"
+                },
+                {
+                    "name": "quarantined",
+                    "type": "uint64"
+                },
+                {
+                    "name": "consumed",
+                    "type": "uint64"
+                },
+                {
+                    "name": "expires",
+                    "type": "uint64"
+                },
+                {
+                    "name": "max_payload",
+                    "type": "uint32"
+                },
+                {
+                    "name": "revoked",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "init",
+            "base": "",
+            "fields": [
+                {
+                    "name": "principal",
+                    "type": "name"
+                },
+                {
+                    "name": "total",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "quarantine",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "regapp",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "app_hash",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "reservation_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "grant_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "obligation",
+                    "type": "uint64"
+                },
+                {
+                    "name": "nullifier",
+                    "type": "uint64"
+                },
+                {
+                    "name": "effect_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "payload_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "status",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
+            "name": "reserve",
+            "base": "",
+            "fields": [
+                {
+                    "name": "grant_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "app_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "space",
+                    "type": "name"
+                },
+                {
+                    "name": "obligation",
+                    "type": "uint64"
+                },
+                {
+                    "name": "nullifier",
+                    "type": "uint64"
+                },
+                {
+                    "name": "effect_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "payload_hash",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "revoke",
+            "base": "",
+            "fields": [
+                {
+                    "name": "grant_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "root_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "principal",
+                    "type": "name"
+                },
+                {
+                    "name": "total",
+                    "type": "uint64"
+                },
+                {
+                    "name": "available",
+                    "type": "uint64"
+                },
+                {
+                    "name": "registered",
+                    "type": "uint64"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "consume",
+            "type": "consume",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "grant",
+            "type": "grant",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "init",
+            "type": "init",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "quarantine",
+            "type": "quarantine",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "regapp",
+            "type": "regapp",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "reserve",
+            "type": "reserve",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "revoke",
+            "type": "revoke",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "apps",
+            "type": "app_row",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "effects",
+            "type": "effect_row",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "grants",
+            "type": "grant_row",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "reservations",
+            "type": "reservation_row",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "root",
+            "type": "root_row",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}

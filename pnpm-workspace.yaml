@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - services/*
+  - packages/*
+  - "!packages/verifier"
+allowBuilds:
+  es5-ext: false
+  esbuild: true

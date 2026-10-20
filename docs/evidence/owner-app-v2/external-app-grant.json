@@ -1,0 +1,134 @@
+{
+  "request": {
+    "version": 2,
+    "kind": "REGISTER_AND_GRANT",
+    "chainId": "73e4385a2708e6d7048834fbc1079f2fabb17b3c125b146af438971e90716c4d",
+    "contract": "vralzuwmebbx",
+    "codeHash": "fadd779a8decc9c09e78cde0369c4aa7fff611ea7a39e36af9ce560564b75557",
+    "abiHash": "6950d4b8e95d6692917e3c4330cf25e2a3a63d631de7543d414fd09593bfefef",
+    "owner": "vrya3iayygzy",
+    "allocator": "vrya3iayygzy",
+    "actor": "rlnmfc13nj2m",
+    "permission": "vrapp",
+    "spec": {
+      "version": 1,
+      "template": "agent-marketplace",
+      "name": "Agent Safe 2026-10-20T13:28",
+      "description": "A public registry where agents publish services and retain small, inspectable memories.",
+      "accent": "mint",
+      "entities": ["agents", "services", "memories"],
+      "actions": ["createagent", "pubservice", "writemem", "setstate"],
+      "maxRows": 1000,
+      "publicData": true
+    },
+    "grantId": "47633037276206",
+    "budget": 5,
+    "maxPayload": 256,
+    "expires": 1792589359,
+    "id": "98fdb1cb-ecf9-490a-af6f-18cf5d6bfa23",
+    "signers": [
+      {
+        "actor": "vrya3iayygzy",
+        "publicKey": "PUB_K1_6MVHLMgzwt7hh4MdSwS8jJXJpKfnJ5o9RtQGFMjJSNczGmeRxe"
+      }
+    ],
+    "transactionId": "ca0fa708ded0c4cdb12217beca558079973119a3bf11115f3f69c2330abafff6",
+    "signingDigest": "9216d7bdeeed57a0c7aea383fdb72a5b80af157fc6a0eb4087e355307c86154e",
+    "transaction": {
+      "expiration": "2026-10-20T13:31:18",
+      "ref_block_num": 47570,
+      "ref_block_prefix": 2511295947,
+      "max_net_usage_words": 0,
+      "max_cpu_usage_ms": 0,
+      "delay_sec": 0,
+      "context_free_actions": [],
+      "actions": [
+        {
+          "account": "vralzuwmebbx",
+          "name": "regapp",
+          "authorization": [
+            {
+              "actor": "vrya3iayygzy",
+              "permission": "active"
+            }
+          ],
+          "data": "eefc694d68fbb8d5e03ff3deb861fcddd5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+        },
+        {
+          "account": "vralzuwmebbx",
+          "name": "grant",
+          "authorization": [
+            {
+              "actor": "vrya3iayygzy",
+              "permission": "active"
+            }
+          ],
+          "data": "2e34446e522b0000eefc694d68fbb8d520c59b23a02567bc00000000805acddd00000000f84ba59205000000000000002fbed86a0000000000010000"
+        }
+      ],
+      "transaction_extensions": []
+    }
+  },
+  "signedTransaction": {
+    "expiration": "2026-10-20T13:31:18",
+    "ref_block_num": 47570,
+    "ref_block_prefix": 2511295947,
+    "max_net_usage_words": 0,
+    "max_cpu_usage_ms": 0,
+    "delay_sec": 0,
+    "context_free_actions": [],
+    "actions": [
+      {
+        "account": "vralzuwmebbx",
+        "name": "regapp",
+        "authorization": [
+          {
+            "actor": "vrya3iayygzy",
+            "permission": "active"
+          }
+        ],
+        "data": "eefc694d68fbb8d5e03ff3deb861fcddd5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+      },
+      {
+        "account": "vralzuwmebbx",
+        "name": "grant",
+        "authorization": [
+          {
+            "actor": "vrya3iayygzy",
+            "permission": "active"
+          }
+        ],
+        "data": "2e34446e522b0000eefc694d68fbb8d520c59b23a02567bc00000000805acddd00000000f84ba59205000000000000002fbed86a0000000000010000"
+      }
+    ],
+    "transaction_extensions": [],
+    "signatures": [
+      "SIG_K1_KY1wbwJwiPpvziZX6yADuNZGAKm3BVBjGpZ8XCUM1BVwpYqYQMxQqxVyLjRt7pu1mJ21TwLbomYocdXNLVK2q4X6FYLpg2"
+    ],
+    "context_free_data": []
+  },
+  "block": 293059135,
+  "blockId": "1177ba3f23b3ced00da4937679ff1dd324adc5bdfb0834dcb9c6a0314ac7317a",
+  "app": {
+    "id": "15400335351187373294",
+    "owner": "vrya3iayygzy",
+    "app_hash": "d5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+  },
+  "grant": {
+    "id": "47633037276206",
+    "app_id": "15400335351187373294",
+    "owner": "vrya3iayygzy",
+    "actor": "rlnmfc13nj2m",
+    "actor_permission": "vrapp",
+    "space": "memory",
+    "budget": 5,
+    "available": 5,
+    "reserved": 0,
+    "quarantined": 0,
+    "consumed": 0,
+    "expires": 1792589359,
+    "max_payload": 256,
+    "revoked": 0
+  },
+  "trust": "IRREVERSIBLE_INCLUSION_AND_CURRENT_STATE_VIA_TRUSTED_RPC"
+}

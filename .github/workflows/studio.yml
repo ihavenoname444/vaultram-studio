@@ -1,0 +1,39 @@
+name: VaultRAM Studio proof
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  proof:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22.22.2"
+      - name: Install pinned pnpm
+        run: npm install --global pnpm@11.25.0
+      - run: pnpm install --frozen-lockfile
+      - name: Audit public source allowlist
+        run: pnpm exec tsx -e 'import {releaseFiles} from "./scripts/release-audit.ts"; console.log("Audited files:", releaseFiles().length)'
+      - name: Install official CDT 4.1.1
+        run: |
+          curl --fail --location --retry 3 https://github.com/AntelopeIO/cdt/releases/download/v4.1.1/cdt_4.1.1-1_amd64.deb --output /tmp/cdt.deb
+          echo 'd946e6b64f297442d19e486401aa49f956080b07a1fa6335f29976106175b588  /tmp/cdt.deb' | sha256sum --check
+          sudo apt-get update
+          sudo apt-get install -y /tmp/cdt.deb
+      - run: pnpm exec tsx scripts/build-contract.ts
+      - run: pnpm exec tsx scripts/build-authority.ts
+      - run: pnpm exec tsx scripts/build-authority.ts owner-app-v2
+      - run: pnpm typecheck
+      - run: REQUIRE_WASM=1 REQUIRE_AUTHORITY=1 REQUIRE_OWNER_APP=1 pnpm test
+      - run: pnpm build
+      - run: pnpm format:check
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vaultram-runtime
+          path: contracts/build/
+          if-no-files-found: error
