@@ -1,0 +1,727 @@
+{
+  "version": 2,
+  "profile": "jungle4-external-owner-lifecycle-v2",
+  "registration": {
+    "spec": {
+      "version": 1,
+      "template": "agent-marketplace",
+      "name": "Agent Safe 2026-10-20T13:28",
+      "description": "A public registry where agents publish services and retain small, inspectable memories.",
+      "accent": "mint",
+      "entities": ["agents", "services", "memories"],
+      "actions": ["createagent", "pubservice", "writemem", "setstate"],
+      "maxRows": 1000,
+      "publicData": true
+    },
+    "transaction": {
+      "expiration": "2026-10-20T13:31:18",
+      "ref_block_num": 47570,
+      "ref_block_prefix": 2511295947,
+      "max_net_usage_words": 0,
+      "max_cpu_usage_ms": 0,
+      "delay_sec": 0,
+      "context_free_actions": [],
+      "actions": [
+        {
+          "account": "vralzuwmebbx",
+          "name": "regapp",
+          "authorization": [
+            {
+              "actor": "vrya3iayygzy",
+              "permission": "active"
+            }
+          ],
+          "data": "eefc694d68fbb8d5e03ff3deb861fcddd5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+        },
+        {
+          "account": "vralzuwmebbx",
+          "name": "grant",
+          "authorization": [
+            {
+              "actor": "vrya3iayygzy",
+              "permission": "active"
+            }
+          ],
+          "data": "2e34446e522b0000eefc694d68fbb8d520c59b23a02567bc00000000805acddd00000000f84ba59205000000000000002fbed86a0000000000010000"
+        }
+      ],
+      "transaction_extensions": [],
+      "signatures": [
+        "SIG_K1_KY1wbwJwiPpvziZX6yADuNZGAKm3BVBjGpZ8XCUM1BVwpYqYQMxQqxVyLjRt7pu1mJ21TwLbomYocdXNLVK2q4X6FYLpg2"
+      ],
+      "context_free_data": []
+    },
+    "transactionId": "ca0fa708ded0c4cdb12217beca558079973119a3bf11115f3f69c2330abafff6",
+    "block": 293059135,
+    "blockId": "1177ba3f23b3ced00da4937679ff1dd324adc5bdfb0834dcb9c6a0314ac7317a"
+  },
+  "write": {
+    "transaction": {
+      "expiration": "2026-10-20T13:32:56",
+      "ref_block_num": 47766,
+      "ref_block_prefix": 3594376760,
+      "max_net_usage_words": 0,
+      "max_cpu_usage_ms": 0,
+      "delay_sec": 0,
+      "context_free_actions": [],
+      "actions": [
+        {
+          "account": "vralzuwmebbx",
+          "name": "reserve",
+          "authorization": [
+            {
+              "actor": "rlnmfc13nj2m",
+              "permission": "vrapp"
+            }
+          ],
+          "data": "2e34446e522b00004d3de643a33e0000eefc694d68fbb8d500000000f84ba5924d3de643a33e00004d3de643a33e00004d3de643a33e000067bbfbb53ea5c78b72a1ee3e176f36dc6699166f44273824b9513338ff32790f"
+        },
+        {
+          "account": "vralzuwmebbx",
+          "name": "consume",
+          "authorization": [
+            {
+              "actor": "rlnmfc13nj2m",
+              "permission": "vrapp"
+            }
+          ],
+          "data": "4d3de643a33e0000727b226b696e64223a226d656d6f7279222c2274657874223a2245787465726e616c6c7920617070726f7665642061707020616e6420626f756e646564206772616e742e204e617469766520617574686f72697479207065726d6974732074686973207075626c6963206d656d6f72792e227d"
+        }
+      ],
+      "transaction_extensions": [],
+      "signatures": [
+        "SIG_K1_K1ExCaG3CTe7TmuzL23nGyXjpqsbttF7BxeSgtknELupqnDScT7n9Nu9k7AVToLT7xL6ZdFWBJDepuu4U5hoMd3PokJGXQ"
+      ],
+      "context_free_data": []
+    },
+    "transactionId": "4b4c0ad36d52131c9f30909b1b164da85be5efa583ff5957c8a9078109358321",
+    "block": 293059227,
+    "blockId": "1177ba9b7bcc6f1e8f2a0a30abcf527e18853f986f095e035533061b01ebb898",
+    "reservationId": "68870939753805",
+    "payload": "{\"kind\":\"memory\",\"text\":\"Externally approved app and bounded grant. Native authority permits this public memory.\"}"
+  },
+  "revocation": {
+    "transaction": {
+      "expiration": "2026-10-20T13:51:26",
+      "ref_block_num": 49986,
+      "ref_block_prefix": 179284170,
+      "max_net_usage_words": 0,
+      "max_cpu_usage_ms": 0,
+      "delay_sec": 0,
+      "context_free_actions": [],
+      "actions": [
+        {
+          "account": "vralzuwmebbx",
+          "name": "revoke",
+          "authorization": [
+            {
+              "actor": "vrya3iayygzy",
+              "permission": "active"
+            }
+          ],
+          "data": "2e34446e522b0000"
+        }
+      ],
+      "transaction_extensions": [],
+      "signatures": [
+        "SIG_K1_JxmcPS37Mti5zTHcTry3njcw4sgX9D2GpZkvsSWnVw1u36bY58fj2rK1dPBYikwGCAzFjDMyQ3yUTjpKgeS4rCfEAnqB5z"
+      ],
+      "context_free_data": []
+    },
+    "transactionId": "c2475b8905798b370e35b759a48c494a78aa408eb1ed98022c2fccad956110e0",
+    "block": 293061473,
+    "blockId": "1177c361e4020d7123ad5bc5e762073b7fde3357f41690678084ad9cc7985d5f"
+  },
+  "denial": {
+    "transaction": {
+      "expiration": "2026-10-20T13:58:55",
+      "ref_block_num": 50884,
+      "ref_block_prefix": 437065723,
+      "max_net_usage_words": 0,
+      "max_cpu_usage_ms": 0,
+      "delay_sec": 0,
+      "context_free_actions": [],
+      "actions": [
+        {
+          "account": "vralzuwmebbx",
+          "name": "reserve",
+          "authorization": [
+            {
+              "actor": "rlnmfc13nj2m",
+              "permission": "vrapp"
+            }
+          ],
+          "data": "2e34446e522b00001a15fb00b9540000eefc694d68fbb8d500000000f84ba5921a15fb00b95400001a15fb00b95400001a15fb00b9540000be751e08ae7fb2f1b12d2d78954510db79f2397a2cf0563cf2cf23f73b77134c"
+        }
+      ],
+      "transaction_extensions": [],
+      "signatures": [
+        "SIG_K1_JzLym6YnhUx3BcjFshqfAvTEMN7pXGvFCJL7rXisVqm2pUsXwMmz7xWMwCkJFDpThbweSgcYtVQfuUxyW8JWPh1dd3szs1"
+      ],
+      "context_free_data": []
+    },
+    "transactionId": "ec79febe7f3cd51c18d2d495cc3f8a71de8c7f9473524b897622387fee07ed33",
+    "reservationId": "93153562137882",
+    "payloadHash": "be751e08ae7fb2f1b12d2d78954510db79f2397a2cf0563cf2cf23f73b77134c",
+    "observation": {
+      "observedAt": "2026-10-20T13:56:56.104Z",
+      "submittingRpc": "https://jungle4.greymass.com",
+      "stateRpcs": [
+        "https://jungle4.greymass.com",
+        "https://jungle4.cryptolions.io"
+      ],
+      "error": {
+        "code": 3050003,
+        "name": "eosio_assert_message_exception",
+        "what": "eosio_assert_message assertion failure",
+        "details": [
+          {
+            "message": "assertion failure with message: grant revoked",
+            "file": "cf_system.cpp",
+            "line_number": 14,
+            "method": "eosio_assert"
+          },
+          {
+            "message": "vralzuwmebbx <= vralzuwmebbx::reserve pending console output: ",
+            "file": "apply_context.cpp",
+            "line_number": 134,
+            "method": "exec_one"
+          }
+        ]
+      },
+      "before": [
+        {
+          "root": [
+            {
+              "principal": "vrya3iayygzy",
+              "total": 10000,
+              "available": 9894,
+              "registered": 3
+            }
+          ],
+          "apps": [
+            {
+              "id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "app_hash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+            },
+            {
+              "id": "7707187089270261977",
+              "owner": "rlnmfc13nj2m",
+              "app_hash": "28f3ae92945e257d611b07bc9d19145e29eb51c80a5c56b8862c0b820603c815"
+            },
+            {
+              "id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "app_hash": "d5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+            }
+          ],
+          "grants": [
+            {
+              "id": 1,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 100,
+              "available": 99,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": 1793025195,
+              "max_payload": 256,
+              "revoked": 1
+            },
+            {
+              "id": 2,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 1,
+              "available": 0,
+              "reserved": 1,
+              "quarantined": 0,
+              "consumed": 0,
+              "expires": 1792424099,
+              "max_payload": 256,
+              "revoked": 1
+            },
+            {
+              "id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 5,
+              "available": 4,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": 1792589359,
+              "max_payload": 256,
+              "revoked": 1
+            }
+          ],
+          "reservations": [
+            {
+              "id": 2001,
+              "grant_id": 2,
+              "obligation": 2001,
+              "nullifier": 2001,
+              "effect_id": 2001,
+              "payload_hash": "abda1a17e22f593c0479fefe59df11c892ba66cfb906bd8b08477e05f34a5798",
+              "status": 0
+            },
+            {
+              "id": "42779262017618",
+              "grant_id": 1,
+              "obligation": "42779262017618",
+              "nullifier": "42779262017618",
+              "effect_id": "42779262017618",
+              "payload_hash": "d9de0c8daf5d447dea50fbfb27841db4d8c5965ce64ebb75bfd36956ed733111",
+              "status": 1
+            },
+            {
+              "id": "68870939753805",
+              "grant_id": "47633037276206",
+              "obligation": "68870939753805",
+              "nullifier": "68870939753805",
+              "effect_id": "68870939753805",
+              "payload_hash": "67bbfbb53ea5c78b72a1ee3e176f36dc6699166f44273824b9513338ff32790f",
+              "status": 1
+            }
+          ],
+          "effects": [
+            {
+              "id": "42779262017618",
+              "reservation": "42779262017618",
+              "grant_id": 1,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Owner-approved app. Delegated memory write enforced by native authority.\"}"
+            },
+            {
+              "id": "68870939753805",
+              "reservation": "68870939753805",
+              "grant_id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Externally approved app and bounded grant. Native authority permits this public memory.\"}"
+            }
+          ]
+        },
+        {
+          "root": [
+            {
+              "principal": "vrya3iayygzy",
+              "total": 10000,
+              "available": 9894,
+              "registered": 3
+            }
+          ],
+          "apps": [
+            {
+              "id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "app_hash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+            },
+            {
+              "id": "7707187089270261977",
+              "owner": "rlnmfc13nj2m",
+              "app_hash": "28f3ae92945e257d611b07bc9d19145e29eb51c80a5c56b8862c0b820603c815"
+            },
+            {
+              "id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "app_hash": "d5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+            }
+          ],
+          "grants": [
+            {
+              "id": 1,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 100,
+              "available": 99,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": 1793025195,
+              "max_payload": 256,
+              "revoked": 1
+            },
+            {
+              "id": 2,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 1,
+              "available": 0,
+              "reserved": 1,
+              "quarantined": 0,
+              "consumed": 0,
+              "expires": 1792424099,
+              "max_payload": 256,
+              "revoked": 1
+            },
+            {
+              "id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 5,
+              "available": 4,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": 1792589359,
+              "max_payload": 256,
+              "revoked": 1
+            }
+          ],
+          "reservations": [
+            {
+              "id": 2001,
+              "grant_id": 2,
+              "obligation": 2001,
+              "nullifier": 2001,
+              "effect_id": 2001,
+              "payload_hash": "abda1a17e22f593c0479fefe59df11c892ba66cfb906bd8b08477e05f34a5798",
+              "status": 0
+            },
+            {
+              "id": "42779262017618",
+              "grant_id": 1,
+              "obligation": "42779262017618",
+              "nullifier": "42779262017618",
+              "effect_id": "42779262017618",
+              "payload_hash": "d9de0c8daf5d447dea50fbfb27841db4d8c5965ce64ebb75bfd36956ed733111",
+              "status": 1
+            },
+            {
+              "id": "68870939753805",
+              "grant_id": "47633037276206",
+              "obligation": "68870939753805",
+              "nullifier": "68870939753805",
+              "effect_id": "68870939753805",
+              "payload_hash": "67bbfbb53ea5c78b72a1ee3e176f36dc6699166f44273824b9513338ff32790f",
+              "status": 1
+            }
+          ],
+          "effects": [
+            {
+              "id": "42779262017618",
+              "reservation": "42779262017618",
+              "grant_id": 1,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Owner-approved app. Delegated memory write enforced by native authority.\"}"
+            },
+            {
+              "id": "68870939753805",
+              "reservation": "68870939753805",
+              "grant_id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Externally approved app and bounded grant. Native authority permits this public memory.\"}"
+            }
+          ]
+        }
+      ],
+      "after": [
+        {
+          "root": [
+            {
+              "principal": "vrya3iayygzy",
+              "total": 10000,
+              "available": 9894,
+              "registered": 3
+            }
+          ],
+          "apps": [
+            {
+              "id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "app_hash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+            },
+            {
+              "id": "7707187089270261977",
+              "owner": "rlnmfc13nj2m",
+              "app_hash": "28f3ae92945e257d611b07bc9d19145e29eb51c80a5c56b8862c0b820603c815"
+            },
+            {
+              "id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "app_hash": "d5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+            }
+          ],
+          "grants": [
+            {
+              "id": 1,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 100,
+              "available": 99,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": 1793025195,
+              "max_payload": 256,
+              "revoked": 1
+            },
+            {
+              "id": 2,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 1,
+              "available": 0,
+              "reserved": 1,
+              "quarantined": 0,
+              "consumed": 0,
+              "expires": 1792424099,
+              "max_payload": 256,
+              "revoked": 1
+            },
+            {
+              "id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 5,
+              "available": 4,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": 1792589359,
+              "max_payload": 256,
+              "revoked": 1
+            }
+          ],
+          "reservations": [
+            {
+              "id": 2001,
+              "grant_id": 2,
+              "obligation": 2001,
+              "nullifier": 2001,
+              "effect_id": 2001,
+              "payload_hash": "abda1a17e22f593c0479fefe59df11c892ba66cfb906bd8b08477e05f34a5798",
+              "status": 0
+            },
+            {
+              "id": "42779262017618",
+              "grant_id": 1,
+              "obligation": "42779262017618",
+              "nullifier": "42779262017618",
+              "effect_id": "42779262017618",
+              "payload_hash": "d9de0c8daf5d447dea50fbfb27841db4d8c5965ce64ebb75bfd36956ed733111",
+              "status": 1
+            },
+            {
+              "id": "68870939753805",
+              "grant_id": "47633037276206",
+              "obligation": "68870939753805",
+              "nullifier": "68870939753805",
+              "effect_id": "68870939753805",
+              "payload_hash": "67bbfbb53ea5c78b72a1ee3e176f36dc6699166f44273824b9513338ff32790f",
+              "status": 1
+            }
+          ],
+          "effects": [
+            {
+              "id": "42779262017618",
+              "reservation": "42779262017618",
+              "grant_id": 1,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Owner-approved app. Delegated memory write enforced by native authority.\"}"
+            },
+            {
+              "id": "68870939753805",
+              "reservation": "68870939753805",
+              "grant_id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Externally approved app and bounded grant. Native authority permits this public memory.\"}"
+            }
+          ]
+        },
+        {
+          "root": [
+            {
+              "principal": "vrya3iayygzy",
+              "total": 10000,
+              "available": 9894,
+              "registered": 3
+            }
+          ],
+          "apps": [
+            {
+              "id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "app_hash": "6af56dd2c16e48d8dac6cfc93c3b51f37d48b77c083acf4ba3fb27a551ae2d98"
+            },
+            {
+              "id": "7707187089270261977",
+              "owner": "rlnmfc13nj2m",
+              "app_hash": "28f3ae92945e257d611b07bc9d19145e29eb51c80a5c56b8862c0b820603c815"
+            },
+            {
+              "id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "app_hash": "d5b8fb684d69fcee256a9bb73db7de4a815d9d0d7f274cfd4bb531c371a66689"
+            }
+          ],
+          "grants": [
+            {
+              "id": 1,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 100,
+              "available": 99,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": 1793025195,
+              "max_payload": 256,
+              "revoked": 1
+            },
+            {
+              "id": 2,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 1,
+              "available": 0,
+              "reserved": 1,
+              "quarantined": 0,
+              "consumed": 0,
+              "expires": 1792424099,
+              "max_payload": 256,
+              "revoked": 1
+            },
+            {
+              "id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "budget": 5,
+              "available": 4,
+              "reserved": 0,
+              "quarantined": 0,
+              "consumed": 1,
+              "expires": 1792589359,
+              "max_payload": 256,
+              "revoked": 1
+            }
+          ],
+          "reservations": [
+            {
+              "id": 2001,
+              "grant_id": 2,
+              "obligation": 2001,
+              "nullifier": 2001,
+              "effect_id": 2001,
+              "payload_hash": "abda1a17e22f593c0479fefe59df11c892ba66cfb906bd8b08477e05f34a5798",
+              "status": 0
+            },
+            {
+              "id": "42779262017618",
+              "grant_id": 1,
+              "obligation": "42779262017618",
+              "nullifier": "42779262017618",
+              "effect_id": "42779262017618",
+              "payload_hash": "d9de0c8daf5d447dea50fbfb27841db4d8c5965ce64ebb75bfd36956ed733111",
+              "status": 1
+            },
+            {
+              "id": "68870939753805",
+              "grant_id": "47633037276206",
+              "obligation": "68870939753805",
+              "nullifier": "68870939753805",
+              "effect_id": "68870939753805",
+              "payload_hash": "67bbfbb53ea5c78b72a1ee3e176f36dc6699166f44273824b9513338ff32790f",
+              "status": 1
+            }
+          ],
+          "effects": [
+            {
+              "id": "42779262017618",
+              "reservation": "42779262017618",
+              "grant_id": 1,
+              "app_id": "7707187089270261976",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Owner-approved app. Delegated memory write enforced by native authority.\"}"
+            },
+            {
+              "id": "68870939753805",
+              "reservation": "68870939753805",
+              "grant_id": "47633037276206",
+              "app_id": "15400335351187373294",
+              "owner": "vrya3iayygzy",
+              "actor": "rlnmfc13nj2m",
+              "actor_permission": "vrapp",
+              "space": "memory",
+              "payload": "{\"kind\":\"memory\",\"text\":\"Externally approved app and bounded grant. Native authority permits this public memory.\"}"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "ramObservation": {
+    "transactionId": "4b4c0ad36d52131c9f30909b1b164da85be5efa583ff5957c8a9078109358321",
+    "payer": "vralzuwmebbx",
+    "bytes": 860,
+    "payloadBytes": 114,
+    "source": "SUBMITTING_RPC_EXECUTION_TRACE",
+    "independentlyVerified": false,
+    "observedAt": "2026-10-20T13:30:57.078Z"
+  }
+}

@@ -5,12 +5,19 @@ import { verifyEvidence, createRpc, VerificationError } from "./verifier.mjs";
 const args = process.argv.slice(2);
 if (!args.length || args.includes("--help")) {
   console.log(
-    "Usage: node verify.mjs PROOF.json [--offline | --rpc cryptolions|greymass]\nDefault: fresh read-only checks via CryptoLions. No wallets or private keys.",
+    "Usage: node verify.mjs PROOF.json [--profile legacy|external-v2] [--offline | --rpc cryptolions|greymass]\nDefault: fresh read-only checks via CryptoLions. No wallets or private keys.",
   );
   process.exit(args.includes("--help") ? 0 : 1);
 }
 try {
   const [path, ...flags] = args;
+  let profileName = "legacy";
+  if (flags[0] === "--profile") {
+    flags.shift();
+    profileName = flags.shift();
+  }
+  if (!["legacy", "external-v2"].includes(profileName))
+    throw new VerificationError("Invalid profile selection");
   const offline = flags.length === 1 && flags[0] === "--offline";
   const selected =
     flags.length === 0
@@ -27,6 +34,7 @@ try {
     );
   const bundle = JSON.parse(readFileSync(path, "utf8"));
   const result = await verifyEvidence(bundle, {
+    profileName,
     rpc: offline ? undefined : createRpc(selected),
     rpcName: offline ? undefined : selected,
   });

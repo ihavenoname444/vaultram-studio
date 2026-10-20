@@ -2,7 +2,7 @@
 
 **Owner control and recovery:** real native Anchor revocation is verified irreversible, followed by an observed denied agent reservation and unchanged state from two RPCs. Full owner recovery custody and OS isolation remain unfinished. See [the current evidence walkthrough](docs/OWNER_AUTHORITY_DEMO.md).
 
-**Verify without Studio:** [the standalone Jungle4 evidence checker](packages/verifier/README.md) runs from its own folder with Node/npm, public evidence and read-only RPC access. No private keys or Studio installation are required. It distinguishes checked signatures/inclusion/current state from historical observations. It complements the existing [Aegis reference verifier](https://github.com/ihavenoname444/aegis); it does not replace its authority rules or claim full Aegis acceptance.
+**Verify without Studio:** [the standalone Jungle4 evidence checker](packages/verifier/README.md) runs from its own folder with Node/npm, public evidence and read-only RPC access. No private keys or Studio installation are required. The explicit `external-v2` profile checks the complete new registration/grant, write and revocation lifecycle; the original legacy bundle remains supported. It distinguishes checked signatures/inclusion/current state from historical observations. It complements the existing [Aegis reference verifier](https://github.com/ihavenoname444/aegis); it does not replace its authority rules or claim full Aegis acceptance.
 
 A local development studio for a bounded agent marketplace: describe an app, compile a versioned specification, sign an action, inspect state, export evidence.
 

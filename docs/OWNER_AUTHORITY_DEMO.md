@@ -74,7 +74,7 @@ light-client verification or proof of historical execution code.
 
 ## Before calling the broader product demo complete
 
-- General account onboarding remains outside this configured-owner demo. The fresh registration/grant/write/revocation/denial lifecycle is complete; the standalone checker still supports its separately pinned historical bundle, not the new onboarding export.
+- General account onboarding remains outside this configured-owner demo. The fresh registration/grant/write/revocation/denial lifecycle is complete; the standalone checker now supports a separately pinned external-v2 bundle for the complete fresh lifecycle as well as the original legacy bundle.
 - Prove gateway isolation from owner/admin files in its deployment environment;
   migrate and test owner recovery custody with safe backups.
 - Obtain and verify VaultRAM's actual lease/claim interface, RAM payer model,

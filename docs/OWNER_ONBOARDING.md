@@ -77,6 +77,4 @@ established. Emergency operations still depend on available chain/RPC access.
 
 Write units are bounded test capacity, not RAM bytes, payment authority, V
 claims or VaultRAM leasing. RPC-backed verification is not a consensus light
-client, proof of historical execution code, or full Aegis acceptance. The
-existing standalone lifecycle verifier has its own pinned evidence schema;
-this new onboarding export does not silently extend that schema.
+client, proof of historical execution code, or full Aegis acceptance. The [standalone checker](../packages/verifier/README.md) now provides a separately reviewed version-2 bundle/profile for this complete external lifecycle. Select `external-v2` explicitly; legacy evidence remains separately pinned.

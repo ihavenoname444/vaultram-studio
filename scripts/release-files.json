@@ -124,5 +124,8 @@
   "docs/evidence/owner-app-v2/external-app-grant.json",
   "docs/evidence/owner-app-v2/external-app-write.json",
   "docs/evidence/owner-app-v2/external-app-revocation.json",
-  "docs/evidence/owner-app-v2/external-app-denial.json"
+  "docs/evidence/owner-app-v2/external-app-denial.json",
+  "packages/verifier/profile-external.json",
+  "packages/verifier/examples/jungle4-external-lifecycle.json",
+  "packages/verifier/test/external.test.mjs"
 ]
