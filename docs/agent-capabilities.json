@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "project": "VaultRAM Studio — independent application prototype",
+  "intendedEcosystem": "VaultRAM / V on Vaulta",
+  "status": "JUNGLE4_DEVELOPMENT_ONLY",
+  "officialVaultRAMStandard": false,
+  "documentation": "docs/AEGIS_STUDIO_BRIDGE.md",
+  "sourceProvenance": "packages/aegis-bridge/provenance.json",
+  "deploymentProfile": "packages/verifier/profile-external.json",
+  "accountingEvidence": "docs/evidence/owner-app-v2/aegis-accounting.json",
+  "readOnlyVerification": {
+    "requiresStudio": false,
+    "requiresPrivateKeys": false,
+    "command": "node packages/aegis-bridge/check.mjs cryptolions",
+    "alternativeProvider": "greymass",
+    "studioRoute": "GET /api/authority/aegis",
+    "scope": "NATIVE_TEST_WRITE_ACCOUNTING_ONLY",
+    "unit": "UNBACKED_TEST_WRITE",
+    "executionAuthorized": false,
+    "aegisPolicyVerdict": "NOT_EVALUATED",
+    "vaultRamBacking": "UNAVAILABLE"
+  },
+  "unsupported": [
+    "V_OR_RAM_BYTE_CONVERSION",
+    "AUTHENTICATED_STATE_CHECKPOINT",
+    "FULL_AEGIS_ACCEPTANCE",
+    "CROSS_CHAIN_EXECUTION",
+    "MAINNET_PRODUCTION_SAFETY",
+    "COMPARATIVE_CHAIN_SAFETY_RANKING"
+  ]
+}

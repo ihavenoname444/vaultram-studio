@@ -9,3 +9,6 @@ playwright-report
 # Preserve the reviewed CDT ABI bytes and generated standalone npm lock.
 packages/verifier/authority.abi.json
 packages/verifier/package-lock.json
+
+# Exact pinned upstream source; do not reformat.
+packages/aegis-bridge/vendor

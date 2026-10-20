@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { AegisPanel } from "./AegisPanel.tsx";
 import { OwnerControls } from "./OwnerControls.tsx";
 import { OnboardingControls } from "./OnboardingControls.tsx";
 type Props = {
@@ -127,6 +128,7 @@ export function AuthorityPanel({
           }}
         />
       )}
+      <AegisPanel key={"aegis-" + contextId} api={api} blocked={busy} />
       <section className="native-card" aria-label="Native authority grant">
         <div className="native-heading">
           <h2>Agent authority</h2>

@@ -1,4 +1,7 @@
 import Fastify from "fastify";
+import { auditAegisAccounting } from "../../../packages/aegis-bridge/bridge.mjs";
+import { createRpc } from "../../../packages/verifier/verifier.mjs";
+import aegisProfile from "../../../packages/verifier/profile-external.json";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { resolve } from "node:path";
@@ -206,6 +209,29 @@ export async function createServer(
         ? { appId: c.app.appId, appHash: c.app.appHash, name: c.app.spec.name }
         : undefined,
     };
+  });
+  // Deployment-wide read-only observation. Never feeds execution authorization.
+  let aegisPending: ReturnType<typeof auditAegisAccounting> | undefined;
+  server.get("/api/authority/aegis", async (req) => {
+    if (Object.keys(req.query as object).length)
+      throw Error("Aegis audit accepts no query parameters");
+    if (!authority) throw Error("Native authority is not configured");
+    const gateway = authority;
+    if (
+      gateway.c.account !== aegisProfile.contract ||
+      gateway.c.codeHash !== aegisProfile.codeHash ||
+      gateway.c.abiHash !== aegisProfile.abiHash
+    )
+      throw Error("Aegis audit deployment mismatch");
+    // Coalesce concurrent reads only; every later refresh makes fresh observations.
+    if (!aegisPending)
+      aegisPending = auditAegisAccounting({
+        rpc: createRpc("cryptolions"),
+        rpcName: "cryptolions",
+      }).finally(() => {
+        aegisPending = undefined;
+      });
+    return aegisPending;
   });
   const enrollment = () => {
     if (!onboarding) throw Error("Native owner/app v2 required");

@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/ihavenoname444/aegis",
+  "commit": "01bcce77bce0bd13ae2bb10d691f5c6c4a7c6038",
+  "version": "0.0.17",
+  "license": "MIT",
+  "unmodified": true,
+  "files": {
+    "vendor/authority-kernel.js": "96159b63474754fbdc0fdf387c022197027f4d04e1a6153e903a1f675906167d",
+    "vendor/LICENSE": "7f3132661971cf470282c212933f40d9111f2a8e6ba244166a2d1583cb7d9662"
+  }
+}

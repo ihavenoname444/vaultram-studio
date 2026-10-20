@@ -12,7 +12,7 @@
     "gateway": "tsx services/gateway/src/server.ts",
     "build": "tsc --noEmit && vite build --config apps/studio/vite.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run && node --test packages/verifier/test/*.test.mjs",
+    "test": "vitest run && node --test packages/verifier/test/*.test.mjs && npm run test:aegis",
     "test:verifier": "node --test packages/verifier/test/*.test.mjs",
     "test:e2e": "playwright test",
     "verify": "tsx scripts/verify.ts",
@@ -22,7 +22,8 @@
     "demo": "node --import tsx scripts/demo.ts",
     "demo:check": "node --import tsx scripts/demo.ts --check",
     "demo:authority": "node --import tsx scripts/authority-demo.ts",
-    "demo:owner-app": "node --import tsx scripts/authority-demo.ts owner-app-v2"
+    "demo:owner-app": "node --import tsx scripts/authority-demo.ts owner-app-v2",
+    "test:aegis": "node --test packages/aegis-bridge/test/*.test.mjs"
   },
   "dependencies": {
     "@wharfkit/antelope": "4.0.2",

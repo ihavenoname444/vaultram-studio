@@ -132,5 +132,17 @@
   "packages/verifier/audit-state.mjs",
   "packages/verifier/test/native-state.test.mjs",
   "docs/NEXT_AEGIS_V_INTEGRATION.md",
-  "docs/evidence/owner-app-v2/whole-state-audit.json"
+  "docs/evidence/owner-app-v2/whole-state-audit.json",
+  "apps/studio/src/AegisPanel.tsx",
+  "packages/aegis-bridge/bridge.mjs",
+  "packages/aegis-bridge/bridge.d.mts",
+  "packages/aegis-bridge/check.mjs",
+  "packages/aegis-bridge/provenance.json",
+  "packages/aegis-bridge/vendor/authority-kernel.js",
+  "packages/aegis-bridge/vendor/LICENSE",
+  "packages/aegis-bridge/test/bridge.test.mjs",
+  "packages/verifier/verifier.d.mts",
+  "docs/AEGIS_STUDIO_BRIDGE.md",
+  "docs/agent-capabilities.json",
+  "docs/evidence/owner-app-v2/aegis-accounting.json"
 ]
